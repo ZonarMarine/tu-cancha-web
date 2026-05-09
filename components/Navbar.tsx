@@ -13,9 +13,10 @@ const links = [
 export default function Navbar() {
   const path     = usePathname();
   const router   = useRouter();
-  const [open, setOpen]       = useState(false);
+  const [open, setOpen]         = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser]       = useState<any>(null);
+  const [user, setUser]         = useState<any>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -27,10 +28,12 @@ export default function Navbar() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setAuthReady(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setAuthReady(true);
     });
 
     return () => subscription.unsubscribe();
@@ -81,7 +84,9 @@ export default function Navbar() {
 
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
-          {user ? (
+          {!authReady ? (
+            <div className="w-24 h-8 rounded-xl animate-pulse" style={{ backgroundColor: 'var(--surface2)' }} />
+          ) : user ? (
             <>
               <Link href="/perfil"
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:bg-white/5"
@@ -130,7 +135,7 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-3 space-y-2">
-            {user ? (
+            {!authReady ? null : user ? (
               <>
                 <Link href="/perfil" onClick={() => setOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
