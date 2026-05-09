@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, User } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const links = [
   { href: "/explorar", label: "Explorar" },
@@ -10,15 +11,39 @@ const links = [
 ];
 
 export default function Navbar() {
-  const path = usePathname();
+  const path     = usePathname();
+  const router   = useRouter();
   const [open, setOpen]       = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser]       = useState<any>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Load session once on mount, then listen for changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
+  const initials = user?.user_metadata?.name
+    ? user.user_metadata.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.[0]?.toUpperCase() ?? '?';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -35,7 +60,7 @@ export default function Navbar() {
             style={{ backgroundColor: 'var(--accent)' }}>
             <Zap size={16} fill="#000" color="#000" />
           </div>
-          <span className="font-black text-lg tracking-tight" style={{ color: 'var(--text)' }}>
+          <span className="font-black text-lg tracking-tight">
             Tu<span style={{ color: 'var(--accent)' }}>Cancha</span>
           </span>
         </Link>
@@ -54,18 +79,39 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Desktop CTA */}
+        {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/auth" className="text-sm font-semibold transition-colors hover:text-white"
-            style={{ color: 'var(--text2)' }}>
-            Iniciar sesión
-          </Link>
-          <Link href="/auth?mode=signup" className="btn-primary px-5 py-2.5 text-sm">
-            Jugá hoy →
-          </Link>
+          {user ? (
+            <>
+              <Link href="/perfil"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:bg-white/5"
+                style={{ color: 'var(--text2)' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black"
+                  style={{ backgroundColor: 'var(--accent)', color: '#000' }}>
+                  {initials}
+                </div>
+                Mi perfil
+              </Link>
+              <button onClick={handleLogout}
+                className="text-sm font-semibold transition-colors hover:text-white"
+                style={{ color: 'var(--text3)' }}>
+                Salir
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth" className="text-sm font-semibold transition-colors hover:text-white"
+                style={{ color: 'var(--text2)' }}>
+                Iniciar sesión
+              </Link>
+              <Link href="/auth?mode=signup" className="btn-primary px-5 py-2.5 text-sm">
+                Jugá hoy →
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Mobile */}
+        {/* Mobile toggle */}
         <button className="md:hidden p-2" onClick={() => setOpen(!open)}
           style={{ color: 'var(--text)' }}>
           {open ? <X size={20} /> : <Menu size={20} />}
@@ -84,15 +130,32 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-3 space-y-2">
-            <Link href="/auth" onClick={() => setOpen(false)}
-              className="block text-center py-3 rounded-xl text-sm font-semibold"
-              style={{ color: 'var(--text2)', border: '1px solid var(--border)' }}>
-              Iniciar sesión
-            </Link>
-            <Link href="/auth?mode=signup" onClick={() => setOpen(false)}
-              className="btn-primary block text-center py-3 text-sm">
-              Jugá hoy →
-            </Link>
+            {user ? (
+              <>
+                <Link href="/perfil" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
+                  style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}>
+                  <User size={16} /> Mi perfil
+                </Link>
+                <button onClick={() => { handleLogout(); setOpen(false); }}
+                  className="block w-full text-left px-4 py-3 rounded-xl text-sm font-semibold"
+                  style={{ color: 'var(--text3)' }}>
+                  Cerrar sesión
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth" onClick={() => setOpen(false)}
+                  className="block text-center py-3 rounded-xl text-sm font-semibold"
+                  style={{ color: 'var(--text2)', border: '1px solid var(--border)' }}>
+                  Iniciar sesión
+                </Link>
+                <Link href="/auth?mode=signup" onClick={() => setOpen(false)}
+                  className="btn-primary block text-center py-3 text-sm">
+                  Jugá hoy →
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
