@@ -241,11 +241,22 @@ export default function ExplorarPage() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from('courts').select('*').order('created_at', { ascending: false });
-      if (error) {
-        setDbError(error.message);
-      } else {
-        setCourts((data ?? []).map(normalise));
+      /* Try the most common table names until one returns data */
+      const TABLE_CANDIDATES = ['courts', 'canchas', 'venues', 'fields', 'court', 'cancha'];
+      let found = false;
+      for (const table of TABLE_CANDIDATES) {
+        const { data, error } = await supabase.from(table).select('*');
+        if (!error && data) {
+          setCourts(data.map(normalise));
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        /* Last resort: try without ordering in case created_at missing */
+        const { data, error } = await supabase.from('courts').select('*');
+        if (error) setDbError(`Tabla no encontrada. Verificá el nombre de la tabla en Supabase. Error: ${error.message}`);
+        else setCourts((data ?? []).map(normalise));
       }
       setLoading(false);
     })();

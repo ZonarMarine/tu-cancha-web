@@ -50,12 +50,17 @@ export default function CanchaPage() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from('courts').select('*').eq('id', id).single();
-      if (error || !data) {
-        setNotFound(true);
-      } else {
-        setCourt(normalise(data));
+      const TABLE_CANDIDATES = ['courts', 'canchas', 'venues', 'fields', 'court', 'cancha'];
+      let found = false;
+      for (const table of TABLE_CANDIDATES) {
+        const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
+        if (!error && data) {
+          setCourt(normalise(data));
+          found = true;
+          break;
+        }
       }
+      if (!found) setNotFound(true);
       setLoading(false);
     })();
   }, [id]);
