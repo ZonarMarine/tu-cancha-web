@@ -168,8 +168,7 @@ function EditModal({
       <div style={{
         position: 'fixed', top: '50%', left: '50%', zIndex: 101,
         transform: 'translate(-50%, -50%)',
-        width: '100%', maxWidth: 480,
-        margin: '0 16px',
+        width: 'min(480px, calc(100vw - 32px))',
         animation: 'modal-in 0.28s cubic-bezier(0.34,1.56,0.64,1) both',
       }}>
         <div style={{
