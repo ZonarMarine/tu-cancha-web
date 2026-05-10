@@ -414,52 +414,56 @@ export default function CanchaPage() {
         /* Hero cinematic zoom */
         .hero-wrap { overflow: hidden; }
         .hero-img {
-          transition: transform 0.85s cubic-bezier(0.25,0.46,0.45,0.94);
-          filter: contrast(1.08) brightness(0.88) saturate(1.12);
+          transition: transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94);
+          filter: contrast(1.1) brightness(0.85) saturate(1.15);
           will-change: transform;
         }
-        .hero-wrap:hover .hero-img { transform: scale(1.05); }
+        .hero-wrap:hover .hero-img { transform: scale(1.055); }
 
         /* Card lift */
+        .card-lift { transition: transform 0.24s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.24s ease; }
         .card-lift:hover {
           transform: translateY(-2px);
-          box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 14px 40px rgba(0,0,0,0.55) !important;
+          box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 16px 48px rgba(0,0,0,0.6) !important;
         }
 
-        /* Time slot hover — elite booking feel */
-        .slot-p {
-          transition: all 0.18s cubic-bezier(0.34,1.3,0.64,1);
-        }
+        /* Time slot hover — premium booking */
+        .slot-p { transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1); }
         .slot-p:hover:not(:disabled) {
-          background: rgba(74,222,128,0.1) !important;
-          border-color: rgba(74,222,128,0.3) !important;
-          transform: scale(1.06);
-          color: rgba(200,255,200,0.9) !important;
-          box-shadow: 0 0 12px rgba(74,222,128,0.12);
+          background: rgba(74,222,128,0.12) !important;
+          border-color: rgba(74,222,128,0.35) !important;
+          transform: scale(1.07);
+          color: rgba(210,255,210,0.95) !important;
+          box-shadow: 0 0 18px rgba(74,222,128,0.18), 0 1px 0 rgba(74,222,128,0.2) inset;
         }
 
-        /* CTA pulse — breathing stadium energy */
+        /* Detail row hover */
+        .detail-row:hover {
+          background: linear-gradient(130deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
+          border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        /* CTA pulse */
         .cta-main {
           animation: cta-pulse 3.5s ease-in-out infinite;
-          transition: opacity 0.16s, transform 0.1s;
+          transition: opacity 0.16s, transform 0.12s;
         }
         .cta-main:hover {
           animation: none;
-          opacity: 0.94;
-          box-shadow: 0 0 44px rgba(215,255,0,0.48), 0 2px 0 rgba(255,255,255,0.3) inset !important;
+          opacity: 0.93;
+          box-shadow: 0 0 48px rgba(215,255,0,0.52), 0 2px 0 rgba(255,255,255,0.32) inset !important;
         }
-        .cta-main:active { transform: scale(0.98); animation: none; }
+        .cta-main:active { transform: scale(0.975); animation: none; }
 
         /* Phone btn */
         .phone-btn:hover {
           background: rgba(255,255,255,0.06) !important;
-          border-color: rgba(255,255,255,0.13) !important;
+          border-color: rgba(255,255,255,0.14) !important;
         }
 
-        /* Viewing indicator pulse */
-        .view-dot {
-          animation: pulse-dot 2.2s ease-in-out infinite;
-        }
+        /* Live/viewing dots */
+        .view-dot { animation: pulse-dot 2.2s ease-in-out infinite; }
+        .live-dot  { animation: pulse-live 1.8s ease-in-out infinite; }
 
         /* Breadcrumb */
         .breadcrumb:hover { color: rgba(255,255,255,0.55) !important; }
@@ -468,9 +472,30 @@ export default function CanchaPage() {
         .sec-label {
           font-size: 9px;
           font-weight: 800;
-          letter-spacing: 0.14em;
+          letter-spacing: 0.15em;
           color: rgba(255,255,255,0.2);
           text-transform: uppercase;
+        }
+
+        /* Emotional badge */
+        .badge-active {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 3px 9px; border-radius: 99px;
+          background: rgba(74,222,128,0.08);
+          border: 1px solid rgba(74,222,128,0.2);
+          font-size: 9.5px; font-weight: 800;
+          color: rgba(100,220,120,0.85);
+          letter-spacing: 0.06em; text-transform: uppercase;
+          user-select: none;
+        }
+        .badge-warn {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 2px 8px; border-radius: 99px;
+          background: rgba(250,204,21,0.07);
+          border: 1px solid rgba(250,204,21,0.15);
+          font-size: 9px; font-weight: 800;
+          color: rgba(250,204,21,0.6);
+          letter-spacing: 0.04em; text-transform: uppercase;
         }
 
         @media (max-width: 880px) { .cancha-grid { grid-template-columns: 1fr !important; } }
@@ -545,11 +570,26 @@ export default function CanchaPage() {
                   <Star size={11} fill="#FACC15" color="#FACC15"/>{court.rating}
                 </div>
               )}
+
+              {/* Bottom-left: cancha activa badge */}
+              <div style={{ position:'absolute', bottom:14, left:14, display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:99, background:'rgba(0,0,0,0.65)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', border:'1px solid rgba(74,222,128,0.2)', fontSize:10, fontWeight:800, color:'rgba(100,230,120,0.8)', letterSpacing:'0.05em' }}>
+                <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.8)', display:'inline-block', flexShrink:0 }}/>
+                CANCHA ACTIVA
+              </div>
             </div>
 
             {/* ── Title + meta ── */}
             <div className="card-lift" style={{ ...card, padding:'20px 22px' }}>
-              <h1 style={{ fontWeight:900, fontSize:27, letterSpacing:'-0.045em', lineHeight:1.05, marginBottom:7, color:'rgba(255,255,255,0.97)' }}>
+              {/* Emotional badge row */}
+              <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:11, flexWrap:'wrap' }}>
+                <span className="badge-active">
+                  <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.8)', display:'inline-block' }}/>
+                  Disponible esta noche
+                </span>
+                <span className="badge-warn">⚡ Se llena rápido</span>
+              </div>
+
+              <h1 style={{ fontWeight:900, fontSize:27, letterSpacing:'-0.045em', lineHeight:1.05, marginBottom:6, color:'rgba(255,255,255,0.97)' }}>
                 {court.title}
               </h1>
               <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'rgba(255,255,255,0.24)', marginBottom:16, letterSpacing:'0.01em' }}>
@@ -560,9 +600,10 @@ export default function CanchaPage() {
                   {icon:<Users size={11}/>,    text:`${court.includedPlayers} jugadores`},
                   {icon:<Clock size={11}/>,    text:'Desde 1 hora'},
                   {icon:<Calendar size={11}/>, text:`${court.slotsAvailable} slots hoy`},
+                  {icon:<span style={{fontSize:11}}>⚽</span>, text:'Ideal para mejengas'},
                 ].map(c=>(
-                  <span key={c.text} style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:99, background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(255,255,255,0.06)' }}>
-                    <span style={{ color:'rgba(255,255,255,0.2)' }}>{c.icon}</span>{c.text}
+                  <span key={String(c.text)} style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:99, background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ color:'rgba(255,255,255,0.22)' }}>{c.icon}</span>{c.text}
                   </span>
                 ))}
               </div>
@@ -604,21 +645,61 @@ export default function CanchaPage() {
               </div>
             </div>
 
-            {/* ── Details ── */}
+            {/* ── Details — Apple Wallet rows ── */}
             <div className="card-lift" style={{ ...card, padding:'16px 20px' }}>
-              <p className="sec-label" style={{ marginBottom:13 }}>Detalles del campo</p>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
+              <p className="sec-label" style={{ marginBottom:12 }}>Detalles del campo</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                 {[
-                  {icon:<Shield size={12}/>, label:'Sin cobro online',        sub:'Pagás en el lugar'},
-                  {icon:<Users size={12}/>,  label:'Hasta 22 jugadores',      sub:'Flexible por partido'},
-                  {icon:<Clock size={12}/>,  label:`${fmtColones(court.basePrice)} / hora`, sub:'Mínimo 1 hora'},
-                  {icon:<MapPin size={12}/>, label:court.location,            sub:'Zona del campo'},
+                  {
+                    icon:<Shield size={14}/>,
+                    label:'Sin cobro por adelantado',
+                    sub:'Pagás directamente en la cancha',
+                    accent: 'rgba(74,222,128,0.35)',
+                    bg: 'rgba(74,222,128,0.07)',
+                  },
+                  {
+                    icon:<Users size={14}/>,
+                    label:`Hasta ${court.includedPlayers} jugadores incluidos`,
+                    sub:'Configurá el equipo al reservar',
+                    accent: 'rgba(147,197,253,0.35)',
+                    bg: 'rgba(59,130,246,0.07)',
+                  },
+                  {
+                    icon:<Clock size={14}/>,
+                    label:`${fmtColones(court.basePrice)} por hora`,
+                    sub:'Mínimo 1h · hasta 6h seguidas',
+                    accent: 'rgba(215,255,0,0.35)',
+                    bg: 'rgba(215,255,0,0.06)',
+                  },
+                  {
+                    icon:<MapPin size={14}/>,
+                    label:court.location,
+                    sub:'Zona de juego nocturno',
+                    accent: 'rgba(251,146,60,0.35)',
+                    bg: 'rgba(251,146,60,0.06)',
+                  },
                 ].map(d=>(
-                  <div key={d.label} style={{ display:'flex', alignItems:'flex-start', gap:9, padding:'9px 11px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ color:'rgba(255,255,255,0.16)', marginTop:1, flexShrink:0 }}>{d.icon}</span>
-                    <div>
-                      <p style={{ fontSize:11.5, fontWeight:600, color:'rgba(255,255,255,0.55)', marginBottom:1, lineHeight:1.3 }}>{d.label}</p>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.22)' }}>{d.sub}</p>
+                  <div key={d.label} className="detail-row" style={{
+                    display:'flex', alignItems:'center', gap:12, padding:'11px 13px',
+                    borderRadius:11,
+                    background:'linear-gradient(130deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%)',
+                    border:'1px solid rgba(255,255,255,0.07)',
+                    transition:'background 0.18s, border-color 0.18s',
+                    cursor:'default',
+                  }}>
+                    {/* Icon tile */}
+                    <div style={{
+                      width:34, height:34, borderRadius:10, flexShrink:0,
+                      background: d.bg,
+                      border:`1px solid ${d.accent}`,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      color: d.accent.replace('0.35','0.9'),
+                    }}>
+                      {d.icon}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.72)', marginBottom:2, lineHeight:1.2, letterSpacing:'-0.01em' }}>{d.label}</p>
+                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)', lineHeight:1.3 }}>{d.sub}</p>
                     </div>
                   </div>
                 ))}
@@ -628,32 +709,41 @@ export default function CanchaPage() {
 
           {/* ════ RIGHT — booking sidebar ════ */}
           <div style={{ position:'sticky', top:76 }}>
+
+            {/* Ambient glow behind card — fills dead right space */}
+            <div aria-hidden style={{ position:'absolute', top:'-30%', left:'-40%', width:400, height:500, background:'radial-gradient(ellipse at center, rgba(215,255,0,0.04) 0%, transparent 65%)', pointerEvents:'none', zIndex:0, filter:'blur(10px)' }}/>
+
             <div style={{
+              position:'relative', zIndex:1,
               borderRadius:16,
-              background:'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 40%), linear-gradient(160deg, rgba(22,22,22,0.96) 0%, rgba(13,13,13,0.98) 100%)',
-              border:'1px solid rgba(255,255,255,0.1)',
-              boxShadow:'0 2px 0 rgba(255,255,255,0.07) inset, 0 20px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.5)',
-              backdropFilter:'blur(24px)',
-              WebkitBackdropFilter:'blur(24px)',
+              background:'linear-gradient(145deg, rgba(255,255,255,0.045) 0%, transparent 40%), linear-gradient(160deg, rgba(22,22,22,0.97) 0%, rgba(12,12,12,0.99) 100%)',
+              border:'1px solid rgba(255,255,255,0.11)',
+              boxShadow:'0 2px 0 rgba(255,255,255,0.08) inset, 0 24px 72px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.5)',
+              backdropFilter:'blur(28px)',
+              WebkitBackdropFilter:'blur(28px)',
               overflow:'hidden',
             }}>
 
               {/* Price hero */}
               <div style={{ padding:'20px 20px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', position:'relative', overflow:'hidden' }}>
-                {/* Subtle lime reflection behind price */}
-                <div style={{ position:'absolute', top:'-40%', right:'-20%', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.07) 0%, transparent 65%)', pointerEvents:'none' }}/>
-                <p className="sec-label" style={{ marginBottom:8, position:'relative' }}>Precio por hora</p>
-                <div style={{ display:'flex', alignItems:'baseline', gap:5, position:'relative' }}>
+                {/* Lime atmosphere behind price */}
+                <div style={{ position:'absolute', top:'-50%', right:'-25%', width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.09) 0%, transparent 65%)', pointerEvents:'none' }}/>
+                <p className="sec-label" style={{ marginBottom:9, position:'relative' }}>Precio por hora</p>
+                <div style={{ display:'flex', alignItems:'baseline', gap:6, position:'relative' }}>
                   <span style={{
-                    fontWeight:900, fontSize:34,
-                    color:'var(--accent)', letterSpacing:'-0.045em', lineHeight:1,
-                    textShadow:'0 0 28px rgba(215,255,0,0.22)',
+                    fontWeight:900, fontSize:36,
+                    color:'var(--accent)', letterSpacing:'-0.05em', lineHeight:1,
+                    textShadow:'0 0 32px rgba(215,255,0,0.28)',
                   }}>
                     {fmtColones(court.basePrice)}
                   </span>
                   <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)', fontWeight:500 }}>/hr</span>
                 </div>
-                <p style={{ fontSize:11, color:'rgba(255,255,255,0.22)', marginTop:5 }}>Incluye {court.includedPlayers} jugadores</p>
+                {/* Thin lime accent line under price */}
+                <div style={{ width:40, height:1.5, background:'linear-gradient(90deg, rgba(215,255,0,0.5), transparent)', borderRadius:99, margin:'8px 0 6px' }}/>
+                <p style={{ fontSize:11, color:'rgba(255,255,255,0.24)', letterSpacing:'-0.01em' }}>
+                  Incluye {court.includedPlayers} jugadores · Por equipo
+                </p>
               </div>
 
               {/* Features */}
@@ -682,14 +772,14 @@ export default function CanchaPage() {
               {/* CTAs */}
               <div style={{ padding:'12px 20px 16px', display:'flex', flexDirection:'column', gap:8 }}>
                 <button onClick={handleReservar} className="cta-main" style={{
-                  display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                  width:'100%', padding:'13px', borderRadius:11,
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:7,
+                  width:'100%', padding:'14px', borderRadius:12,
                   background:'var(--accent)', color:'#000',
-                  fontWeight:800, fontSize:13.5, letterSpacing:'-0.02em',
+                  fontWeight:900, fontSize:14, letterSpacing:'-0.025em',
                   border:'none', cursor:'pointer',
-                  boxShadow:'0 0 24px rgba(215,255,0,0.26), 0 2px 0 rgba(255,255,255,0.28) inset',
+                  boxShadow:'0 0 26px rgba(215,255,0,0.28), 0 2px 0 rgba(255,255,255,0.3) inset',
                 }}>
-                  <Zap size={13} fill="#000"/>
+                  <Zap size={14} fill="#000"/>
                   {user ? 'Reservar ahora' : 'Iniciá sesión para reservar'}
                 </button>
 
@@ -708,17 +798,43 @@ export default function CanchaPage() {
 
               {/* Trust footer */}
               <div style={{ padding:'0 20px 16px', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
-                <Shield size={9} color="rgba(255,255,255,0.13)"/>
-                <p style={{ fontSize:10, color:'rgba(255,255,255,0.13)', fontWeight:500 }}>Sin cobro por adelantado · Cancelá gratis</p>
+                <Shield size={9} color="rgba(255,255,255,0.14)"/>
+                <p style={{ fontSize:10, color:'rgba(255,255,255,0.14)', fontWeight:500 }}>Sin cobro por adelantado · Cancelá gratis</p>
               </div>
 
             </div>
 
-            {/* Tagline below sidebar — football culture */}
-            <p style={{ marginTop:14, textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.15)', fontWeight:500, letterSpacing:'0.01em', lineHeight:1.5 }}>
+            {/* Tagline — football culture */}
+            <p style={{ marginTop:16, textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.14)', fontWeight:500, letterSpacing:'0.01em', lineHeight:1.6 }}>
               Armá el equipo.<br/>
-              <span style={{ color:'rgba(215,255,0,0.35)' }}>Tu cancha los espera.</span>
+              <span style={{ color:'rgba(215,255,0,0.32)' }}>Tu cancha los espera.</span>
             </p>
+
+            {/* Tactical field lines — fills right dead space */}
+            <div aria-hidden style={{ marginTop:28, display:'flex', justifyContent:'center', opacity:0.024, pointerEvents:'none', userSelect:'none' }}>
+              <svg viewBox="0 0 240 310" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width:180, height:'auto' }}>
+                {/* Outer boundary */}
+                <rect x="8" y="8" width="224" height="294" stroke="white" strokeWidth="1.5" rx="2"/>
+                {/* Halfway line */}
+                <line x1="8" y1="155" x2="232" y2="155" stroke="white" strokeWidth="1.5"/>
+                {/* Center circle */}
+                <circle cx="120" cy="155" r="44" stroke="white" strokeWidth="1.5"/>
+                {/* Center dot */}
+                <circle cx="120" cy="155" r="2.5" fill="white"/>
+                {/* Top penalty box */}
+                <rect x="52" y="8" width="136" height="56" stroke="white" strokeWidth="1.5"/>
+                {/* Top goal box */}
+                <rect x="82" y="8" width="76" height="24" stroke="white" strokeWidth="1.5"/>
+                {/* Top penalty arc */}
+                <path d="M 85 64 A 35 35 0 0 1 155 64" stroke="white" strokeWidth="1.5" fill="none"/>
+                {/* Bottom penalty box */}
+                <rect x="52" y="246" width="136" height="56" stroke="white" strokeWidth="1.5"/>
+                {/* Bottom goal box */}
+                <rect x="82" y="278" width="76" height="24" stroke="white" strokeWidth="1.5"/>
+                {/* Bottom penalty arc */}
+                <path d="M 155 246 A 35 35 0 0 1 85 246" stroke="white" strokeWidth="1.5" fill="none"/>
+              </svg>
+            </div>
           </div>
 
         </div>
