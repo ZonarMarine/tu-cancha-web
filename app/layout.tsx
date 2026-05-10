@@ -20,17 +20,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Navbar />
         <main>{children}</main>
-        <footer style={{ borderTop: '1px solid var(--border)' }} className="py-12 mt-20">
-          <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="font-black text-lg">Tu<span style={{ color: 'var(--accent)' }}>Cancha</span></p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text3)' }}>El sistema operativo del deporte amateur en Costa Rica.</p>
-            </div>
-            <p className="text-sm" style={{ color: 'var(--text3)' }}>
-              © 2026 Tu Cancha CR · <a href="mailto:hola@tucanchacr.com" className="hover:text-white transition-colors">hola@tucanchacr.com</a>
-            </p>
-          </div>
-        </footer>
       </body>
     </html>
   );
