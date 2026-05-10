@@ -374,39 +374,38 @@ export default function CanchaPage() {
     {time:'8:00 PM', ok:false},{time:'9:00 PM', ok:true},
   ];
 
-  /* Shared card surface */
+  /* Shared card surface — TuCancha signature */
   const card: React.CSSProperties = {
-    borderRadius: 14,
-    background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, transparent 55%), linear-gradient(160deg, #181818 0%, #121212 100%)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    boxShadow: '0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 24px rgba(0,0,0,0.4)',
-    transition: 'transform 0.24s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.24s ease',
+    borderRadius: 16,
+    background: 'linear-gradient(145deg, rgba(255,255,255,0.032) 0%, transparent 52%), linear-gradient(160deg, #191919 0%, #111111 100%)',
+    border: '1px solid rgba(255,255,255,0.075)',
+    boxShadow: '0 1px 0 rgba(255,255,255,0.055) inset, 0 8px 32px rgba(0,0,0,0.45)',
   };
 
   return (
     <div style={{ paddingTop:60, minHeight:'100svh', background:'var(--bg)', position:'relative', overflow:'hidden' }}>
 
-      {/* ── Stadium ambient atmosphere ── */}
+      {/* ── Stadium ambient atmosphere — 3-point lighting ── */}
       <div aria-hidden="true" style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }}>
-        {/* Top-right: stadium floodlight leak */}
+        {/* Main floodlight: upper-right, primary stadium light */}
         <div style={{
-          position:'absolute', top:'-15%', right:'-8%',
+          position:'absolute', top:'-18%', right:'-6%',
+          width:800, height:800, borderRadius:'50%',
+          background:'radial-gradient(circle at center, rgba(215,255,0,0.048) 0%, transparent 62%)',
+          filter:'blur(1px)',
+        }}/>
+        {/* Fill light: lower-left, field surface bounce */}
+        <div style={{
+          position:'absolute', bottom:'-22%', left:'-10%',
           width:700, height:700, borderRadius:'50%',
-          background:'radial-gradient(circle at center, rgba(215,255,0,0.042) 0%, transparent 65%)',
-          filter:'blur(2px)',
+          background:'radial-gradient(circle at center, rgba(215,255,0,0.024) 0%, transparent 62%)',
         }}/>
-        {/* Bottom-left: field reflection bounce */}
+        {/* Ambient: center, ultra-subtle green-lime haze */}
         <div style={{
-          position:'absolute', bottom:'-20%', left:'-12%',
-          width:600, height:600, borderRadius:'50%',
-          background:'radial-gradient(circle at center, rgba(215,255,0,0.022) 0%, transparent 65%)',
-        }}/>
-        {/* Center: ultra-subtle lime atmosphere */}
-        <div style={{
-          position:'absolute', top:'30%', left:'50%',
+          position:'absolute', top:'25%', left:'48%',
           transform:'translateX(-50%)',
-          width:900, height:400,
-          background:'radial-gradient(ellipse at center, rgba(215,255,0,0.012) 0%, transparent 70%)',
+          width:1100, height:500,
+          background:'radial-gradient(ellipse at center, rgba(215,255,0,0.014) 0%, transparent 68%)',
         }}/>
       </div>
 
@@ -548,36 +547,37 @@ export default function CanchaPage() {
       )}
 
       {/* ── Page content ── */}
-      <div style={{ maxWidth:1280, margin:'0 auto', padding:'32px 32px 80px', position:'relative', zIndex:1 }}>
+      <div style={{ maxWidth:1440, margin:'0 auto', padding:'36px 48px 100px', position:'relative', zIndex:1 }}>
 
         {/* Breadcrumb */}
         <Link href="/explorar" className="breadcrumb" style={{
-          display:'inline-flex', alignItems:'center', gap:6,
-          marginBottom:24, fontSize:12, fontWeight:600,
-          color:'rgba(255,255,255,0.22)', textDecoration:'none',
-          letterSpacing:'0.01em', transition:'color 0.18s',
+          display:'inline-flex', alignItems:'center', gap:7,
+          marginBottom:28, fontSize:12, fontWeight:600,
+          color:'rgba(255,255,255,0.2)', textDecoration:'none',
+          letterSpacing:'0.02em', transition:'color 0.18s',
         }}>
           <ArrowLeft size={12}/> Explorar canchas
         </Link>
 
-        {/* 8 / 4 grid */}
-        <div className="cancha-grid" style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) 300px', gap:24, alignItems:'start' }}>
+        {/* 8 / 4 grid — expanded */}
+        <div className="cancha-grid" style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) 320px', gap:32, alignItems:'start' }}>
 
-          {/* ════ LEFT COLUMN ════ */}
-          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          {/* ════ LEFT COLUMN — emotional rhythm spacing ════ */}
+          <div style={{ display:'flex', flexDirection:'column' }}>
 
-            {/* ── Cinematic hero ── */}
+            {/* ── Cinematic hero — dominant, immersive ── */}
             <div
               className="hero-wrap card-lift"
               style={{
                 ...card,
-                borderRadius:16,
-                height:220,
+                borderRadius:18,
+                height:264,
                 position:'relative',
+                marginBottom:16,
                 background: court.imageUrl ? '#050505' : fieldBg,
                 flexShrink:0,
                 cursor:'default',
-                boxShadow:'0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 48px rgba(0,0,0,0.6)',
+                boxShadow:'0 1px 0 rgba(255,255,255,0.05) inset, 0 16px 56px rgba(0,0,0,0.65)',
               }}
             >
               {court.imageUrl ? (
@@ -625,7 +625,7 @@ export default function CanchaPage() {
             </div>
 
             {/* ── Title + meta ── */}
-            <div className="card-lift" style={{ ...card, padding:'20px 22px' }}>
+            <div className="card-lift" style={{ ...card, padding:'22px 24px', marginBottom:20 }}>
               {/* Emotional badge row */}
               <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:11, flexWrap:'wrap' }}>
                 <span className="badge-active">
@@ -657,7 +657,7 @@ export default function CanchaPage() {
             </div>
 
             {/* ── Time slots ── */}
-            <div className="card-lift" style={{ ...card, padding:'16px 20px' }}>
+            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:28 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
                 <p className="sec-label" style={{ margin:0 }}>Horarios disponibles hoy</p>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -693,7 +693,7 @@ export default function CanchaPage() {
             </div>
 
             {/* ── Details — Apple Wallet rows ── */}
-            <div className="card-lift" style={{ ...card, padding:'16px 20px' }}>
+            <div className="card-lift" style={{ ...card, padding:'20px 22px' }}>
               <p className="sec-label" style={{ marginBottom:12 }}>Detalles del campo</p>
               <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                 {[
@@ -753,40 +753,40 @@ export default function CanchaPage() {
           </div>
 
           {/* ════ RIGHT — booking sidebar ════ */}
-          <div style={{ position:'sticky', top:76 }}>
+          <div style={{ position:'sticky', top:80 }}>
 
             {/* Ambient glow behind card — fills dead right space */}
             <div aria-hidden style={{ position:'absolute', top:'-30%', left:'-40%', width:400, height:500, background:'radial-gradient(ellipse at center, rgba(215,255,0,0.04) 0%, transparent 65%)', pointerEvents:'none', zIndex:0, filter:'blur(10px)' }}/>
 
             <div style={{
               position:'relative', zIndex:1,
-              borderRadius:16,
-              background:'linear-gradient(145deg, rgba(255,255,255,0.045) 0%, transparent 40%), linear-gradient(160deg, rgba(22,22,22,0.97) 0%, rgba(12,12,12,0.99) 100%)',
-              border:'1px solid rgba(255,255,255,0.11)',
-              boxShadow:'0 2px 0 rgba(255,255,255,0.08) inset, 0 24px 72px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.5)',
-              backdropFilter:'blur(28px)',
-              WebkitBackdropFilter:'blur(28px)',
+              borderRadius:18,
+              background:'linear-gradient(145deg, rgba(255,255,255,0.042) 0%, transparent 38%), linear-gradient(160deg, rgba(21,21,21,0.97) 0%, rgba(11,11,11,0.99) 100%)',
+              border:'1px solid rgba(255,255,255,0.1)',
+              boxShadow:'0 2px 0 rgba(255,255,255,0.07) inset, 0 28px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4)',
+              backdropFilter:'blur(32px)',
+              WebkitBackdropFilter:'blur(32px)',
               overflow:'hidden',
             }}>
 
               {/* Price hero */}
-              <div style={{ padding:'20px 20px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', position:'relative', overflow:'hidden' }}>
+              <div style={{ padding:'22px 22px 18px', borderBottom:'1px solid rgba(255,255,255,0.065)', position:'relative', overflow:'hidden' }}>
                 {/* Lime atmosphere behind price */}
-                <div style={{ position:'absolute', top:'-50%', right:'-25%', width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.09) 0%, transparent 65%)', pointerEvents:'none' }}/>
-                <p className="sec-label" style={{ marginBottom:9, position:'relative' }}>Precio por hora</p>
-                <div style={{ display:'flex', alignItems:'baseline', gap:6, position:'relative' }}>
+                <div style={{ position:'absolute', top:'-50%', right:'-25%', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.08) 0%, transparent 65%)', pointerEvents:'none' }}/>
+                <p className="sec-label" style={{ marginBottom:10, position:'relative' }}>Precio por hora</p>
+                <div style={{ display:'flex', alignItems:'baseline', gap:7, position:'relative' }}>
                   <span style={{
-                    fontWeight:900, fontSize:36,
+                    fontWeight:900, fontSize:38,
                     color:'var(--accent)', letterSpacing:'-0.05em', lineHeight:1,
-                    textShadow:'0 0 32px rgba(215,255,0,0.28)',
+                    textShadow:'0 0 36px rgba(215,255,0,0.26)',
                   }}>
                     {fmtColones(court.basePrice)}
                   </span>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)', fontWeight:500 }}>/hr</span>
+                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.18)', fontWeight:500 }}>/hr</span>
                 </div>
-                {/* Thin lime accent line under price */}
-                <div style={{ width:40, height:1.5, background:'linear-gradient(90deg, rgba(215,255,0,0.5), transparent)', borderRadius:99, margin:'8px 0 6px' }}/>
-                <p style={{ fontSize:11, color:'rgba(255,255,255,0.24)', letterSpacing:'-0.01em' }}>
+                {/* Signature lime accent line */}
+                <div style={{ width:36, height:1.5, background:'linear-gradient(90deg, rgba(215,255,0,0.45), transparent)', borderRadius:99, margin:'10px 0 7px' }}/>
+                <p style={{ fontSize:11, color:'rgba(255,255,255,0.22)', letterSpacing:'-0.01em', lineHeight:1.5 }}>
                   Incluye {court.includedPlayers} jugadores · Por equipo
                 </p>
               </div>
@@ -815,14 +815,14 @@ export default function CanchaPage() {
               </div>
 
               {/* CTAs */}
-              <div style={{ padding:'12px 20px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ padding:'14px 22px 18px', display:'flex', flexDirection:'column', gap:9 }}>
                 <button onClick={handleReservar} className="cta-main" style={{
                   display:'flex', alignItems:'center', justifyContent:'center', gap:7,
-                  width:'100%', padding:'14px', borderRadius:12,
+                  width:'100%', padding:'15px', borderRadius:13,
                   background:'var(--accent)', color:'#000',
-                  fontWeight:900, fontSize:14, letterSpacing:'-0.025em',
+                  fontWeight:900, fontSize:14, letterSpacing:'-0.03em',
                   border:'none', cursor:'pointer',
-                  boxShadow:'0 0 26px rgba(215,255,0,0.28), 0 2px 0 rgba(255,255,255,0.3) inset',
+                  boxShadow:'0 0 28px rgba(215,255,0,0.26), 0 2px 0 rgba(255,255,255,0.28) inset',
                 }}>
                   <Zap size={14} fill="#000"/>
                   {user ? 'Reservar ahora' : 'Iniciá sesión para reservar'}
@@ -830,21 +830,21 @@ export default function CanchaPage() {
 
                 <button className="phone-btn" style={{
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                  width:'100%', padding:'10px', borderRadius:11,
+                  width:'100%', padding:'11px', borderRadius:12,
                   background:'rgba(255,255,255,0.03)',
-                  color:'rgba(255,255,255,0.3)',
+                  color:'rgba(255,255,255,0.28)',
                   fontWeight:600, fontSize:12, cursor:'pointer',
-                  border:'1px solid rgba(255,255,255,0.07)',
-                  transition:'background 0.16s, border-color 0.16s',
+                  border:'1px solid rgba(255,255,255,0.065)',
+                  transition:'background 0.18s, border-color 0.18s',
                 }}>
                   <Phone size={11}/> Llamar a la cancha
                 </button>
               </div>
 
               {/* Trust footer */}
-              <div style={{ padding:'0 20px 16px', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
-                <Shield size={9} color="rgba(255,255,255,0.14)"/>
-                <p style={{ fontSize:10, color:'rgba(255,255,255,0.14)', fontWeight:500 }}>Sin cobro por adelantado · Cancelá gratis</p>
+              <div style={{ padding:'0 22px 18px', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+                <Shield size={9} color="rgba(255,255,255,0.12)"/>
+                <p style={{ fontSize:10, color:'rgba(255,255,255,0.12)', fontWeight:500, letterSpacing:'0.01em' }}>Sin cobro por adelantado · Cancelá gratis</p>
               </div>
 
             </div>
