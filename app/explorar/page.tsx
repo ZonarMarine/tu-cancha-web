@@ -32,7 +32,13 @@ function normalise(row: Record<string, any>): Court {
     rating:          row.rating  ?? row.calificacion ?? 0,
     tag:             row.tag     ?? null,
     slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? row.slots ?? 0,
-    imageUrl:        row.image_url ?? row.imageUrl ?? null,
+    imageUrl:        row.image_url ?? row.imageUrl ?? row.photo_url ?? row.photo
+                 ?? row.cover_image ?? row.cover_url ?? row.thumbnail_url ?? row.thumbnail
+                 ?? row.picture_url ?? row.picture ?? row.img_url ?? row.img
+                 ?? row.banner_url ?? row.banner ?? row.media_url
+                 ?? (Array.isArray(row.photos) ? row.photos[0] : row.photos)
+                 ?? (Array.isArray(row.images) ? row.images[0] : row.images)
+                 ?? null,
   };
 }
 
