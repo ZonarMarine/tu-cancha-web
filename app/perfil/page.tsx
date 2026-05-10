@@ -101,22 +101,32 @@ function EditModal({
         }
       }
 
-      const updates = {
+      const baseUpdates = {
         id: uid,
         name: name.trim(),
         team: team.trim(),
-        stat_atk: statAtk ? Number(statAtk) : null,
-        stat_def: statDef ? Number(statDef) : null,
-        stat_str: statStr ? Number(statStr) : null,
-        stat_skl: statSkl ? Number(statSkl) : null,
         avatar_url,
         updated_at: new Date().toISOString(),
       };
 
-      const { error: dbErr } = await supabase.from('profiles').upsert(updates);
-      if (dbErr) throw dbErr;
+      const statsUpdates = {
+        stat_atk: statAtk ? Number(statAtk) : null,
+        stat_def: statDef ? Number(statDef) : null,
+        stat_str: statStr ? Number(statStr) : null,
+        stat_skl: statSkl ? Number(statSkl) : null,
+      };
 
-      onSave({ ...profile, ...updates });
+      /* Try full upsert first; if stat columns missing, retry without them */
+      let { error: dbErr } = await supabase.from('profiles').upsert({ ...baseUpdates, ...statsUpdates });
+      if (dbErr?.message?.includes('stat_')) {
+        const fallback = await supabase.from('profiles').upsert(baseUpdates);
+        if (fallback.error) throw fallback.error;
+        onSave({ ...profile, ...baseUpdates });
+      } else {
+        if (dbErr) throw dbErr;
+        onSave({ ...profile, ...baseUpdates, ...statsUpdates });
+      }
+
       handleClose();
     } catch (e: any) {
       setError(e.message ?? 'Error al guardar.');
@@ -215,46 +225,53 @@ function EditModal({
             {/* Avatar picker */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
               <div style={{ position: 'relative' }}>
-                {/* Avatar preview */}
-                <div style={{
-                  width: 80, height: 80, borderRadius: 22,
-                  overflow: 'hidden',
-                  border: '2px solid rgba(215,255,0,0.2)',
-                  boxShadow: '0 0 0 1px rgba(215,255,0,0.06), 0 8px 24px rgba(0,0,0,0.4)',
-                  position: 'relative',
-                  cursor: 'pointer',
-                }}
-                  onClick={() => fileRef.current?.click()}>
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="avatar"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%', height: '100%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: 'linear-gradient(145deg, rgba(215,255,0,0.14), rgba(215,255,0,0.05))',
-                      fontWeight: 900, fontSize: 26, color: 'var(--accent)',
-                      letterSpacing: '-0.02em',
-                    }}>
-                      {initials}
-                    </div>
-                  )}
 
-                  {/* Camera overlay */}
+                {/* FUT card border — same as profile header */}
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  style={{ cursor: 'pointer', position: 'relative' }}>
+                  {/* Outer glow */}
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'rgba(0,0,0,0.45)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    opacity: 0,
-                    transition: 'opacity 0.18s',
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
-                  >
-                    <Camera size={22} color="#fff" />
+                    position: 'absolute', inset: -5, borderRadius: 24,
+                    background: 'linear-gradient(145deg, rgba(215,255,0,0.2), rgba(180,220,0,0.04), rgba(215,255,0,0.16))',
+                    filter: 'blur(7px)', pointerEvents: 'none',
+                  }} />
+                  {/* Gold frame */}
+                  <div style={{
+                    padding: 3, borderRadius: 22,
+                    background: 'linear-gradient(145deg, #c8b84a 0%, #f0d96e 30%, #b89c38 52%, #e8cd60 72%, #c0a840 100%)',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25)',
+                    position: 'relative', zIndex: 1,
+                  }}>
+                    {/* Inner dark ring */}
+                    <div style={{ padding: 2, borderRadius: 19, background: 'linear-gradient(160deg, #1a1a0a, #0c0c06)' }}>
+                      {/* Avatar tile */}
+                      <div style={{ width: 80, height: 80, borderRadius: 17, overflow: 'hidden', position: 'relative' }}>
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{
+                            width: '100%', height: '100%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: 'linear-gradient(145deg, #1e2d06, #111800)',
+                            fontWeight: 900, fontSize: 26, color: 'var(--accent)',
+                            letterSpacing: '-0.02em',
+                          }}>{initials}</div>
+                        )}
+                        {/* Camera overlay on hover */}
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          background: 'rgba(0,0,0,0.5)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          opacity: 0, transition: 'opacity 0.18s',
+                        }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
+                        >
+                          <Camera size={20} color="#fff" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -262,9 +279,9 @@ function EditModal({
                 <button
                   onClick={() => fileRef.current?.click()}
                   style={{
-                    position: 'absolute', bottom: -4, right: -4,
+                    position: 'absolute', bottom: -2, right: -2, zIndex: 3,
                     width: 26, height: 26, borderRadius: 8,
-                    background: 'var(--accent)', border: '2px solid #141414',
+                    background: 'var(--accent)', border: '2px solid #1c1c1c',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer',
                   }}>
