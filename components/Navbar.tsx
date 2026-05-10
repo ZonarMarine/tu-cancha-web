@@ -109,7 +109,7 @@ export default function Navbar() {
                 style={{ color: 'var(--text2)' }}>
                 Iniciar sesión
               </Link>
-              <Link href="/auth?mode=signup" className="btn-primary px-5 py-2.5 text-sm">
+              <Link href="/auth?mode=signup" className="btn-primary px-5 py-2 text-sm">
                 Jugá hoy →
               </Link>
             </>

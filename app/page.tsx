@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Star, ChevronRight, Trophy, Users, Zap, ArrowUp } from "lucide-react";
+import { MapPin, Star, ChevronRight, Users, Zap, ArrowUp } from "lucide-react";
 import { COURTS, GAMES, fmtColones } from "@/lib/data";
 import LiveTicker from "@/components/LiveTicker";
 import MatchCard from "@/components/MatchCard";
@@ -72,66 +72,68 @@ export default function HomePage() {
           }
         `}</style>
 
-        <div className="relative z-10 w-full max-w-4xl mx-auto">
+        <div className="relative z-10 w-full max-w-3xl mx-auto">
 
           {/* Live badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-10 text-xs font-semibold"
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-12 text-xs font-semibold"
             style={{
               backgroundColor: 'rgba(215,255,0,0.05)',
               border: '1px solid rgba(215,255,0,0.15)',
               color: 'var(--accent)',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.06em',
             }}>
             <span className="w-1.5 h-1.5 rounded-full pulse-live" style={{ backgroundColor: 'var(--accent)' }} />
             {GAMES.length} partidos activos · Costa Rica
           </div>
 
           {/* Headline */}
-          <h1 className="font-black leading-none tracking-tighter mb-8"
-            style={{ fontSize: 'clamp(52px, 9vw, 104px)', letterSpacing: '-0.03em' }}>
+          <h1 className="font-black leading-none tracking-tighter mb-10"
+            style={{ fontSize: 'clamp(48px, 8.5vw, 100px)', letterSpacing: '-0.03em' }}>
             Jugá hoy.<br />
             <span style={{
               color: 'var(--accent)',
-              textShadow: '0 0 80px rgba(215,255,0,0.25)',
+              textShadow: '0 0 80px rgba(215,255,0,0.2)',
             }}>Sin organizar</span><br />
             nada.
           </h1>
 
-          <p className="text-lg max-w-md mx-auto mb-12 leading-relaxed"
-            style={{ color: 'var(--text3)', fontSize: 18 }}>
-            El sistema operativo del fútbol amateur en Costa Rica.
-            Partidos, canchas y rivales. En segundos.
+          {/* Subtitle */}
+          <p className="max-w-sm mx-auto mb-12 leading-relaxed"
+            style={{ color: 'var(--text3)', fontSize: 17 }}>
+            Partidos, canchas y rivales en Costa Rica. En segundos.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
-            <Link href="/juegos" className="btn-primary px-8 py-4 text-sm w-full sm:w-auto text-center"
-              style={{ fontSize: 15, letterSpacing: '0.01em' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-20">
+            <Link href="/juegos" className="btn-primary px-9 py-4 text-sm w-full sm:w-auto text-center">
               Ver partidos activos →
             </Link>
             <Link href="/explorar"
-              className="px-8 py-4 rounded-2xl text-sm font-semibold w-full sm:w-auto text-center transition-all"
-              style={{ border: '1px solid var(--border2)', color: 'var(--text2)', backgroundColor: 'transparent' }}>
+              className="px-9 py-4 rounded-2xl text-sm font-medium w-full sm:w-auto text-center transition-all"
+              style={{ border: '1px solid var(--border)', color: 'var(--text3)' }}>
               Explorar canchas
             </Link>
           </div>
 
-          {/* Live stats — quieter */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
+          {/* Live stats — with dividers */}
+          <div className="flex items-center justify-center mb-10">
             {[
-              { val: '24', label: 'jugadores conectados' },
-              { val: '6',  label: 'partidos llenándose'  },
-              { val: '3',  label: 'canchas activas'       },
-            ].map(s => (
-              <div key={s.label} className="flex items-center gap-2">
-                <span className="font-black text-sm" style={{ color: 'var(--accent)' }}>{s.val}</span>
-                <span className="text-xs" style={{ color: 'var(--text3)' }}>{s.label}</span>
+              { val: '24', label: 'jugadores' },
+              { val: '6',  label: 'partidos'  },
+              { val: '3',  label: 'canchas'   },
+            ].map((s, i) => (
+              <div key={s.label} className="flex items-center">
+                {i > 0 && <div className="w-px h-8 mx-8" style={{ backgroundColor: 'var(--border)' }} />}
+                <div className="text-center">
+                  <p className="font-black text-xl mb-0.5" style={{ color: 'var(--text)' }}>{s.val}</p>
+                  <p className="text-xs" style={{ color: 'var(--text3)' }}>{s.label}</p>
+                </div>
               </div>
             ))}
           </div>
 
           {/* Live ticker */}
-          <div className="max-w-xs mx-auto">
+          <div className="max-w-xs mx-auto opacity-60">
             <LiveTicker />
           </div>
         </div>
