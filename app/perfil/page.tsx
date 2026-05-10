@@ -502,34 +502,49 @@ export default function PerfilPage() {
             {/* Avatar + identity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
 
-              {/* Avatar */}
+              {/* Avatar — FIFA FUT card border */}
               <div style={{ position: 'relative', flexShrink: 0 }}>
+                {/* Outer glow */}
                 <div style={{
-                  position: 'absolute', inset: -5, borderRadius: 25,
-                  border: '1.5px solid rgba(215,255,0,0.28)',
-                  animation: 'ring-pulse 3s ease-in-out infinite',
+                  position: 'absolute', inset: -6, borderRadius: 26,
+                  background: 'linear-gradient(145deg, rgba(215,255,0,0.22), rgba(180,220,0,0.06), rgba(215,255,0,0.18))',
+                  filter: 'blur(8px)',
                   pointerEvents: 'none',
+                  animation: 'ring-pulse 3s ease-in-out infinite',
                 }} />
+                {/* FUT-style frame: thick gradient border */}
                 <div style={{
-                  width: 72, height: 72, borderRadius: 20, overflow: 'hidden',
-                  border: '1px solid rgba(215,255,0,0.22)',
-                  boxShadow: '0 0 0 1px rgba(215,255,0,0.06), 0 8px 28px rgba(215,255,0,0.1)',
+                  padding: 3, borderRadius: 22,
+                  background: 'linear-gradient(145deg, #c8b84a 0%, #f0d96e 30%, #b89c38 52%, #e8cd60 72%, #c0a840 100%)',
+                  boxShadow: '0 0 0 1px rgba(0,0,0,0.6), 0 12px 36px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  position: 'relative', zIndex: 1,
                 }}>
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
+                  {/* Inner dark border ring */}
+                  <div style={{
+                    padding: 2, borderRadius: 19,
+                    background: 'linear-gradient(160deg, #1a1a0a, #0c0c06)',
+                  }}>
+                    {/* Avatar tile */}
                     <div style={{
-                      width: '100%', height: '100%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 900, fontSize: 24, letterSpacing: '-0.02em',
-                      background: 'linear-gradient(145deg, rgba(215,255,0,0.14), rgba(215,255,0,0.05))',
-                      color: 'var(--accent)',
-                    }}>{initials}</div>
-                  )}
+                      width: 72, height: 72, borderRadius: 17, overflow: 'hidden',
+                    }}>
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{
+                          width: '100%', height: '100%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: 900, fontSize: 24, letterSpacing: '-0.02em',
+                          background: 'linear-gradient(145deg, #1e2d06, #111800)',
+                          color: 'var(--accent)',
+                        }}>{initials}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 {/* Online dot */}
                 <div style={{
-                  position: 'absolute', bottom: 3, right: 3,
+                  position: 'absolute', bottom: 4, right: 4, zIndex: 2,
                   width: 11, height: 11, borderRadius: '50%',
                   background: '#4ADE80', border: '2px solid var(--bg)',
                   boxShadow: '0 0 6px rgba(74,222,128,0.55)',
