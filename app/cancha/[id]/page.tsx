@@ -50,7 +50,7 @@ export default function CanchaPage() {
 
   useEffect(() => {
     (async () => {
-      const TABLE_CANDIDATES = ['courts', 'canchas', 'venues', 'fields', 'court', 'cancha'];
+      const TABLE_CANDIDATES = ['owner_courts', 'courts', 'canchas', 'venues', 'fields', 'court', 'cancha'];
       let found = false;
       for (const table of TABLE_CANDIDATES) {
         const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
