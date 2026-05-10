@@ -110,12 +110,11 @@ export default function HomePage() {
             letterSpacing: '-0.03em',
             marginBottom: 28,
           }}>
-            Jugá hoy.<br />
+            Tu Cancha.<br />
             <span style={{
               color: 'var(--accent)',
               textShadow: '0 0 80px rgba(215,255,0,0.15)',
-            }}>Sin organizar</span><br />
-            nada.
+            }}>Tu Partido.</span>
           </h1>
 
           {/* Subtitle */}
