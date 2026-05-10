@@ -148,7 +148,7 @@ function EditModal({
       <style>{`
         .modal-input:focus { border-color: rgba(215,255,0,0.35) !important; }
         .modal-stat-input:focus { border-color: rgba(215,255,0,0.35) !important; }
-        @keyframes modal-in { from { opacity:0; transform:translateY(16px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes modal-in { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
       `}</style>
 
       {/* Backdrop */}
@@ -164,14 +164,14 @@ function EditModal({
         }}
       />
 
-      {/* Modal panel */}
+      {/* Modal panel — two-layer: outer positions, inner animates */}
       <div style={{
         position: 'fixed', top: '50%', left: '50%', zIndex: 101,
         transform: 'translate(-50%, -50%)',
         width: 'min(480px, calc(100vw - 32px))',
-        animation: 'modal-in 0.28s cubic-bezier(0.34,1.56,0.64,1) both',
       }}>
         <div style={{
+          animation: 'modal-in 0.28s cubic-bezier(0.34,1.56,0.64,1) both',
           borderRadius: 22,
           background: 'linear-gradient(160deg, #1c1c1c 0%, #141414 100%)',
           border: '1px solid rgba(255,255,255,0.1)',
