@@ -129,8 +129,7 @@ export default function PerfilPage() {
           padding: '36px 0 28px',
         }}>
         <div className="container">
-          {/* Constrain content to feel tight, not stretched */}
-          <div style={{ maxWidth: 900 }}>
+          <div>
             <div
               className="profile-header-inner"
               style={{
