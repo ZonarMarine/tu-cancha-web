@@ -88,7 +88,7 @@ export default function Navbar() {
           height: 2px;
           border-radius: 99px;
           background: var(--accent);
-          box-shadow: 0 0 8px rgba(215,255,0,0.55);
+          box-shadow: 0 0 6px rgba(215,255,0,0.32);
         }
 
         /* ── Auth buttons ── */
@@ -115,7 +115,7 @@ export default function Navbar() {
             background: 'linear-gradient(135deg, rgba(215,255,0,0.15) 0%, rgba(215,255,0,0.06) 100%)',
             border: '1px solid rgba(215,255,0,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 12px rgba(215,255,0,0.12)',
+            boxShadow: '0 0 8px rgba(215,255,0,0.08)',
           }}>
             <Zap size={13} fill="var(--accent)" color="var(--accent)" />
           </div>
@@ -165,7 +165,7 @@ export default function Navbar() {
                   color: '#000',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontWeight: 900, letterSpacing: '0.02em',
-                  boxShadow: '0 0 10px rgba(215,255,0,0.2)',
+                  boxShadow: '0 0 8px rgba(215,255,0,0.12)',
                 }}>
                   {initials}
                 </div>
