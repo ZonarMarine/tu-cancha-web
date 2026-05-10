@@ -60,7 +60,7 @@ body {
   color: #000;
   font-weight: 700;
   font-size: 14px;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
   border-radius: 12px;
   border: none;
   cursor: pointer;
@@ -72,15 +72,15 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 55%);
   pointer-events: none;
 }
 .btn-primary:hover {
-  background: #deff14;
-  box-shadow: 0 4px 24px rgba(215,255,0,0.28), 0 1px 0 rgba(255,255,255,0.15) inset;
+  background: #e2ff1a;
+  box-shadow: 0 0 28px rgba(215,255,0,0.32), 0 1px 0 rgba(255,255,255,0.2) inset;
   transform: translateY(-1px);
 }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:active { transform: translateY(0) scale(0.99); }
 
 /* ── Cards ─────────────────────────────── */
 .card {
@@ -95,12 +95,24 @@ body {
   transform: translateY(-2px);
 }
 
-/* ── Live pulse ────────────────────────── */
+/* ── Stadium ambient CTA pulse ─────────── */
+@keyframes cta-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(215,255,0,0.24), 0 2px 0 rgba(255,255,255,0.28) inset; }
+  50%       { box-shadow: 0 0 40px rgba(215,255,0,0.40), 0 2px 0 rgba(255,255,255,0.28) inset; }
+}
+
+/* ── Live dot pulse ────────────────────── */
 @keyframes pulse-live {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.35; transform: scale(0.8); }
+  50%       { opacity: 0.35; transform: scale(0.75); }
 }
-.pulse-live { animation: pulse-live 1.6s ease-in-out infinite; }
+.pulse-live { animation: pulse-live 1.8s ease-in-out infinite; }
+
+/* ── Viewing dot pulse ─────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; box-shadow: 0 0 6px rgba(74,222,128,0.7); }
+}
 
 /* ── Shimmer ───────────────────────────── */
 @keyframes shimmer {
@@ -138,3 +150,6 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
+
+/* ── Spin ──────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
