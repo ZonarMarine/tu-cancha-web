@@ -170,7 +170,7 @@ export default function HomePage() {
           </div>
 
           {/* Ticker */}
-          <div style={{ maxWidth: 300, margin: '0 auto', opacity: 0.5 }}>
+          <div style={{ maxWidth: 340, margin: '0 auto' }}>
             <LiveTicker />
           </div>
         </div>

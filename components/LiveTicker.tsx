@@ -30,14 +30,14 @@ export default function LiveTicker() {
   const e = EVENTS[idx];
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
-      style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)' }}>
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+      style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
       <span className="w-2 h-2 rounded-full flex-shrink-0 pulse-live" style={{ backgroundColor: 'var(--accent)' }} />
-      <span className="text-xs font-semibold transition-all duration-300"
-        style={{ color: 'var(--text2)', opacity: visible ? 1 : 0 }}>
+      <span className="text-xs font-medium transition-opacity duration-300"
+        style={{ color: 'var(--text2)', opacity: visible ? 1 : 0, letterSpacing: '0.01em' }}>
         {e.icon} {e.text}
       </span>
-      <span className="text-xs flex-shrink-0" style={{ color: 'var(--text3)' }}>{e.time}</span>
+      <span className="text-xs flex-shrink-0" style={{ color: 'var(--text3)', marginLeft: 'auto' }}>{e.time}</span>
     </div>
   );
 }
