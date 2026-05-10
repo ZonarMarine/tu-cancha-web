@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, MapPin, Star, SlidersHorizontal, X, Zap, Clock, Users } from "lucide-react";
+import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtColones } from "@/lib/data";
 
@@ -528,13 +528,6 @@ export default function ExplorarPage() {
         </div>
 
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <Zap size={11} fill="var(--accent)" color="var(--accent)" />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase' }}>
-              Explorar canchas
-            </span>
-          </div>
 
           <h1 className="hero-title" style={{ fontWeight: 900, fontSize: 'clamp(28px, 3.4vw, 44px)', letterSpacing: '-0.042em', lineHeight: 1.04, marginBottom: 6 }}>
             Encontrá tu cancha.
