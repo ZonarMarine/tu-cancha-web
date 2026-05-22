@@ -286,7 +286,7 @@ function CreatePartidoInner() {
   useEffect(() => {
     (async () => {
       try {
-        /* Restore last-used team name, format, and level from localStorage */
+        /* 1. Restore from localStorage instantly (fast) */
         try {
           const lsTeam   = localStorage.getItem('tc_team_name');
           const lsFormat = localStorage.getItem('tc_team_format');
@@ -295,6 +295,22 @@ function CreatePartidoInner() {
           if (lsFormat) setFormat(lsFormat);
           if (lsLevel)  setLevel(lsLevel);
         } catch (_) {}
+
+        /* 2. Override with DB value if logged in — most recent reto team name */
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: lastReto } = await supabase
+            .from('retos')
+            .select('team_name')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if ((lastReto as any)?.team_name) {
+            setTeamName((lastReto as any).team_name);
+            try { localStorage.setItem('tc_team_name', (lastReto as any).team_name); } catch (_) {}
+          }
+        }
       } catch (_) {}
       setProfileLoad(false);
     })();
