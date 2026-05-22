@@ -286,28 +286,12 @@ function CreatePartidoInner() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          /* Only select columns we know exist — `name` is guaranteed */
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          const profileName = ((profile as any)?.name ?? '').trim();
-          if (profileName) {
-            setTeamName(profileName);
-          } else if (session.user.email) {
-            /* Fallback: email username as a starting point */
-            const base = session.user.email.split('@')[0].replace(/[._-]/g, ' ');
-            setTeamName(base.charAt(0).toUpperCase() + base.slice(1));
-          }
-        }
-        /* Restore last-used format / level from localStorage */
+        /* Restore last-used team name, format, and level from localStorage */
         try {
+          const lsTeam   = localStorage.getItem('tc_team_name');
           const lsFormat = localStorage.getItem('tc_team_format');
           const lsLevel  = localStorage.getItem('tc_team_level');
+          if (lsTeam)   setTeamName(lsTeam);
           if (lsFormat) setFormat(lsFormat);
           if (lsLevel)  setLevel(lsLevel);
         } catch (_) {}
@@ -378,10 +362,11 @@ function CreatePartidoInner() {
         user_id:    session?.user?.id ?? null,
         created_at: new Date().toISOString(),
       });
-      /* Persist format/level preferences for next visit */
+      /* Persist team name, format, level for next visit */
       try {
-        if (format) localStorage.setItem('tc_team_format', format);
-        if (level)  localStorage.setItem('tc_team_level',  level);
+        if (teamName.trim()) localStorage.setItem('tc_team_name',   teamName.trim());
+        if (format)          localStorage.setItem('tc_team_format', format);
+        if (level)           localStorage.setItem('tc_team_level',  level);
       } catch (_) {}
     } catch (_) {
       // Non-blocking — show success regardless (fallback UX)
