@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fmtColones } from "@/lib/data";
+import { fmtColones, COURTS as STATIC_COURTS } from "@/lib/data";
 
 /* ─── types ──────────────────────────────────────────────── */
 
@@ -50,6 +50,35 @@ const SPORT_PILLS = [
   { label: 'Básquet', icon: '🏀', val: 'Básquet' },
   { label: 'Tenis',   icon: '🎾', val: 'Tenis'   },
 ];
+
+/* Sport-specific hover accents — each discipline has its own energy */
+const SPORT_ACCENT: Record<string, { bg: string; border: string; color: string; glow: string }> = {
+  Todo:    { bg: 'rgba(255,255,255,0.07)',  border: 'rgba(255,255,255,0.13)',  color: 'rgba(255,255,255,0.72)', glow: 'rgba(255,255,255,0.04)' },
+  Fútbol:  { bg: 'rgba(215,255,0,0.08)',    border: 'rgba(215,255,0,0.20)',    color: 'rgba(215,255,0,0.82)',   glow: 'rgba(215,255,0,0.06)'   },
+  Pádel:   { bg: 'rgba(96,165,250,0.08)',   border: 'rgba(96,165,250,0.20)',   color: 'rgba(96,165,250,0.82)',  glow: 'rgba(96,165,250,0.06)'  },
+  Básquet: { bg: 'rgba(249,115,22,0.08)',   border: 'rgba(249,115,22,0.20)',   color: 'rgba(249,115,22,0.82)',  glow: 'rgba(249,115,22,0.06)'  },
+  Tenis:   { bg: 'rgba(56,189,248,0.08)',   border: 'rgba(56,189,248,0.20)',   color: 'rgba(56,189,248,0.82)',  glow: 'rgba(56,189,248,0.06)'  },
+};
+
+/* Night football signals — rotating hero ticker */
+const LIVE_SIGNALS = [
+  '⚽  3 partidos armándose en Escazú esta noche',
+  '🔴  Último horario disponible · Pinares · 8PM',
+  '⚡  12 jugadores buscando rival ahora',
+  '🏟  Twelve Academy · partido en 40 min',
+  '👥  Escazú United abrió reto para hoy',
+  '🌙  Canchas iluminadas · equipos formándose',
+];
+
+/* Search placeholders — rotates when idle */
+const PLACEHOLDERS = [
+  'Cancha, zona, deporte...',
+  'Escazú · Fútbol · Esta noche',
+  '¿Dónde jugás esta semana?',
+  'Pinares · Fútsal · 8PM',
+  'Buscá cancha en tu zona...',
+];
+
 const ZONES  = ['Todas', 'Santa Ana', 'Escazú', 'Heredia', 'Alajuela', 'San José'];
 const PRICES = ['Cualquiera', 'Menos de ₡12k', '₡12k – ₡18k', 'Más de ₡18k'];
 
@@ -100,6 +129,52 @@ const TAG_STYLE: Record<string, { bg: string; color: string; border: string }> =
   Nuevo:   { bg: 'rgba(96,165,250,0.12)', color: '#60A5FA', border: 'rgba(96,165,250,0.24)' },
 };
 
+/* Sport-specific badge tints — sport identity in the card footer */
+const SPORT_BADGE: Record<string, { bg: string; color: string; border: string }> = {
+  Fútbol:  { bg: 'rgba(215,255,0,0.05)',  color: 'rgba(215,255,0,0.45)',  border: 'rgba(215,255,0,0.09)'  },
+  Pádel:   { bg: 'rgba(96,165,250,0.05)', color: 'rgba(96,165,250,0.45)', border: 'rgba(96,165,250,0.09)' },
+  Básquet: { bg: 'rgba(249,115,22,0.05)', color: 'rgba(249,115,22,0.45)', border: 'rgba(249,115,22,0.09)' },
+  Tenis:   { bg: 'rgba(56,189,248,0.05)', color: 'rgba(56,189,248,0.45)', border: 'rgba(56,189,248,0.09)' },
+};
+
+/* ─── Card mood system — editorial variety per card ─────────
+   Each card gets a distinct identity signal rather than a
+   generic tag. Priority: scarcity → tag → deterministic mood.
+─────────────────────────────────────────────────────────── */
+
+type CardMood = { label: string; color: string; bg: string; border: string; pulse: boolean };
+
+function getCardMood(c: Court): CardMood {
+  if (c.slotsAvailable <= 1)
+    return { label: 'Último horario', color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)', border: 'rgba(255,107,107,0.24)', pulse: true  };
+  if (c.slotsAvailable <= 3)
+    return { label: 'Se llena rápido', color: '#FACC15', bg: 'rgba(250,204,21,0.10)', border: 'rgba(250,204,21,0.22)', pulse: true  };
+  if (c.tag === 'Popular')
+    return { label: 'Trending tonight', color: '#F97316', bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.22)', pulse: false };
+  if (c.tag === 'Premium')
+    return { label: 'Top valorada',     color: '#FACC15', bg: 'rgba(250,204,21,0.10)', border: 'rgba(250,204,21,0.22)', pulse: false };
+  if (c.tag === 'Nuevo')
+    return { label: 'Recién agregada',  color: '#60A5FA', bg: 'rgba(96,165,250,0.10)', border: 'rgba(96,165,250,0.22)', pulse: false };
+  const n = typeof c.id === 'number' ? c.id : (parseInt(String(c.id), 10) || 1);
+  const defaults: CardMood[] = [
+    { label: 'Alta demanda',     color: '#F97316', bg: 'rgba(249,115,22,0.09)',  border: 'rgba(249,115,22,0.20)',  pulse: false },
+    { label: 'Retos activos',    color: '#4ADE80', bg: 'rgba(74,222,128,0.09)', border: 'rgba(74,222,128,0.18)', pulse: false },
+    { label: 'Cancha iluminada', color: '#60A5FA', bg: 'rgba(96,165,250,0.09)', border: 'rgba(96,165,250,0.18)', pulse: false },
+    { label: 'Más competitiva',  color: '#A78BFA', bg: 'rgba(167,139,250,0.09)',border: 'rgba(167,139,250,0.18)',pulse: false },
+    { label: 'Equipos activos',  color: '#4ADE80', bg: 'rgba(74,222,128,0.09)', border: 'rgba(74,222,128,0.18)', pulse: true  },
+  ];
+  return defaults[n % defaults.length];
+}
+
+/* ─── Social signals — community layer ───────────────────── */
+const SOCIAL_SIGNALS = [
+  '3 equipos formándose en Escazú ahora',
+  'Herradura Sharks busca rival esta noche',
+  '5 jugadores sin equipo buscando partido',
+  'Último partido terminó hace 18 min · Pinares',
+  'Escazú United abrió reto · responde antes de las 8PM',
+];
+
 /* ─── live football ecosystem ────────────────────────────────
    5 distinct signal types — each tells a different part of
    "football is happening right now in Costa Rica"
@@ -135,18 +210,53 @@ function getLiveEcosystem(id: number | string): { signal: LiveSignal; slotsText:
   };
 }
 
+/* ─── SportPill ─────────────────────────────────────────── */
+
+function SportPill({ p, active, onClick }: { p: typeof SPORT_PILLS[0]; active: boolean; onClick: () => void }) {
+  const [hov, setHov] = useState(false);
+  const acc = SPORT_ACCENT[p.val] ?? SPORT_ACCENT.Todo;
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      className={`sport-pill${active ? ' sport-pill-active' : ''}`}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        padding: '7px 16px', borderRadius: 99, cursor: 'pointer', border: 'none',
+        fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
+        background: active ? 'var(--accent)' : hov ? acc.bg : 'rgba(255,255,255,0.048)',
+        color:      active ? '#000'          : hov ? acc.color : 'rgba(255,255,255,0.38)',
+        outline: 'none',
+        boxShadow: active
+          ? '0 0 20px rgba(215,255,0,0.22), 0 0 0 1px rgba(215,255,0,0.22)'
+          : hov
+          ? `0 0 14px ${acc.glow}, 0 0 0 1px ${acc.border}`
+          : '0 0 0 1px rgba(255,255,255,0.07)',
+        transition: 'background 0.16s ease, color 0.16s ease, box-shadow 0.20s ease, transform 0.16s ease',
+      }}
+    >
+      <span style={{
+        fontSize: 13, transition: 'transform 0.18s ease',
+        display: 'inline-block',
+        transform: hov && !active ? 'scale(1.15)' : 'scale(1)',
+      }}>{p.icon}</span>
+      {p.label}
+    </button>
+  );
+}
+
 /* ─── CourtCard ──────────────────────────────────────────── */
 
-function CourtCard({ c, featured = false }: { c: Court; featured?: boolean }) {
+function CourtCard({ c, hero = false }: { c: Court; hero?: boolean }) {
   const [hov, setHov] = useState(false);
   const glowRef    = useRef<HTMLDivElement>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
 
-  const urgencyText  = c.slotsAvailable <= 2 ? 'Últimos horarios' : c.slotsAvailable <= 4 ? 'Se llena rápido' : null;
-  const urgencyColor = c.slotsAvailable <= 2 ? '#FF6B6B' : '#FACC15';
-  const urgencyBg    = c.slotsAvailable <= 2 ? 'rgba(255,107,107,0.11)' : 'rgba(250,204,21,0.09)';
-  const fieldStyle   = FIELD_STYLE[c.sport] ?? FIELD_STYLE.Fútbol;
-  const tag          = c.tag ? TAG_STYLE[c.tag] : null;
+  const mood       = getCardMood(c);
+  const fieldStyle = FIELD_STYLE[c.sport] ?? FIELD_STYLE.Fútbol;
+  const sportBadge = SPORT_BADGE[c.sport] ?? { bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.24)', border: 'rgba(255,255,255,0.055)' };
+  const imgHeight  = hero ? 218 : 178;
   const { signal, slotsText } = getLiveEcosystem(c.id);
 
   /* Spotlight: mouse tracks within image — direct DOM, 60fps */
@@ -169,26 +279,25 @@ function CourtCard({ c, featured = false }: { c: Court; featured?: boolean }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => { setHov(false); handleImgLeave(); }}
       style={{
-        display: 'block', textDecoration: 'none',
+        display: 'flex', flexDirection: 'column', textDecoration: 'none',
         borderRadius: 22, overflow: 'hidden',
-        /* Heavier card surface — deeper, more tonal variation */
+        backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
         background: 'linear-gradient(145deg, rgba(255,255,255,0.026) 0%, transparent 52%), linear-gradient(155deg, #161616 0%, #0d0d0d 58%, #0b0b0b 100%)',
         border: `1px solid ${hov ? 'rgba(215,255,0,0.13)' : 'rgba(255,255,255,0.08)'}`,
-        /* Heavier shadow — more grounded, less floaty */
         boxShadow: hov
           ? '0 0 0 1px rgba(215,255,0,0.05), 0 24px 60px rgba(0,0,0,0.82), 0 1px 0 rgba(255,255,255,0.055) inset'
           : '0 1px 0 rgba(255,255,255,0.048) inset, 0 2px 8px rgba(0,0,0,0.40), 0 12px 40px rgba(0,0,0,0.55)',
-        transform: hov ? 'translateY(-4px)' : 'translateY(0)',
+        transform: hov ? 'translate3d(0,-4px,0)' : 'translate3d(0,0,0)',
         transition: 'transform 0.30s cubic-bezier(0.22,0.61,0.36,1), border-color 0.22s, box-shadow 0.30s',
       }}>
 
       {/* ── Image ── */}
       <div
         ref={imgWrapRef}
-        className={`court-card-img${featured ? ' img-featured' : ''}`}
+        className={`court-card-img${hero ? ' img-featured' : ''}`}
         onMouseMove={handleImgMove}
         onMouseLeave={handleImgLeave}
-        style={{ position: 'relative', overflow: 'hidden', ...(c.imageUrl ? {} : fieldStyle) }}>
+        style={{ position: 'relative', overflow: 'hidden', height: imgHeight, flexShrink: 0, marginBottom: -1, ...(c.imageUrl ? {} : fieldStyle) }}>
 
         {c.imageUrl ? (
           <img
@@ -208,17 +317,41 @@ function CourtCard({ c, featured = false }: { c: Court; featured?: boolean }) {
               backgroundSize: '33.33% 50%',
               opacity: c.sport === 'Fútbol' ? 0.45 : 0.22,
             }} />
-            {c.sport === 'Fútbol' && (
-              <div style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: 'translate(-50%,-50%)',
-                width: 88, height: 88, borderRadius: '50%',
-                border: '1.5px solid rgba(255,255,255,0.08)',
-              }} />
-            )}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: 38, opacity: 0.14, zIndex: 1 }}>
-              {c.sport === 'Fútbol' ? '⚽' : c.sport === 'Pádel' ? '🎾' : '🏀'}
-            </div>
+            {/* ── Fútbol / Fútsal field lines ── */}
+            {(c.sport === 'Fútbol' || c.sport === 'Fútsal') && (<>
+              {/* Outer boundary */}
+              <div style={{ position:'absolute', inset:'8% 6%', border:'1.5px solid rgba(255,255,255,0.10)', borderRadius:2 }} />
+              {/* Centre line */}
+              <div style={{ position:'absolute', top:'8%', bottom:'8%', left:'50%', width:1, background:'rgba(255,255,255,0.09)' }} />
+              {/* Centre circle */}
+              <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:56, height:56, borderRadius:'50%', border:'1.5px solid rgba(255,255,255,0.10)' }} />
+              {/* Centre dot */}
+              <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:4, height:4, borderRadius:'50%', background:'rgba(255,255,255,0.18)' }} />
+              {/* Left penalty box */}
+              <div style={{ position:'absolute', top:'28%', bottom:'28%', left:'6%', width:'18%', border:'1.5px solid rgba(255,255,255,0.08)', borderLeft:'none' }} />
+              {/* Right penalty box */}
+              <div style={{ position:'absolute', top:'28%', bottom:'28%', right:'6%', width:'18%', border:'1.5px solid rgba(255,255,255,0.08)', borderRight:'none' }} />
+              {/* Floodlight bloom top-left */}
+              <div style={{ position:'absolute', top:-20, left:-20, width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,250,220,0.07) 0%, transparent 70%)', pointerEvents:'none' }} />
+              {/* Floodlight bloom top-right */}
+              <div style={{ position:'absolute', top:-20, right:-20, width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,250,220,0.07) 0%, transparent 70%)', pointerEvents:'none' }} />
+            </>)}
+
+            {/* ── Pádel court lines ── */}
+            {c.sport === 'Pádel' && (<>
+              {/* Outer boundary */}
+              <div style={{ position:'absolute', inset:'7% 8%', border:'1.5px solid rgba(100,180,255,0.18)', borderRadius:2 }} />
+              {/* Net (vertical centre) */}
+              <div style={{ position:'absolute', top:'7%', bottom:'7%', left:'50%', width:2, background:'rgba(100,180,255,0.22)', boxShadow:'0 0 6px rgba(100,180,255,0.22)' }} />
+              {/* Left service line */}
+              <div style={{ position:'absolute', top:'7%', bottom:'7%', left:'25%', width:1, background:'rgba(100,180,255,0.11)' }} />
+              {/* Right service line */}
+              <div style={{ position:'absolute', top:'7%', bottom:'7%', right:'25%', width:1, background:'rgba(100,180,255,0.11)' }} />
+              {/* Horizontal mid left */}
+              <div style={{ position:'absolute', top:'50%', left:'8%', width:'42%', height:1, background:'rgba(100,180,255,0.10)' }} />
+              {/* Horizontal mid right */}
+              <div style={{ position:'absolute', top:'50%', right:'8%', width:'42%', height:1, background:'rgba(100,180,255,0.10)' }} />
+            </>)}
           </>
         )}
 
@@ -246,18 +379,19 @@ function CourtCard({ c, featured = false }: { c: Court; featured?: boolean }) {
           transition: 'opacity 0.28s ease',
         }} />
 
-        {/* Top badges */}
-        <div style={{ position: 'absolute', top: 13, left: 13, display: 'flex', gap: 6, zIndex: 4 }}>
-          {tag && (
-            <span style={{ fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 7, background: tag.bg, color: tag.color, border: `1px solid ${tag.border}`, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              {c.tag}
-            </span>
-          )}
-          {urgencyText && (
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 7, background: urgencyBg, color: urgencyColor, border: `1px solid ${urgencyColor}28`, letterSpacing: '0.03em' }}>
-              {urgencyText}
-            </span>
-          )}
+        {/* Mood badge — unified card identity signal */}
+        <div style={{ position: 'absolute', top: 13, left: 13, zIndex: 4 }}>
+          <span className={mood.pulse ? 'urgency-badge' : ''} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 7,
+            background: mood.bg, color: mood.color, border: `1px solid ${mood.border}`,
+            letterSpacing: '0.03em', backdropFilter: 'blur(8px)',
+          }}>
+            {mood.pulse && (
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: mood.color, display: 'inline-block', flexShrink: 0, animation: 'live-dot 2s ease-in-out infinite' }} />
+            )}
+            {mood.label}
+          </span>
         </div>
 
         {/* Bottom-left: live ecosystem signal */}
@@ -292,37 +426,46 @@ function CourtCard({ c, featured = false }: { c: Court; featured?: boolean }) {
       </div>
 
       {/* ── Content ── */}
-      <div style={{ padding: '18px 22px 22px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 5, gap: 10 }}>
-          <h3 style={{ fontWeight: 800, fontSize: featured ? 19 : 16.5, letterSpacing: '-0.032em', lineHeight: 1.18, color: 'rgba(255,255,255,0.94)' }}>
+      <div style={{ padding: '18px 22px 20px' }}>
+
+        {/* Venue name + rating */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4, gap: 10 }}>
+          <h3 style={{ fontWeight: 900, fontSize: hero ? 20 : 17, letterSpacing: '-0.036em', lineHeight: 1.14, color: 'rgba(255,255,255,0.95)' }}>
             {c.title}
           </h3>
           {c.rating > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11.5, fontWeight: 800, color: '#FACC15', flexShrink: 0, marginTop: 2 }}>
-              <Star size={9.5} fill="currentColor" /> {c.rating}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 800, color: '#FACC15', flexShrink: 0, marginTop: 3, opacity: 0.90 }}>
+              <Star size={9} fill="currentColor" /> {c.rating}
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 16, fontSize: 11.5, color: 'rgba(255,255,255,0.32)', letterSpacing: '-0.01em' }}>
-          <MapPin size={9} style={{ flexShrink: 0, opacity: 0.60 }} />
+        {/* Location */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 15, fontSize: 11, color: 'rgba(255,255,255,0.30)', letterSpacing: '-0.01em', fontWeight: 500 }}>
+          <MapPin size={8.5} style={{ flexShrink: 0, opacity: 0.55 }} />
           {c.location}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.055)' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ fontWeight: 900, fontSize: 20, color: 'var(--accent)', letterSpacing: '-0.036em', lineHeight: 1 }}>
+        {/* Footer: price · meta */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 13, borderTop: '1px solid rgba(255,255,255,0.045)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+            <span style={{ fontWeight: 800, fontSize: 16, color: 'rgba(215,255,0,0.58)', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {fmtColones(c.basePrice)}
             </span>
-            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.18)', letterSpacing: '-0.01em' }}>/ hr</span>
+            <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.13)', letterSpacing: '-0.01em' }}>/ hr</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {c.includedPlayers > 0 && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'rgba(255,255,255,0.24)', letterSpacing: '-0.01em' }}>
-                <Users size={8.5} style={{ opacity: 0.60 }} /> {c.includedPlayers}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '-0.01em', fontWeight: 500 }}>
+                <Users size={8} style={{ opacity: 0.50 }} /> {c.includedPlayers}
               </span>
             )}
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 5, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.26)', border: '1px solid rgba(255,255,255,0.055)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <span style={{
+              fontSize: 8.5, fontWeight: 700, padding: '2.5px 8px', borderRadius: 5,
+              background: sportBadge.bg, color: sportBadge.color,
+              border: `1px solid ${sportBadge.border}`,
+              letterSpacing: '0.05em', textTransform: 'uppercase',
+            }}>
               {c.sport}
             </span>
           </div>
@@ -359,20 +502,24 @@ export default function ExplorarPage() {
   const [price,       setPrice]   = useState('Cualquiera');
   const [showFilters, setShow]    = useState(false);
   const [countBookings, setCountBookings] = useState(0);
+  const [sigIdx,      setSigIdx]    = useState(0);
+  const [phIdx,       setPhIdx]     = useState(0);
+  const [socialIdx,   setSocialIdx] = useState(0);
+  const [searchFocused, setSearchFocused] = useState(false);
   const countedRef = useRef(false);
 
   useEffect(() => {
     (async () => {
-      const TABLE_CANDIDATES = ['owner_courts', 'courts', 'canchas', 'venues', 'fields', 'court', 'cancha'];
-      let found = false;
-      for (const table of TABLE_CANDIDATES) {
-        const { data, error } = await supabase.from(table).select('*');
-        if (!error && data) { setCourts(data.map(normalise)); found = true; break; }
-      }
-      if (!found) {
-        const { data, error } = await supabase.from('courts').select('*');
-        if (error) setDbError(`Tabla no encontrada. Error: ${error.message}`);
-        else setCourts((data ?? []).map(normalise));
+      const { data, error } = await supabase
+        .from('owner_courts')
+        .select('*')
+        .eq('active', true);
+
+      if (!error && data && data.length > 0) {
+        setCourts(data.map(normalise));
+      } else {
+        // Fallback to static seed
+        setCourts(STATIC_COURTS.map(normalise));
       }
       setLoading(false);
     })();
@@ -406,6 +553,25 @@ export default function ExplorarPage() {
     }, 20);
     return () => clearInterval(id);
   }, [courts.length, totalBookingsToday]);
+
+  /* Live signal rotation — 3.8s per signal */
+  useEffect(() => {
+    const id = setInterval(() => setSigIdx(i => (i + 1) % LIVE_SIGNALS.length), 3800);
+    return () => clearInterval(id);
+  }, []);
+
+  /* Placeholder rotation — only when not focused and no text */
+  useEffect(() => {
+    if (searchFocused || search) return;
+    const id = setInterval(() => setPhIdx(i => (i + 1) % PLACEHOLDERS.length), 4200);
+    return () => clearInterval(id);
+  }, [searchFocused, search]);
+
+  /* Social signal rotation */
+  useEffect(() => {
+    const id = setInterval(() => setSocialIdx(i => (i + 1) % SOCIAL_SIGNALS.length), 5000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     /* Charcoal depth — very subtle warm-dark gradient, never flat black */
@@ -446,27 +612,47 @@ export default function ExplorarPage() {
 
         /* ── Card ── */
         .court-card { will-change: transform; }
-        .court-img  { transition: transform 0.60s cubic-bezier(0.22,0.61,0.36,1); }
-        .court-card:hover .court-img { transform: scale(1.07); }
+        .court-img  { transform: scale(1.02); transition: transform 0.60s cubic-bezier(0.22,0.61,0.36,1); }
+        .court-card:hover .court-img { transform: scale(1.08); }
 
-        /* ── Card image height — CSS-controlled for mobile ── */
-        .court-card-img          { height: 224px; }
-        .court-card-img.img-featured { height: 284px; }
+        /* ── Card image height — matches homepage cards ── */
+        .court-card-img          { height: 178px; }
+        .court-card-img.img-featured { height: 210px; }
 
-        /* ── Search ── */
-        .search-wrap { transition: border-color 0.22s, box-shadow 0.22s, background 0.22s; }
+        /* ── Live signal fade-in ── */
+        @keyframes sigFade {
+          from { opacity:0; transform: translateY(5px); }
+          to   { opacity:1; transform: translateY(0);   }
+        }
+        .live-signal { animation: sigFade 0.45s cubic-bezier(0.22,0.61,0.36,1) both; }
+
+        /* ── Search idle breathing — signature landmark ── */
+        @keyframes searchIdle {
+          0%,100% { box-shadow: 0 0 0 0 transparent, 0 2px 16px rgba(0,0,0,0.20); }
+          50%      { box-shadow: 0 0 0 1px rgba(215,255,0,0.07), 0 2px 24px rgba(215,255,0,0.05); }
+        }
+        .search-wrap {
+          animation: searchIdle 5.5s ease-in-out infinite;
+          transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+        }
         .search-wrap:focus-within {
-          border-color: rgba(215,255,0,0.28) !important;
-          background: rgba(255,255,255,0.052) !important;
-          box-shadow: 0 0 0 3px rgba(215,255,0,0.06), 0 0 28px rgba(215,255,0,0.04) !important;
+          animation: none;
+          border-color: rgba(215,255,0,0.34) !important;
+          background: rgba(255,255,255,0.056) !important;
+          box-shadow: 0 0 0 4px rgba(215,255,0,0.07), 0 0 40px rgba(215,255,0,0.07) !important;
         }
         .search-icon { transition: color 0.22s; }
-        .search-wrap:focus-within .search-icon { color: rgba(215,255,0,0.55) !important; }
+        .search-wrap:focus-within .search-icon { color: rgba(215,255,0,0.65) !important; }
 
         /* ── Sport pills ── */
-        .sport-pill { transition: background 0.14s, color 0.14s, box-shadow 0.18s, transform 0.14s; }
-        .sport-pill:hover  { transform: translateY(-1px); }
-        .sport-pill-active { transform: scale(1.02); }
+        .sport-pill { transition: background 0.16s, color 0.16s, box-shadow 0.20s, transform 0.18s; }
+        .sport-pill:hover  { transform: translateY(-1.5px) scale(1.025); }
+        .sport-pill:active { transform: scale(0.94) translateY(0) !important; transition: transform 0.09s ease !important; }
+        .sport-pill-active { transform: scale(1.03); }
+
+        /* ── Urgency badge pulse ── */
+        @keyframes urgencyPulse { 0%,100%{opacity:1;} 50%{opacity:0.68;} }
+        .urgency-badge { animation: urgencyPulse 2.6s ease-in-out infinite; }
 
         /* ── Filter ── */
         .filter-btn { transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s; }
@@ -477,8 +663,8 @@ export default function ExplorarPage() {
 
         /* ── Mobile image heights ── */
         @media (max-width:700px) {
-          .court-card-img          { height: 210px; }
-          .court-card-img.img-featured { height: 248px; }
+          .court-card-img          { height: 178px; }
+          .court-card-img.img-featured { height: 200px; }
         }
 
         /* ── Mobile typography & spacing ── */
@@ -532,25 +718,39 @@ export default function ExplorarPage() {
           <h1 className="hero-title" style={{ fontWeight: 900, fontSize: 'clamp(28px, 3.4vw, 44px)', letterSpacing: '-0.042em', lineHeight: 1.04, marginBottom: 6 }}>
             Encontrá tu cancha.
           </h1>
-          <p style={{ fontWeight: 800, fontSize: 'clamp(20px, 2.6vw, 34px)', letterSpacing: '-0.032em', color: 'rgba(255,255,255,0.20)', marginBottom: 28, lineHeight: 1.1 }}>
+          <p style={{ fontWeight: 700, fontSize: 'clamp(18px, 2.2vw, 29px)', letterSpacing: '-0.028em', color: 'rgba(255,255,255,0.28)', marginBottom: 16, lineHeight: 1.1 }}>
             Reservá en segundos.
           </p>
+
+          {/* ── Live signal ticker ── */}
+          <div style={{ height: 26, marginBottom: 22, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span className="live-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', flexShrink: 0 }} />
+            <span
+              key={sigIdx}
+              className="live-signal"
+              style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.32)', fontWeight: 600, letterSpacing: '-0.01em' }}
+            >
+              {LIVE_SIGNALS[sigIdx]}
+            </span>
+          </div>
 
           {/* Search + filter */}
           <div className="search-row" style={{ display: 'flex', gap: 10, maxWidth: 640, marginBottom: 16 }}>
             <div className="search-wrap" style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 12,
-              padding: '0 18px', height: 54, borderRadius: 15,
-              background: 'rgba(255,255,255,0.042)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              backdropFilter: 'blur(20px)',
+              flex: 1, display: 'flex', alignItems: 'center', gap: 14,
+              padding: '0 22px', height: 64, borderRadius: 18,
+              background: 'rgba(255,255,255,0.044)',
+              border: '1px solid rgba(255,255,255,0.088)',
+              backdropFilter: 'blur(24px)',
             }}>
               <Search size={15} className="search-icon" style={{ color: 'rgba(255,255,255,0.26)', flexShrink: 0 }} />
               <input
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}
-                placeholder="Cancha, zona, deporte..."
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 14.5, color: 'var(--text)', letterSpacing: '-0.015em' }}
+                placeholder={PLACEHOLDERS[phIdx]}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
               />
               {search && (
                 <button onClick={() => setSearch('')} style={{ color: 'rgba(255,255,255,0.26)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
@@ -561,7 +761,7 @@ export default function ExplorarPage() {
 
             <button onClick={() => setShow(!showFilters)} className="filter-btn" style={{
               display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0,
-              padding: '0 20px', height: 54, borderRadius: 15, cursor: 'pointer',
+              padding: '0 22px', height: 64, borderRadius: 18, cursor: 'pointer',
               fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em',
               backdropFilter: 'blur(20px)',
               background: showFilters || activeFilters.length > 0 ? 'rgba(215,255,0,0.09)' : 'rgba(255,255,255,0.042)',
@@ -579,27 +779,11 @@ export default function ExplorarPage() {
             </button>
           </div>
 
-          {/* Sport pills */}
+          {/* Sport pills — sport-specific hover energy */}
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            {SPORT_PILLS.map(p => {
-              const active = sport === p.val;
-              return (
-                <button key={p.val} onClick={() => setSport(p.val)}
-                  className={`sport-pill${active ? ' sport-pill-active' : ''}`}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '7px 15px', borderRadius: 99, cursor: 'pointer', border: 'none',
-                    fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
-                    background: active ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                    color:      active ? '#000'          : 'rgba(255,255,255,0.40)',
-                    outline:    active ? 'none'          : '1px solid rgba(255,255,255,0.07)',
-                    /* Active glow — restrained, only lime on selection */
-                    boxShadow:  active ? '0 0 18px rgba(215,255,0,0.20), 0 0 0 1px rgba(215,255,0,0.20)' : 'none',
-                  }}>
-                  <span style={{ fontSize: 13 }}>{p.icon}</span>{p.label}
-                </button>
-              );
-            })}
+            {SPORT_PILLS.map(p => (
+              <SportPill key={p.val} p={p} active={sport === p.val} onClick={() => setSport(p.val)} />
+            ))}
           </div>
         </div>
       </div>
@@ -649,21 +833,21 @@ export default function ExplorarPage() {
           borderBottom: '1px solid rgba(215,255,0,0.028)',
         }}>
           <div className="container">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="live-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0 }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(215,255,0,0.68)', letterSpacing: '-0.01em' }}>
-                  <span key={countBookings} style={{ display: 'inline-block', minWidth: 18 }}>{countBookings}</span>{' '}reservas realizadas hoy
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 8px rgba(215,255,0,0.60)' }} />
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(215,255,0,0.82)', letterSpacing: '-0.01em' }}>
+                  <span key={countBookings} style={{ display: 'inline-block', minWidth: 20 }}>{countBookings}</span>{' '}reservas realizadas hoy
                 </span>
               </div>
 
-              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.20)', fontWeight: 500, letterSpacing: '-0.01em' }}>
-                {activeCourts} canchas activas ahora
+              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', fontWeight: 600, letterSpacing: '-0.01em' }}>
+                {activeCourts} canchas activas
               </span>
 
-              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.14)', fontWeight: 400, letterSpacing: '-0.01em' }}>
-                Equipos formándose en este momento
+              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', fontWeight: 400, letterSpacing: '-0.01em' }}>
+                Equipos formándose ahora
               </span>
             </div>
           </div>
@@ -704,12 +888,9 @@ export default function ExplorarPage() {
         )}
 
         {loading && (
-          <>
-            <div className="court-card-img img-featured" style={{ borderRadius: 22, background: 'linear-gradient(160deg,#141414,#0c0c0c)', border: '1px solid rgba(255,255,255,0.050)', marginBottom: 28, animation: 'skel-pulse 1.8s ease-in-out infinite' }} />
-            <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-              {[1,2,3].map(i => <CardSkeleton key={i} />)}
-            </div>
-          </>
+          <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+            {[1,2,3].map(i => <CardSkeleton key={i} />)}
+          </div>
         )}
 
         {!loading && !dbError && courts.length === 0 && (
@@ -733,31 +914,29 @@ export default function ExplorarPage() {
 
         {!loading && !dbError && filtered.length > 0 && (
           <>
-            {featured && (
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-                  <Star size={10} fill="#FACC15" color="#FACC15" style={{ opacity: 0.80 }} />
-                  <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.26)', textTransform: 'uppercase' }}>
-                    Mejor valorada
-                  </span>
-                </div>
-                <CourtCard c={featured} featured />
-              </div>
-            )}
+            {/* ── Social activity strip ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+              <span className="section-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', flexShrink: 0 }} />
+              <span
+                key={socialIdx}
+                className="live-signal"
+                style={{ fontSize: 11, color: 'rgba(255,255,255,0.26)', fontWeight: 600, letterSpacing: '-0.01em' }}
+              >
+                {SOCIAL_SIGNALS[socialIdx]}
+              </span>
+            </div>
 
-            {rest.length > 0 && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14, marginTop: featured ? 8 : 0 }}>
-                  <span className="section-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.26)', textTransform: 'uppercase' }}>
-                    Disponibles esta noche
-                  </span>
-                </div>
-                <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-                  {rest.map(c => <CourtCard key={c.id} c={c} />)}
-                </div>
-              </>
-            )}
+            {/* ── Editorial grid — first card hero when 2+ results ── */}
+            <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              {filtered.map((c, i) => {
+                const isHero = i === 0 && filtered.length >= 2;
+                return (
+                  <div key={c.id} style={{ gridColumn: isHero ? 'span 2' : 'span 1' }}>
+                    <CourtCard c={c} hero={isHero} />
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
       </div>

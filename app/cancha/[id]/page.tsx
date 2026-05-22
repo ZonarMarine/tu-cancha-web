@@ -25,6 +25,19 @@ const TIME_SLOTS = [
   '6:00 PM','7:00 PM','8:00 PM','9:00 PM',
 ];
 
+// Heat levels 1–5: drive visual urgency on the slot grid
+const SLOT_HEAT: Record<string, number> = {
+  '6:00 AM':1,'7:00 AM':2,'8:00 AM':2,'9:00 AM':2,'10:00 AM':1,
+  '11:00 AM':1,'12:00 PM':2,'1:00 PM':1,'2:00 PM':1,'3:00 PM':2,
+  '4:00 PM':3,'5:00 PM':4,'6:00 PM':5,'7:00 PM':5,'8:00 PM':4,'9:00 PM':3,
+};
+// Pseudo-random but deterministic recent bookings count per slot
+function slotRecent(courtId: string|number, slot: string): number {
+  const h = SLOT_HEAT[slot] ?? 1;
+  const c = String(courtId).split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  return Math.max(0, Math.min(9, Math.floor((c % 3) + h - 1)));
+}
+
 const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -52,259 +65,474 @@ function normalise(row: Record<string, any>): Court {
 
 /* ─── BookingModal ───────────────────────────────────────────── */
 
+const STEPS_ORDER = ['date','time','confirm'] as const;
+type BkStep = typeof STEPS_ORDER[number];
+
 function BookingModal({ court, user, onClose }: {
-  court: Court;
-  user: any;
-  onClose: () => void;
+  court: Court; user: any; onClose: () => void;
 }) {
   const router = useRouter();
   const today  = new Date();
 
-  const [viewDate,    setViewDate]    = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [viewDate,     setViewDate]     = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDay,  setSelectedDay]  = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [hours,   setHours]   = useState(1);
-  const [players, setPlayers] = useState(court.includedPlayers ?? 10);
-  const [step,    setStep]    = useState<'date'|'time'|'confirm'>('date');
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [hours,        setHours]        = useState(1);
+  const [players,      setPlayers]      = useState(court.includedPlayers ?? 10);
+  const [step,         setStep]         = useState<BkStep>('date');
+  const [direction,    setDirection]    = useState<1|-1>(1);  // 1=forward, -1=back
+  const [animKey,      setAnimKey]      = useState(0);
+  const [saving,       setSaving]       = useState(false);
+  const [error,        setError]        = useState('');
+  const [success,      setSuccess]      = useState(false);
+  const [visible,      setVisible]      = useState(false);
 
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
   const handleClose = () => { setVisible(false); setTimeout(onClose, 220); };
 
-  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
-  const firstDow    = (y: number, m: number) => new Date(y, m, 1).getDay();
-  const isBefore    = (d: Date) => { const t = new Date(); t.setHours(0,0,0,0); return d < t; };
-
-  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
-  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
-
-  const totalPrice = court.basePrice * hours;
-
-  const handleConfirm = async () => {
-    if (!selectedDay || !selectedTime) return;
-    setSaving(true); setError('');
-    try {
-      const { error: err } = await supabase.from('bookings').insert({
-        user_id:     user.id,
-        court_id:    court.id,
-        court_name:  court.title,
-        date:        selectedDay.toISOString().split('T')[0],
-        time:        selectedTime,
-        hours, players,
-        total_price: totalPrice,
-        status:      'pending',
-      });
-      if (err) throw err;
-      setSuccess(true);
-    } catch (e: any) {
-      setError(e.message ?? 'Error al reservar. Intentá de nuevo.');
-    } finally {
-      setSaving(false);
-    }
+  const goStep = (next: BkStep) => {
+    const curr = STEPS_ORDER.indexOf(step);
+    const nx   = STEPS_ORDER.indexOf(next);
+    setDirection(nx > curr ? 1 : -1);
+    setAnimKey(k => k + 1);
+    setStep(next);
   };
 
+  const daysInMonth = (y: number, m: number) => new Date(y, m+1, 0).getDate();
+  const firstDow    = (y: number, m: number) => new Date(y, m, 1).getDay();
+  const isBefore    = (d: Date) => { const t = new Date(); t.setHours(0,0,0,0); return d < t; };
+  const prevMonth   = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1));
+  const nextMonth   = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1));
+
+  const totalPrice = court.basePrice * hours;
   const y = viewDate.getFullYear();
   const m = viewDate.getMonth();
   const blanks = firstDow(y, m);
   const days   = daysInMonth(y, m);
 
-  const inputRow: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+  const handleConfirm = async () => {
+    if (!selectedDay || !selectedTime) return;
+    setSaving(true); setError('');
+    try {
+      const res = await fetch('/api/payments/create-checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courtId:    court.id,
+          courtName:  court.title,
+          date:       selectedDay.toISOString().split('T')[0],
+          time:       selectedTime,
+          hours,
+          players,
+          basePrice:  court.basePrice,
+          userId:     user.id,
+          userName:   user.user_metadata?.name ?? user.email ?? '',
+          userEmail:  user.email ?? '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Error al crear el pago.');
+      // Redirect to ONVO hosted checkout
+      window.location.href = data.checkoutUrl;
+    } catch (e: any) {
+      setError(e.message ?? 'Error al reservar. Intentá de nuevo.');
+    } finally { setSaving(false); }
+  };
+
+  // Day "heat" — weekends feel hotter
+  const dayHeat = (d: Date) => {
+    const dow = d.getDay();
+    if (dow === 5 || dow === 6) return 'hot';   // Fri / Sat
+    if (dow === 0 || dow === 4) return 'warm';  // Sun / Thu
+    return 'normal';
   };
 
   return (
     <>
       <style>{`
-        @keyframes modal-in { from{opacity:0;transform:translateY(12px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);} }
-        .bk-day:hover:not(:disabled){background:rgba(255,255,255,0.08)!important;}
-        .bk-slot:hover{border-color:rgba(215,255,0,0.22)!important;background:rgba(215,255,0,0.04)!important;}
+        @keyframes modal-in  { from{opacity:0;transform:translateY(14px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);} }
+        @keyframes step-fwd  { from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);} }
+        @keyframes step-back { from{opacity:0;transform:translateX(-18px);}to{opacity:1;transform:translateX(0);} }
+        @keyframes slot-select { 0%{transform:scale(0.94);}60%{transform:scale(1.04);}100%{transform:scale(1);} }
+        @keyframes slot-hot  { 0%,100%{box-shadow:0 0 0 0 rgba(215,255,0,0);}50%{box-shadow:0 0 0 3px rgba(215,255,0,0.07);} }
+        @keyframes stepper-press { 0%{transform:scale(1);}40%{transform:scale(0.88);}100%{transform:scale(1);} }
+        @keyframes conn-fill { from{width:0;}to{width:100%;} }
+        @keyframes spin      { to { transform: rotate(360deg) } }
+        .bk-day:hover:not(:disabled){background:rgba(255,255,255,0.08)!important;transform:scale(1.06);}
+        .bk-day{transition:background 0.13s,transform 0.13s;}
+        .bk-stepper:active{animation:stepper-press 0.22s ease;}
         .bk-stepper:hover{background:rgba(255,255,255,0.1)!important;}
+        .bk-slot-hot{animation:slot-hot 2.2s ease-in-out infinite;}
       `}</style>
 
       {/* Backdrop */}
       <div onClick={handleClose} style={{
-        position:'fixed', inset:0, zIndex:100,
-        background:'rgba(0,0,0,0.75)', backdropFilter:'blur(12px)',
-        opacity: visible ? 1 : 0, transition:'opacity 0.22s',
-      }} />
+        position:'fixed',inset:0,zIndex:100,
+        background:'rgba(0,0,0,0.80)',backdropFilter:'blur(14px)',
+        opacity:visible?1:0,transition:'opacity 0.24s',
+      }}/>
 
-      {/* Panel — outer positions, inner animates */}
+      {/* Panel */}
       <div style={{
-        position:'fixed', top:'50%', left:'50%', zIndex:101,
+        position:'fixed',top:'50%',left:'50%',zIndex:101,
         transform:'translate(-50%,-50%)',
-        width:'min(520px, calc(100vw - 32px))',
-        maxHeight:'calc(100svh - 48px)', overflowY:'auto',
+        width:'min(500px,calc(100vw - 32px))',
+        maxHeight:'calc(100svh - 40px)',overflowY:'auto',
       }}>
         <div style={{
-          animation:'modal-in 0.26s cubic-bezier(0.34,1.4,0.64,1) both',
-          borderRadius:22,
-          background:'linear-gradient(160deg, #1c1c1c, #141414)',
-          border:'1px solid rgba(255,255,255,0.1)',
-          boxShadow:'0 2px 0 rgba(255,255,255,0.05) inset, 0 32px 80px rgba(0,0,0,0.7)',
+          animation:'modal-in 0.28s cubic-bezier(0.34,1.3,0.64,1) both',
+          borderRadius:24,
+          background:'linear-gradient(165deg,#1a1a1a 0%,#111 100%)',
+          border:'1px solid rgba(255,255,255,0.09)',
+          boxShadow:'0 2px 0 rgba(255,255,255,0.05) inset,0 40px 100px rgba(0,0,0,0.75)',
           overflow:'hidden',
         }}>
-          {success ? (
-            <div style={{ padding:'48px 32px', textAlign:'center' }}>
-              <div style={{ width:64, height:64, borderRadius:20, margin:'0 auto 20px', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(74,222,128,0.1)', border:'1px solid rgba(74,222,128,0.22)' }}>
-                <Check size={28} color="#4ADE80" />
+
+          {saving ? (
+            /* ── Redirecting to ONVO checkout ── */
+            <div style={{padding:'52px 32px',textAlign:'center'}}>
+              <div style={{
+                width:68,height:68,borderRadius:22,margin:'0 auto 22px',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                background:'rgba(215,255,0,0.08)',border:'1px solid rgba(215,255,0,0.20)',
+              }}>
+                <Loader2 size={28} color="var(--accent)" style={{animation:'spin 0.9s linear infinite'}}/>
               </div>
-              <p style={{ fontWeight:900, fontSize:20, letterSpacing:'-0.02em', marginBottom:8 }}>¡Reserva enviada!</p>
-              <p style={{ fontSize:13, color:'rgba(255,255,255,0.4)', marginBottom:6, lineHeight:1.6 }}>
-                {court.title} · {selectedDay?.toLocaleDateString('es-CR',{day:'numeric',month:'long'})} · {selectedTime}
+              <p style={{fontWeight:900,fontSize:20,letterSpacing:'-0.03em',marginBottom:10}}>
+                Preparando pago…
               </p>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.28)', marginBottom:28 }}>
-                Estado: <span style={{ color:'#FACC15', fontWeight:700 }}>Pendiente de confirmación</span>
+              <p style={{fontSize:13,color:'rgba(255,255,255,0.35)',lineHeight:1.65}}>
+                Guardando tu reserva y abriendo el checkout seguro de ONVO Pay.
               </p>
-              <div style={{ display:'flex', gap:10 }}>
-                <button onClick={handleClose} style={{ flex:1, padding:'12px', borderRadius:12, fontSize:13, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.45)', border:'1px solid rgba(255,255,255,0.08)' }}>Cerrar</button>
-                <Link href="/perfil" style={{ flex:2, padding:'12px', borderRadius:12, fontSize:13, fontWeight:700, background:'var(--accent)', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', gap:6, textDecoration:'none' }}>
-                  <Calendar size={14} /> Ver mis reservas
-                </Link>
-              </div>
             </div>
           ) : (
             <>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 24px 0' }}>
+              {/* ── Header ── */}
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 22px 0'}}>
                 <div>
-                  <p style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.02em', marginBottom:2 }}>Reservar cancha</p>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.32)' }}>{court.title}</p>
+                  <p style={{fontWeight:800,fontSize:15,letterSpacing:'-0.02em',marginBottom:2}}>Reservar cancha</p>
+                  <p style={{fontSize:11.5,color:'rgba(255,255,255,0.30)'}}>{court.title} · {court.location}</p>
                 </div>
-                <button onClick={handleClose} style={{ width:32, height:32, borderRadius:10, background:'rgba(255,255,255,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.45)' }}>
-                  <X size={15} />
+                <button onClick={handleClose} style={{width:30,height:30,borderRadius:9,background:'rgba(255,255,255,0.05)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.40)'}}>
+                  <X size={14}/>
                 </button>
               </div>
 
-              {/* Step tabs */}
-              <div style={{ display:'flex', gap:0, padding:'16px 24px 0' }}>
-                {(['date','time','confirm'] as const).map((s, i) => (
-                  <div key={s} style={{ display:'flex', alignItems:'center' }}>
-                    <button
-                      onClick={() => { if (s==='time'&&!selectedDay) return; if (s==='confirm'&&(!selectedDay||!selectedTime)) return; setStep(s); }}
-                      style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', background: step===s ? 'rgba(215,255,0,0.1)' : 'transparent', color: step===s ? 'var(--accent)' : 'rgba(255,255,255,0.25)', letterSpacing:'0.04em', textTransform:'uppercase' }}>
-                      {i+1}. {s==='date'?'Fecha':s==='time'?'Hora':'Confirmar'}
-                    </button>
-                    {i < 2 && <span style={{ color:'rgba(255,255,255,0.12)', fontSize:11, padding:'0 2px' }}>›</span>}
-                  </div>
-                ))}
+              {/* ── Progress bar ── */}
+              <div style={{display:'flex',alignItems:'center',padding:'16px 22px 0',gap:0}}>
+                {(['date','time','confirm'] as const).map((s,i)=>{
+                  const done   = STEPS_ORDER.indexOf(step) > i;
+                  const active = step === s;
+                  const canNav = (s==='time'&&!!selectedDay)||(s==='confirm'&&!!selectedDay&&!!selectedTime)||(s==='date');
+                  return (
+                    <div key={s} style={{display:'flex',alignItems:'center',flex:i<2?1:0}}>
+                      <button onClick={()=>canNav&&goStep(s)} style={{
+                        display:'flex',alignItems:'center',gap:6,
+                        background:'none',border:'none',cursor:canNav?'pointer':'default',padding:0,
+                      }}>
+                        <div style={{
+                          width:22,height:22,borderRadius:'50%',flexShrink:0,
+                          display:'flex',alignItems:'center',justifyContent:'center',
+                          fontSize:10,fontWeight:800,
+                          background: done?'var(--accent)':active?'rgba(215,255,0,0.12)':'rgba(255,255,255,0.05)',
+                          border: done?'none':active?'1.5px solid rgba(215,255,0,0.35)':'1.5px solid rgba(255,255,255,0.08)',
+                          color: done?'#000':active?'var(--accent)':'rgba(255,255,255,0.20)',
+                          transition:'all 0.22s',
+                          boxShadow: active?'0 0 10px rgba(215,255,0,0.18)':'none',
+                        }}>
+                          {done?<Check size={11} strokeWidth={3}/>:i+1}
+                        </div>
+                        <span style={{fontSize:10.5,fontWeight:700,letterSpacing:'0.02em',
+                          color:active?'rgba(255,255,255,0.80)':done?'rgba(215,255,0,0.50)':'rgba(255,255,255,0.20)',
+                          transition:'color 0.22s',
+                        }}>
+                          {s==='date'?'Fecha':s==='time'?'Hora':'Confirmar'}
+                        </span>
+                      </button>
+                      {i<2&&(
+                        <div style={{flex:1,height:1.5,margin:'0 10px',borderRadius:1,background:'rgba(255,255,255,0.06)',overflow:'hidden',position:'relative'}}>
+                          {done&&<div style={{position:'absolute',inset:0,background:'rgba(215,255,0,0.30)',animation:'conn-fill 0.35s ease forwards'}}/>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
-              <div style={{ height:1, background:'rgba(255,255,255,0.06)', margin:'14px 0 0' }} />
-              <div style={{ padding:'20px 24px 24px' }}>
+              {/* ── Step content — animated ── */}
+              <div key={animKey} style={{
+                padding:'20px 22px 22px',
+                animation:`${direction===1?'step-fwd':'step-back'} 0.22s ease both`,
+              }}>
 
-                {/* Step 1 — Date */}
-                {step==='date' && (
+                {/* ════ STEP 1 — DATE ════ */}
+                {step==='date'&&(
                   <div>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                      <button onClick={prevMonth} className="bk-stepper" style={{ width:32, height:32, borderRadius:9, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.45)' }}><ChevronLeft size={15}/></button>
-                      <p style={{ fontWeight:700, fontSize:14 }}>{MONTHS_ES[m]} {y}</p>
-                      <button onClick={nextMonth} className="bk-stepper" style={{ width:32, height:32, borderRadius:9, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.45)' }}><ChevronRight size={15}/></button>
+                    {/* Month nav */}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+                      <button onClick={prevMonth} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.40)'}}>
+                        <ChevronLeft size={14}/>
+                      </button>
+                      <p style={{fontWeight:700,fontSize:13.5}}>{MONTHS_ES[m]} {y}</p>
+                      <button onClick={nextMonth} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.40)'}}>
+                        <ChevronRight size={14}/>
+                      </button>
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
-                      {DAYS_ES.map(d => <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.22)', letterSpacing:'0.06em', padding:'4px 0' }}>{d}</div>)}
+
+                    {/* Day headers */}
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:4}}>
+                      {DAYS_ES.map(d=>(
+                        <div key={d} style={{textAlign:'center',fontSize:9.5,fontWeight:700,color:'rgba(255,255,255,0.20)',letterSpacing:'0.06em',padding:'3px 0'}}>{d}</div>
+                      ))}
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
+
+                    {/* Day grid */}
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
                       {Array.from({length:blanks}).map((_,i)=><div key={`b${i}`}/>)}
                       {Array.from({length:days}).map((_,i)=>{
-                        const d = new Date(y,m,i+1);
+                        const d        = new Date(y,m,i+1);
                         const disabled = isBefore(d);
-                        const isSelected = selectedDay?.toDateString()===d.toDateString();
-                        const isToday = d.toDateString()===today.toDateString();
+                        const isSel    = selectedDay?.toDateString()===d.toDateString();
+                        const isToday  = d.toDateString()===today.toDateString();
+                        const heat     = !disabled ? dayHeat(d) : 'normal';
                         return (
-                          <button key={i} disabled={disabled} onClick={()=>{setSelectedDay(d);setStep('time');}} className="bk-day"
-                            style={{ height:34, borderRadius:8, fontSize:13, fontWeight:isSelected?800:500, cursor:disabled?'default':'pointer', border:'none', background:isSelected?'var(--accent)':isToday?'rgba(215,255,0,0.07)':'rgba(255,255,255,0.03)', color:isSelected?'#000':disabled?'rgba(255,255,255,0.12)':isToday?'var(--accent)':'rgba(255,255,255,0.65)', outline:isToday&&!isSelected?'1px solid rgba(215,255,0,0.18)':'none', transition:'background 0.14s' }}>
+                          <button key={i} disabled={disabled} className="bk-day"
+                            onClick={()=>{setSelectedDay(d);goStep('time');}}
+                            style={{
+                              height:32,borderRadius:8,fontSize:12.5,
+                              fontWeight:isSel?800:heat==='hot'?600:400,
+                              cursor:disabled?'default':'pointer',border:'none',
+                              background: isSel
+                                ? 'var(--accent)'
+                                : isToday
+                                ? 'rgba(215,255,0,0.08)'
+                                : heat==='hot'
+                                ? 'rgba(215,255,0,0.04)'
+                                : 'rgba(255,255,255,0.025)',
+                              color: isSel?'#000'
+                                : disabled?'rgba(255,255,255,0.10)'
+                                : isToday?'var(--accent)'
+                                : heat==='hot'?'rgba(255,255,255,0.82)'
+                                : 'rgba(255,255,255,0.52)',
+                              outline: isSel?'none'
+                                : isToday?'1px solid rgba(215,255,0,0.18)'
+                                : heat==='hot'?'1px solid rgba(215,255,0,0.06)':'none',
+                              boxShadow: isSel?'0 0 14px rgba(215,255,0,0.22)':'none',
+                              position:'relative',
+                            }}>
                             {i+1}
+                            {/* Hot day micro-dot */}
+                            {heat==='hot'&&!disabled&&!isSel&&(
+                              <span style={{position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:3,height:3,borderRadius:'50%',background:'rgba(215,255,0,0.45)'}}/>
+                            )}
                           </button>
                         );
                       })}
                     </div>
-                    {selectedDay && (
-                      <div style={{ marginTop:14, padding:'10px 14px', borderRadius:10, background:'rgba(215,255,0,0.06)', border:'1px solid rgba(215,255,0,0.13)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:13, color:'var(--accent)', fontWeight:600 }}>{selectedDay.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}</span>
-                        <button onClick={()=>setStep('time')} style={{ fontSize:12, fontWeight:700, color:'#000', background:'var(--accent)', border:'none', borderRadius:8, padding:'5px 12px', cursor:'pointer' }}>Continuar →</button>
+
+                    {/* Selected date confirmation strip */}
+                    {selectedDay&&(
+                      <div style={{marginTop:12,padding:'10px 14px',borderRadius:10,background:'rgba(215,255,0,0.05)',border:'1px solid rgba(215,255,0,0.12)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                        <span style={{fontSize:12.5,color:'var(--accent)',fontWeight:600}}>
+                          {selectedDay.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}
+                        </span>
+                        <button onClick={()=>goStep('time')} style={{fontSize:12,fontWeight:700,color:'#000',background:'var(--accent)',border:'none',borderRadius:8,padding:'5px 12px',cursor:'pointer'}}>
+                          Elegir hora →
+                        </button>
                       </div>
                     )}
+
+                    {/* Live signal */}
+                    <div style={{marginTop:12,display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{width:5,height:5,borderRadius:'50%',background:'#4ADE80',display:'inline-block',animation:'slot-hot 1.8s ease-in-out infinite'}}/>
+                      <span style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>7 reservas hechas hoy en esta cancha</span>
+                    </div>
                   </div>
                 )}
 
-                {/* Step 2 — Time */}
-                {step==='time' && (
+                {/* ════ STEP 2 — TIME ════ */}
+                {step==='time'&&(
                   <div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.32)', marginBottom:14 }}>
+                    <p style={{fontSize:11.5,color:'rgba(255,255,255,0.30)',marginBottom:14,letterSpacing:'-0.01em'}}>
                       {selectedDay?.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}
                     </p>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7, marginBottom:18 }}>
+
+                    {/* Slot grid */}
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
                       {TIME_SLOTS.map(t=>{
-                        const active = selectedTime===t;
+                        const active  = selectedTime===t;
+                        const heat    = SLOT_HEAT[t] ?? 1;
+                        const recent  = slotRecent(court.id, t);
+                        const isHot   = heat >= 5;
+                        const isWarm  = heat >= 4;
                         return (
-                          <button key={t} onClick={()=>setSelectedTime(t)} className="bk-slot" style={{ padding:'9px 4px', borderRadius:10, fontSize:11.5, fontWeight:600, cursor:'pointer', background:active?'var(--accent)':'rgba(255,255,255,0.03)', color:active?'#000':'rgba(255,255,255,0.55)', border:`1px solid ${active?'transparent':'rgba(255,255,255,0.07)'}`, transition:'all 0.13s' }}>{t}</button>
+                          <button key={t}
+                            onClick={()=>setSelectedTime(t)}
+                            className={isHot&&!active?'bk-slot-hot':''}
+                            style={{
+                              padding:'9px 4px 7px',borderRadius:10,
+                              fontSize:11,fontWeight:active?800:600,
+                              cursor:'pointer',
+                              display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+                              background: active
+                                ? 'var(--accent)'
+                                : isHot
+                                ? 'rgba(215,255,0,0.055)'
+                                : isWarm
+                                ? 'rgba(215,255,0,0.025)'
+                                : 'rgba(255,255,255,0.03)',
+                              color: active?'#000'
+                                : isHot?'rgba(255,255,255,0.88)'
+                                : 'rgba(255,255,255,0.50)',
+                              border: active
+                                ? '1px solid transparent'
+                                : isHot
+                                ? '1px solid rgba(215,255,0,0.14)'
+                                : '1px solid rgba(255,255,255,0.06)',
+                              boxShadow: active
+                                ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
+                                : 'none',
+                              transform: active?'scale(1)':'scale(1)',
+                              animation: active?'slot-select 0.24s ease':'none',
+                              transition:'background 0.14s,border-color 0.14s,color 0.14s',
+                            }}>
+                            <span>{t}</span>
+                            {/* Occupancy micro-bar */}
+                            {!active&&(
+                              <div style={{width:'70%',height:2,borderRadius:1,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
+                                <div style={{
+                                  height:'100%',
+                                  width:`${Math.min(100,recent*14)}%`,
+                                  background:isHot?'rgba(215,255,0,0.50)':isWarm?'rgba(215,255,0,0.28)':'rgba(255,255,255,0.20)',
+                                  borderRadius:1,
+                                }}/>
+                              </div>
+                            )}
+                          </button>
                         );
                       })}
                     </div>
-                    <div style={inputRow}>
-                      <div>
-                        <p style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>Duración</p>
-                        <p style={{ fontSize:11, color:'rgba(255,255,255,0.28)' }}>{fmtColones(court.basePrice)} / hora</p>
+
+                    {/* Legend */}
+                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                      <div style={{display:'flex',alignItems:'center',gap:5}}>
+                        <span style={{width:5,height:5,borderRadius:'50%',background:'rgba(215,255,0,0.60)',display:'inline-block'}}/>
+                        <span style={{fontSize:10,color:'rgba(255,255,255,0.28)'}}>Alta demanda</span>
                       </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                        <button onClick={()=>setHours(h=>Math.max(1,h-1))} className="bk-stepper" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', cursor:'pointer', fontWeight:700, fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-                        <span style={{ fontWeight:800, fontSize:15, minWidth:26, textAlign:'center' }}>{hours}h</span>
-                        <button onClick={()=>setHours(h=>Math.min(6,h+1))} className="bk-stepper" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', cursor:'pointer', fontWeight:700, fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
-                      </div>
-                    </div>
-                    <div style={{...inputRow, borderBottom:'none'}}>
-                      <div>
-                        <p style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>Jugadores</p>
-                        <p style={{ fontSize:11, color:'rgba(255,255,255,0.28)' }}>Incluye {court.includedPlayers}</p>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                        <button onClick={()=>setPlayers(p=>Math.max(2,p-1))} className="bk-stepper" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', cursor:'pointer', fontWeight:700, fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-                        <span style={{ fontWeight:800, fontSize:15, minWidth:26, textAlign:'center' }}>{players}</span>
-                        <button onClick={()=>setPlayers(p=>Math.min(22,p+1))} className="bk-stepper" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', cursor:'pointer', fontWeight:700, fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+                      <div style={{display:'flex',alignItems:'center',gap:5}}>
+                        <span style={{width:5,height:5,borderRadius:'50%',background:'rgba(255,255,255,0.20)',display:'inline-block'}}/>
+                        <span style={{fontSize:10,color:'rgba(255,255,255,0.28)'}}>Disponible</span>
                       </div>
                     </div>
-                    <button disabled={!selectedTime} onClick={()=>setStep('confirm')} style={{ width:'100%', marginTop:18, padding:'13px', borderRadius:12, fontWeight:700, fontSize:14, cursor:selectedTime?'pointer':'default', background:selectedTime?'var(--accent)':'rgba(255,255,255,0.05)', color:selectedTime?'#000':'rgba(255,255,255,0.2)', border:'none', transition:'all 0.14s' }}>
+
+                    {/* Duration + Players */}
+                    <div style={{borderRadius:12,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.06)',overflow:'hidden',marginBottom:16}}>
+                      {/* Duration row */}
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+                        <div>
+                          <p style={{fontSize:12.5,fontWeight:600,marginBottom:1}}>Duración</p>
+                          <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>{fmtColones(court.basePrice)} × {hours}h = <span style={{color:'rgba(255,255,255,0.55)',fontWeight:700}}>{fmtColones(court.basePrice*hours)}</span></p>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                          <button onClick={()=>setHours(h=>Math.max(1,h-1))} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontWeight:700,fontSize:16,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                          <span style={{fontWeight:800,fontSize:15,minWidth:28,textAlign:'center'}}>{hours}h</span>
+                          <button onClick={()=>setHours(h=>Math.min(6,h+1))} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontWeight:700,fontSize:16,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                        </div>
+                      </div>
+                      {/* Players row */}
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px'}}>
+                        <div>
+                          <p style={{fontSize:12.5,fontWeight:600,marginBottom:1}}>Jugadores</p>
+                          <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>Incluye {court.includedPlayers}</p>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                          <button onClick={()=>setPlayers(p=>Math.max(2,p-1))} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontWeight:700,fontSize:16,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                          <span style={{fontWeight:800,fontSize:15,minWidth:28,textAlign:'center'}}>{players}</span>
+                          <button onClick={()=>setPlayers(p=>Math.min(22,p+1))} className="bk-stepper" style={{width:30,height:30,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontWeight:700,fontSize:16,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button disabled={!selectedTime} onClick={()=>goStep('confirm')} style={{width:'100%',padding:'13px',borderRadius:12,fontWeight:800,fontSize:14,cursor:selectedTime?'pointer':'default',background:selectedTime?'var(--accent)':'rgba(255,255,255,0.05)',color:selectedTime?'#000':'rgba(255,255,255,0.18)',border:'none',letterSpacing:'-0.01em',transition:'all 0.16s',boxShadow:selectedTime?'0 0 22px rgba(215,255,0,0.22)':'none'}}>
                       Continuar →
                     </button>
                   </div>
                 )}
 
-                {/* Step 3 — Confirm */}
-                {step==='confirm' && (
+                {/* ════ STEP 3 — CONFIRM ════ */}
+                {step==='confirm'&&(
                   <div>
-                    <div style={{ borderRadius:14, padding:'14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:16 }}>
-                      <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'rgba(255,255,255,0.25)', textTransform:'uppercase', marginBottom:12 }}>Resumen de reserva</p>
+                    {/* Summary card */}
+                    <div style={{borderRadius:14,overflow:'hidden',border:'1px solid rgba(255,255,255,0.07)',marginBottom:14}}>
                       {[
                         {label:'Cancha',    val:court.title},
-                        {label:'Ubicación', val:court.location},
                         {label:'Fecha',     val:selectedDay?.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})??''},
                         {label:'Hora',      val:selectedTime??''},
                         {label:'Duración',  val:`${hours} hora${hours>1?'s':''}`},
-                        {label:'Jugadores', val:String(players)},
-                      ].map((r,i,arr)=>(
-                        <div key={r.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,0.04)':'none' }}>
-                          <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>{r.label}</span>
-                          <span style={{ fontSize:13, fontWeight:600 }}>{r.val}</span>
+                        {label:'Jugadores', val:`${players} jugadores`},
+                      ].map((r,i)=>(
+                        <div key={r.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 14px',background:i%2===0?'rgba(255,255,255,0.02)':'transparent',borderBottom:i<4?'1px solid rgba(255,255,255,0.04)':'none'}}>
+                          <span style={{fontSize:11.5,color:'rgba(255,255,255,0.32)'}}>{r.label}</span>
+                          <span style={{fontSize:13,fontWeight:700,letterSpacing:'-0.01em'}}>{r.val}</span>
                         </div>
                       ))}
                     </div>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, padding:'13px 16px', borderRadius:12, background:'rgba(215,255,0,0.05)', border:'1px solid rgba(215,255,0,0.1)' }}>
-                      <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.5)' }}>Total</span>
-                      <span style={{ fontWeight:900, fontSize:22, color:'var(--accent)', letterSpacing:'-0.02em' }}>{fmtColones(totalPrice)}</span>
+
+                    {/* Total — emotional weight */}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,padding:'14px 16px',borderRadius:13,background:'rgba(215,255,0,0.04)',border:'1px solid rgba(215,255,0,0.10)'}}>
+                      <div>
+                        <p style={{fontSize:10,color:'rgba(255,255,255,0.30)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:3}}>Total</p>
+                        <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>Cancha activa esta noche</p>
+                      </div>
+                      <p style={{fontWeight:900,fontSize:24,color:'var(--accent)',letterSpacing:'-0.03em',textShadow:'0 0 24px rgba(215,255,0,0.20)'}}>{fmtColones(totalPrice)}</p>
                     </div>
-                    {error && <div style={{ padding:'10px 14px', borderRadius:10, marginBottom:12, fontSize:12, background:'rgba(255,59,59,0.07)', color:'#FF6B6B', border:'1px solid rgba(255,59,59,0.13)' }}>{error}</div>}
-                    <div style={{ display:'flex', gap:10 }}>
-                      <button onClick={()=>setStep('time')} style={{ flex:1, padding:'13px', borderRadius:12, fontSize:13, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.45)', border:'1px solid rgba(255,255,255,0.07)' }}>← Atrás</button>
-                      <button onClick={handleConfirm} disabled={saving} style={{ flex:2, padding:'13px', borderRadius:12, fontSize:14, fontWeight:800, cursor:saving?'default':'pointer', background:saving?'rgba(215,255,0,0.65)':'var(--accent)', color:'#000', border:'none', display:'flex', alignItems:'center', justifyContent:'center', gap:7, letterSpacing:'-0.01em', boxShadow:'0 0 20px rgba(215,255,0,0.2)' }}>
-                        {saving ? <><Loader2 size={14} style={{animation:'spin 0.7s linear infinite'}}/> Confirmando…</> : <><Zap size={14} fill="#000"/> Confirmar reserva</>}
+
+                    {error&&<div style={{padding:'10px 14px',borderRadius:10,marginBottom:12,fontSize:12,background:'rgba(255,59,59,0.07)',color:'#FF6B6B',border:'1px solid rgba(255,59,59,0.13)'}}>{error}</div>}
+
+                    <div style={{display:'flex',gap:9}}>
+                      <button onClick={()=>goStep('time')} style={{flex:1,padding:'12px',borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.40)',border:'1px solid rgba(255,255,255,0.07)'}}>← Atrás</button>
+                      <button onClick={handleConfirm} disabled={saving} style={{flex:2,padding:'13px',borderRadius:12,fontSize:14,fontWeight:800,cursor:saving?'default':'pointer',background:saving?'rgba(215,255,0,0.60)':'var(--accent)',color:'#000',border:'none',display:'flex',alignItems:'center',justifyContent:'center',gap:7,letterSpacing:'-0.01em',boxShadow:'0 0 24px rgba(215,255,0,0.22)'}}>
+                        {saving?<><Loader2 size={14} style={{animation:'spin 0.7s linear infinite'}}/>Preparando pago…</>:<><Zap size={14} fill="#000"/>Ir a pagar</>}
                       </button>
                     </div>
                   </div>
                 )}
+
               </div>
+
+              {/* ── Persistent summary strip ── */}
+              {(selectedDay||selectedTime)&&step!=='confirm'&&(
+                <div style={{
+                  borderTop:'1px solid rgba(255,255,255,0.05)',
+                  padding:'11px 22px',
+                  display:'flex',alignItems:'center',justifyContent:'space-between',
+                  background:'rgba(0,0,0,0.20)',
+                }}>
+                  <div style={{display:'flex',gap:16,alignItems:'center'}}>
+                    {selectedDay&&(
+                      <div>
+                        <p style={{fontSize:9,color:'rgba(255,255,255,0.25)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:1}}>Fecha</p>
+                        <p style={{fontSize:11.5,fontWeight:700,color:'rgba(255,255,255,0.70)',letterSpacing:'-0.01em'}}>
+                          {selectedDay.toLocaleDateString('es-CR',{weekday:'short',day:'numeric',month:'short'})}
+                        </p>
+                      </div>
+                    )}
+                    {selectedTime&&(
+                      <div>
+                        <p style={{fontSize:9,color:'rgba(255,255,255,0.25)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:1}}>Hora</p>
+                        <p style={{fontSize:11.5,fontWeight:700,color:'var(--accent)',letterSpacing:'-0.01em'}}>{selectedTime}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p style={{fontSize:9,color:'rgba(255,255,255,0.25)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:1}}>Jugadores</p>
+                      <p style={{fontSize:11.5,fontWeight:700,color:'rgba(255,255,255,0.55)',letterSpacing:'-0.01em'}}>{players}</p>
+                    </div>
+                  </div>
+                  {selectedDay&&selectedTime&&(
+                    <p style={{fontSize:13,fontWeight:900,color:'var(--accent)',letterSpacing:'-0.02em'}}>{fmtColones(totalPrice)}</p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -539,6 +767,20 @@ export default function CanchaPage() {
           border: 1px solid rgba(255,255,255,0.055);
         }
 
+        /* Amenity tile hover */
+        .amenity-tile:hover {
+          border-color: rgba(215,255,0,0.22) !important;
+          background: rgba(215,255,0,0.025) !important;
+        }
+
+        /* Reto CTA button */
+        .reto-btn { transition: background 0.18s, border-color 0.18s, color 0.18s; }
+        .reto-btn:hover {
+          background: rgba(215,255,0,0.08) !important;
+          border-color: rgba(215,255,0,0.35) !important;
+          color: rgba(215,255,0,0.90) !important;
+        }
+
         @media (max-width: 880px) { .cancha-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
@@ -693,7 +935,7 @@ export default function CanchaPage() {
             </div>
 
             {/* ── Details — Apple Wallet rows ── */}
-            <div className="card-lift" style={{ ...card, padding:'20px 22px' }}>
+            <div className="card-lift" style={{ ...card, padding:'20px 22px', marginBottom:20 }}>
               <p className="sec-label" style={{ marginBottom:12 }}>Detalles del campo</p>
               <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                 {[
@@ -745,6 +987,169 @@ export default function CanchaPage() {
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.68)', marginBottom:3, lineHeight:1.25, letterSpacing:'-0.01em' }}>{d.label}</p>
                       <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)', lineHeight:1.45 }}>{d.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Amenities ── */}
+            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
+              <p className="sec-label" style={{ marginBottom:14 }}>Instalaciones</p>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                {[
+                  { emoji:'💡', label:'Iluminación LED' },
+                  { emoji:'🅿️', label:'Estacionamiento' },
+                  { emoji:'🚿', label:'Vestidores' },
+                  { emoji:'⛳', label:'Césped sintético' },
+                  { emoji:'🏆', label:'Cancha techada' },
+                  { emoji:'📶', label:'WiFi disponible' },
+                  { emoji:'🔒', label:'Seguridad 24/7' },
+                  { emoji:'🥤', label:'Cafetería' },
+                  { emoji:'♻️', label:'Cancha ecológica' },
+                ].map(a=>(
+                  <div key={a.label} className="amenity-tile" style={{
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:5,
+                    padding:'10px 6px', borderRadius:10,
+                    background:'rgba(255,255,255,0.02)',
+                    border:'1px solid rgba(255,255,255,0.055)',
+                    textAlign:'center',
+                    cursor:'default',
+                    transition:'border-color 0.18s, background 0.18s',
+                  }}>
+                    <span style={{ fontSize:18, lineHeight:1 }}>{a.emoji}</span>
+                    <span style={{ fontSize:9.5, fontWeight:600, color:'rgba(255,255,255,0.42)', lineHeight:1.3, letterSpacing:'0.01em' }}>{a.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Esta noche — live section ── */}
+            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                <p className="sec-label" style={{ margin:0 }}>Esta noche</p>
+                <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:99, background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.18)', fontSize:9, fontWeight:800, color:'rgba(100,230,120,0.85)', letterSpacing:'0.08em' }}>
+                  <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.85)', display:'inline-block' }}/>
+                  EN VIVO
+                </span>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {/* Active game 1 — searching */}
+                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(215,255,0,0.025)', border:'1px solid rgba(215,255,0,0.08)' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(215,255,0,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Partido activo — buscando rival</span>
+                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div>
+                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Escazú United</p>
+                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>7PM · 8v8 · Nivel Intermedio</p>
+                    </div>
+                    <button onClick={handleReservar} style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'var(--accent)', color:'#000', border:'none', whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>Retar a este equipo</button>
+                  </div>
+                </div>
+                {/* Active game 2 — confirmed */}
+                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(74,222,128,0.60)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Partido confirmado</span>
+                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div>
+                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Los Clavos FC vs Arena FC</p>
+                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>8PM · 5v5</p>
+                    </div>
+                    <button style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(255,255,255,0.07)', whiteSpace:'nowrap' }}>Ver partido</button>
+                  </div>
+                </div>
+                {/* Active game 3 — filling */}
+                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(251,146,60,0.025)', border:'1px solid rgba(251,146,60,0.08)' }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(251,146,60,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Cupos disponibles</span>
+                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div>
+                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Herradura United</p>
+                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>9PM · 7v7 · 4 cupos libres</p>
+                    </div>
+                    <button onClick={handleReservar} style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'rgba(251,146,60,0.12)', color:'rgba(251,146,60,0.80)', border:'1px solid rgba(251,146,60,0.18)', whiteSpace:'nowrap' }}>Unirme</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Reviews ── */}
+            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                <p className="sec-label" style={{ margin:0 }}>Reseñas</p>
+                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <Star size={12} fill="#FACC15" color="#FACC15"/>
+                  <span style={{ fontWeight:800, fontSize:14, color:'rgba(255,255,255,0.80)', letterSpacing:'-0.02em' }}>4.8</span>
+                  <span style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)' }}>· 47 reseñas</span>
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {[
+                  {
+                    initials:'CM', name:'Carlos M.', stars:5,
+                    date:'hace 3 días',
+                    text:'Cancha en excelente estado, la iluminación es perfecta para jugar de noche. Llegamos a las 8PM y estaba de primera.',
+                    color:'rgba(215,255,0,0.10)', textColor:'rgba(215,255,0,0.75)',
+                  },
+                  {
+                    initials:'DP', name:'Diego P.', stars:5,
+                    date:'hace 1 semana',
+                    text:'Ya vamos cada jueves con el equipo. El piso sintético agarra bien y los vestidores están limpios. Muy recomendada.',
+                    color:'rgba(74,222,128,0.10)', textColor:'rgba(74,222,128,0.75)',
+                  },
+                  {
+                    initials:'LA', name:'Luis A.', stars:4,
+                    date:'hace 2 semanas',
+                    text:'Buena cancha para mejengas. A veces tarda un poco la respuesta del encargado pero el campo vale la pena.',
+                    color:'rgba(147,197,253,0.10)', textColor:'rgba(147,197,253,0.75)',
+                  },
+                ].map(r=>(
+                  <div key={r.name} style={{ padding:'12px 14px', borderRadius:12, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+                      <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, background:r.color, border:`1px solid ${r.textColor.replace('0.75','0.25')}`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:r.textColor }}>
+                        {r.initials}
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <span style={{ fontWeight:700, fontSize:12.5, color:'rgba(255,255,255,0.70)' }}>{r.name}</span>
+                          <span style={{ fontSize:10.5, color:'#FACC15', letterSpacing:'0.02em' }}>{'★'.repeat(r.stars)}</span>
+                        </div>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>{r.date}</span>
+                      </div>
+                    </div>
+                    <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.40)', lineHeight:1.6, margin:0 }}>{r.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Equipos frecuentes ── */}
+            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
+              <p className="sec-label" style={{ marginBottom:14 }}>Equipos frecuentes</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                {[
+                  { initials:'LC', name:'Los Clavos FC',      matches:12, color:'rgba(215,255,0,0.10)',   textColor:'rgba(215,255,0,0.75)',   wins:9,  losses:3  },
+                  { initials:'EU', name:'Escazú United',       matches:9,  color:'rgba(74,222,128,0.10)', textColor:'rgba(74,222,128,0.75)',  wins:6,  losses:3  },
+                  { initials:'HK', name:'Heredia Kicks',       matches:7,  color:'rgba(147,197,253,0.10)',textColor:'rgba(147,197,253,0.75)', wins:4,  losses:3  },
+                  { initials:'AF', name:'Arena FC',            matches:5,  color:'rgba(251,146,60,0.10)', textColor:'rgba(251,146,60,0.75)',  wins:3,  losses:2  },
+                ].map(t=>(
+                  <div key={t.name} style={{ display:'flex', alignItems:'center', gap:11, padding:'10px 12px', borderRadius:11, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
+                    <div style={{ width:34, height:34, borderRadius:10, flexShrink:0, background:t.color, border:`1px solid ${t.textColor.replace('0.75','0.22')}`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:t.textColor }}>
+                      {t.initials}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontWeight:700, fontSize:12.5, color:'rgba(255,255,255,0.70)', marginBottom:2, letterSpacing:'-0.01em' }}>{t.name}</p>
+                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)' }}>{t.matches} partidos este mes</p>
+                    </div>
+                    <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+                      <span style={{ padding:'2px 7px', borderRadius:6, fontSize:9.5, fontWeight:700, background:'rgba(74,222,128,0.09)', color:'rgba(74,222,128,0.75)', letterSpacing:'0.02em' }}>{t.wins}G</span>
+                      <span style={{ padding:'2px 7px', borderRadius:6, fontSize:9.5, fontWeight:700, background:'rgba(255,107,107,0.09)', color:'rgba(255,107,107,0.60)', letterSpacing:'0.02em' }}>{t.losses}P</span>
                     </div>
                   </div>
                 ))}
@@ -839,6 +1244,19 @@ export default function CanchaPage() {
                 }}>
                   <Phone size={11}/> Llamar a la cancha
                 </button>
+
+                <Link href="/juegos" className="reto-btn" style={{
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                  width:'100%', padding:'11px', borderRadius:12,
+                  background:'rgba(215,255,0,0.03)',
+                  color:'rgba(215,255,0,0.60)',
+                  fontWeight:700, fontSize:12, cursor:'pointer',
+                  border:'1px solid rgba(215,255,0,0.16)',
+                  textDecoration:'none',
+                  letterSpacing:'-0.01em',
+                }}>
+                  ⚡ Retar equipo aquí
+                </Link>
               </div>
 
               {/* Trust footer */}

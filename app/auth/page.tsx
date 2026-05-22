@@ -32,9 +32,19 @@ function AuthForm() {
         if (err) throw err;
         setSuccess('¡Cuenta creada! Revisá tu email para confirmar.');
       } else {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signInData, error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
-        router.push('/perfil');
+        // Owners go straight to the owner portal
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', signInData.user?.id ?? '')
+          .single();
+        if (profile?.role === 'owner') {
+          router.replace('/propietario');
+        } else {
+          router.push('/perfil');
+        }
       }
     } catch (e: any) {
       setError(e.message);

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import NotificationBell from "@/components/NotificationBell";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar" },
@@ -153,6 +154,7 @@ export default function Navbar() {
             <div style={{ width: 72, height: 26, borderRadius: 7, backgroundColor: 'rgba(255,255,255,0.05)' }} />
           ) : user ? (
             <>
+              <NotificationBell />
               <Link href="/perfil" className="nav-profile" style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 textDecoration: 'none', fontSize: 13.5, fontWeight: 500,
