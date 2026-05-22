@@ -21,10 +21,9 @@ interface BookingRow {
   profiles?:   { name?: string; email?: string } | null;
 }
 
-// ── Fallback mock week data (visual only) ─────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────
 
-const WEEK_DAYS = ["L","K","M","J","V","S","D"];
-const MOCK_WEEK = [38000,29000,51000,44000,67000,74000,21000];
+const WEEK_DAYS = ["L","M","X","J","V","S","D"];
 
 function fmt(n: number) {
   return n >= 1000 ? `₡${(n / 1000).toFixed(0)}k` : `₡${n}`;
@@ -50,7 +49,9 @@ export default function OwnerDashboard() {
   const [pending,   setPending]   = useState<BookingRow[]>([]);
   const [confirmed, setConfirmed] = useState<BookingRow[]>([]);
   const [todayNet,  setTodayNet]  = useState(0);
-  const [weekData,  setWeekData]  = useState(MOCK_WEEK);
+  const [weekData,  setWeekData]  = useState([0,0,0,0,0,0,0]);
+  const [weekTotal, setWeekTotal] = useState(0);
+  const [occPct,    setOccPct]    = useState<number | null>(null);
   const [loading,   setLoading]   = useState(true);
   const [justActed, setJustActed] = useState<Record<string, "confirmed" | "rejected">>({});
 
@@ -60,32 +61,92 @@ export default function OwnerDashboard() {
     return () => clearInterval(t);
   }, []);
 
-  // Fetch real bookings from Supabase
+  // Fetch real bookings + compute week chart + occupancy
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const today    = new Date().toISOString().split("T")[0];
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
-      // Pending payment + unconfirmed (today & tomorrow)
-      const { data: pRows } = await supabase
+      // Get owner's court names for filtering
+      let courtNames: string[] = [];
+      if (user) {
+        const { data: courts } = await supabase
+          .from("owner_courts")
+          .select("name, slots")
+          .eq("owner_id", user.id)
+          .is("deleted_at", null);
+        courtNames = (courts ?? []).map((c: any) => c.name).filter(Boolean);
+
+        // Occupancy: this month's bookings / available slots
+        const monthStart = new Date(); monthStart.setDate(1);
+        const monthStartStr = monthStart.toISOString().split("T")[0];
+        const totalSlotsPerDay = (courts ?? []).reduce((s: number, c: any) => s + (c.slots?.length ?? 10), 0);
+        const daysGone = new Date().getDate();
+        const availSoFar = totalSlotsPerDay * daysGone;
+
+        const { count: bookedCount } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .in("court_name", courtNames)
+          .in("status", ["confirmed", "paid", "completed"])
+          .gte("date", monthStartStr)
+          .lte("date", today);
+
+        setOccPct(availSoFar > 0 ? Math.min(100, Math.round(((bookedCount ?? 0) / availSoFar) * 100)) : null);
+      }
+
+      // Week boundaries (Mon–Sun)
+      const now     = new Date();
+      const dowJS   = now.getDay();                  // Sun=0
+      const monOff  = (dowJS + 6) % 7;               // days since Monday
+      const monDate = new Date(now); monDate.setDate(now.getDate() - monOff); monDate.setHours(0,0,0,0);
+      const sunDate = new Date(monDate); sunDate.setDate(monDate.getDate() + 6);
+      const monStr  = monDate.toISOString().split("T")[0];
+      const sunStr  = sunDate.toISOString().split("T")[0];
+
+      // Week bookings
+      const weekQ = supabase
+        .from("bookings")
+        .select("date, total_price")
+        .in("status", ["confirmed", "paid", "completed"])
+        .gte("date", monStr)
+        .lte("date", sunStr);
+      const { data: wRows } = courtNames.length > 0
+        ? await weekQ.in("court_name", courtNames)
+        : await weekQ;
+
+      const wd = [0,0,0,0,0,0,0];
+      for (const r of wRows ?? []) {
+        const d = new Date(r.date + "T12:00:00");
+        const i = (d.getDay() + 6) % 7; // Mon=0
+        wd[i] += r.total_price ?? 0;
+      }
+      setWeekData(wd);
+      setWeekTotal(wd.reduce((s, v) => s + v, 0));
+
+      // Pending bookings (today + tomorrow)
+      const pendQ = supabase
         .from("bookings")
         .select("id, court_name, date, time, players, total_price, status")
         .in("status", ["pending_payment", "pending", "partially_paid"])
-        .gte("date", today)
-        .lte("date", tomorrow)
-        .order("date", { ascending: true })
-        .order("time", { ascending: true })
-        .limit(10);
+        .gte("date", today).lte("date", tomorrow)
+        .order("date", { ascending: true }).order("time", { ascending: true }).limit(10);
+      const { data: pRows } = courtNames.length > 0
+        ? await pendQ.in("court_name", courtNames)
+        : await pendQ;
 
       // Confirmed today
-      const { data: cRows } = await supabase
+      const confQ = supabase
         .from("bookings")
         .select("id, court_name, date, time, players, total_price, status")
         .in("status", ["confirmed", "paid"])
         .eq("date", today)
-        .order("time", { ascending: true })
-        .limit(10);
+        .order("time", { ascending: true }).limit(10);
+      const { data: cRows } = courtNames.length > 0
+        ? await confQ.in("court_name", courtNames)
+        : await confQ;
 
       // Today's net revenue from payments table
       const { data: payRows } = await supabase
@@ -97,7 +158,7 @@ export default function OwnerDashboard() {
 
       setPending((pRows ?? []) as BookingRow[]);
       setConfirmed((cRows ?? []) as BookingRow[]);
-      setTodayNet((payRows ?? []).reduce((s, p) => s + (p.owner_net_amount ?? 0), 0));
+      setTodayNet((payRows ?? []).reduce((s: number, p: any) => s + (p.owner_net_amount ?? 0), 0));
     } catch (e) {
       console.error("Dashboard fetch error:", e);
     } finally {
@@ -166,7 +227,7 @@ export default function OwnerDashboard() {
               Dashboard
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginTop: 4, letterSpacing: "-0.01em" }}>
-              Viernes 9 de mayo · Tus instalaciones en tiempo real
+              {new Date().toLocaleDateString("es-CR", { weekday: "long", day: "numeric", month: "long" })} · Tus instalaciones en tiempo real
             </p>
           </div>
           <Link href="/propietario/reservas" style={{
@@ -206,8 +267,8 @@ export default function OwnerDashboard() {
             bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.12)",
           },
           {
-            label: "Ocupación", value: "87%",
-            sub: "promedio semanal", icon: BarChart3, color: "#60A5FA",
+            label: "Ocupación", value: occPct !== null ? `${occPct}%` : "—",
+            sub: occPct !== null ? "del tiempo disponible este mes" : "calculando…", icon: BarChart3, color: "#60A5FA",
             bg: "rgba(96,165,250,0.06)", border: "rgba(96,165,250,0.12)",
           },
         ].map((s, i) => (
@@ -368,9 +429,11 @@ export default function OwnerDashboard() {
               INGRESOS SEMANALES
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em", color: "#D7FF00" }}>
-              {fmt(weekData.reduce((s, v) => s + v, 0))}
+              {fmt(weekTotal)}
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>esta semana · estimado</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
+              {weekTotal > 0 ? "esta semana · reservas confirmadas" : "esta semana · sin reservas aún"}
+            </div>
           </div>
 
           {/* Bar chart */}
