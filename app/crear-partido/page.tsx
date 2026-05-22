@@ -273,6 +273,7 @@ function CreatePartidoInner() {
   const [level,    setLevel]    = useState<string | null>(null);
   const [zone,     setZone]     = useState('');
   const [venue,    setVenue]    = useState(paramVenue);
+  const [date,     setDate]     = useState(() => new Date().toISOString().split('T')[0]);
   const [time,     setTime]     = useState(paramTime);
   const [duration, setDuration] = useState<string>(
     paramHours === '2' ? '2h' : paramHours === '1.5' ? '1h 30m' : '1h'
@@ -367,7 +368,7 @@ function CreatePartidoInner() {
         court_name: venue.trim() || zone,
         location:   zone,
         time,
-        date:       new Date().toISOString().split('T')[0],
+        date,
         hours,
         players:    playersPerTeam,
         price:      parseInt(price || '0'),
@@ -592,6 +593,46 @@ function CreatePartidoInner() {
                       />
                     </FieldInput>
 
+                    {/* ── Date picker — next 7 days as pills ── */}
+                    <FieldInput label="Fecha" icon={<Clock size={9} color="rgba(215,255,0,0.55)" />}>
+                      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                        {Array.from({ length: 7 }, (_, i) => {
+                          const d = new Date(); d.setDate(d.getDate() + i);
+                          const iso   = d.toISOString().split('T')[0];
+                          const label = i === 0 ? 'Hoy' : i === 1 ? 'Mañana'
+                            : d.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric' })
+                                .replace('.', '').replace(/^\w/, c => c.toUpperCase());
+                          const dayNum = d.getDate();
+                          const active = date === iso;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              onClick={() => setDate(iso)}
+                              style={{
+                                flexShrink: 0,
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                padding: '10px 14px', borderRadius: 13, cursor: 'pointer',
+                                minWidth: 58,
+                                background: active ? 'rgba(215,255,0,0.10)' : 'rgba(255,255,255,0.04)',
+                                border: active ? '1.5px solid rgba(215,255,0,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                color: active ? 'var(--accent)' : 'rgba(255,255,255,0.40)',
+                                boxShadow: active ? '0 0 14px rgba(215,255,0,0.08)' : 'none',
+                                transition: 'all 0.14s ease',
+                              }}
+                            >
+                              <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                                {dayNum}
+                              </span>
+                              <span style={{ fontSize: 10, fontWeight: 600, marginTop: 3, letterSpacing: '0.01em' }}>
+                                {label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FieldInput>
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                       <FieldInput label="Hora" icon={<Clock size={9} color="rgba(215,255,0,0.55)" />}>
                         <select value={time} onChange={e => setTime(e.target.value)} style={selectStyle}>
@@ -748,7 +789,8 @@ function CreatePartidoInner() {
                         { label: 'Equipo',   value: teamName },
                         { label: 'Formato',  value: `${format} · ${level}` },
                         { label: 'Zona',     value: venue ? `${venue} — ${zone}` : zone },
-                        { label: 'Hora',     value: `Hoy · ${time} · ${duration}` },
+                        { label: 'Fecha',    value: new Date(date + 'T12:00:00').toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' }) },
+                        { label: 'Hora',     value: `${time} · ${duration}` },
                         { label: 'Precio',   value: `₡${parseInt(price || '0').toLocaleString('es-CR')} por equipo` },
                         ...(note ? [{ label: 'Nota', value: note }] : []),
                       ].map((row, i, arr) => (
