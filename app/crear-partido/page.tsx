@@ -576,7 +576,7 @@ function CreatePartidoInner() {
                       </select>
                     </FieldInput>
 
-                    <FieldInput label="Cancha o complejo (opcional)" icon={<MapPin size={9} color="rgba(215,255,0,0.35)" />}>
+                    <FieldInput label="Cancha o complejo" icon={<MapPin size={9} color="rgba(215,255,0,0.35)" />}>
                       <VenueAutocomplete
                         value={venue}
                         onChange={setVenue}
