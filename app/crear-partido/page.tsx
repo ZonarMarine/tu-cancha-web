@@ -359,6 +359,7 @@ function CreatePartidoInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (step !== 3) return; // guard against accidental submission from steps 1 or 2
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const hours = duration === '2h' ? 2 : duration === '1h 30m' ? 1.5 : 1;
@@ -453,7 +454,7 @@ function CreatePartidoInner() {
         <div style={{ maxWidth: 560, margin: '0 auto' }}>
 
           {/* ── Back ── */}
-          <button onClick={() => step > 1 ? prevStep() : router.back()} className="back-btn" style={{
+          <button type="button" onClick={() => step > 1 ? prevStep() : router.back()} className="back-btn" style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
             display: 'flex', alignItems: 'center', gap: 6, marginBottom: 36,
             fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
