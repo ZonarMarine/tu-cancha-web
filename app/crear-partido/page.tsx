@@ -357,8 +357,8 @@ function CreatePartidoInner() {
   function nextStep() { if (step < 3) setStep(s => s + 1); }
   function prevStep() { if (step > 1) setStep(s => s - 1); }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(e?: React.FormEvent | React.MouseEvent) {
+    e?.preventDefault();
     if (step !== 3) return; // guard against accidental submission from steps 1 or 2
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -851,7 +851,8 @@ function CreatePartidoInner() {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     className="btn-primary"
                     style={{
                       padding: '12px 32px', fontSize: 14, borderRadius: 13,
