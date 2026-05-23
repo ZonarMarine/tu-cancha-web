@@ -18,6 +18,14 @@ export type Court = {
   tag:             string | null;
   slotsAvailable:  number;
   imageUrl?:       string | null;
+  /* raw slots array from owner_courts — used to calculate availability */
+  slots:           string[];
+};
+
+/* Extended with live booking data computed after fetching today's bookings */
+export type CourtWithLive = Court & {
+  bookingsToday: number;   // confirmed bookings for this court today
+  slotsLeft:     number | null; // null = no slot schedule defined
 };
 
 function normalise(row: Record<string, any>): Court {
@@ -30,7 +38,8 @@ function normalise(row: Record<string, any>): Court {
     sport:           row.sport   ?? row.deporte ?? 'Fútbol',
     rating:          row.rating  ?? row.calificacion ?? 0,
     tag:             row.tag     ?? null,
-    slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? row.slots ?? 0,
+    slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? 0,
+    slots:           Array.isArray(row.slots) ? row.slots : [],
     imageUrl:        row.image_url ?? row.imageUrl ?? row.photo_url ?? row.photo
                  ?? row.cover_image ?? row.cover_url ?? row.thumbnail_url ?? row.thumbnail
                  ?? row.picture_url ?? row.picture ?? row.img_url ?? row.img
@@ -39,6 +48,14 @@ function normalise(row: Record<string, any>): Court {
                  ?? (Array.isArray(row.images) ? row.images[0] : row.images)
                  ?? null,
   };
+}
+
+/* Attach live booking data to a base court */
+function attachLive(court: Court, bookedTimesToday: string[]): CourtWithLive {
+  const bookingsToday = bookedTimesToday.length;
+  const totalSlots    = court.slots.length > 0 ? court.slots.length : null;
+  const slotsLeft     = totalSlots !== null ? Math.max(0, totalSlots - bookingsToday) : null;
+  return { ...court, bookingsToday, slotsLeft };
 }
 
 /* ─── filters ────────────────────────────────────────────── */
@@ -60,15 +77,8 @@ const SPORT_ACCENT: Record<string, { bg: string; border: string; color: string; 
   Tenis:   { bg: 'rgba(56,189,248,0.08)',   border: 'rgba(56,189,248,0.20)',   color: 'rgba(56,189,248,0.82)',  glow: 'rgba(56,189,248,0.06)'  },
 };
 
-/* Night football signals — rotating hero ticker */
-const LIVE_SIGNALS = [
-  '⚽  3 partidos armándose en Escazú esta noche',
-  '🔴  Último horario disponible · Pinares · 8PM',
-  '⚡  12 jugadores buscando rival ahora',
-  '🏟  Twelve Academy · partido en 40 min',
-  '👥  Escazú United abrió reto para hoy',
-  '🌙  Canchas iluminadas · equipos formándose',
-];
+/* Live signals — populated from real retos data, falls back to empty */
+let LIVE_SIGNALS: string[] = [];
 
 /* Search placeholders — rotates when idle */
 const PLACEHOLDERS = [
@@ -144,36 +154,33 @@ const SPORT_BADGE: Record<string, { bg: string; color: string; border: string }>
 
 type CardMood = { label: string; color: string; bg: string; border: string; pulse: boolean };
 
-function getCardMood(c: Court): CardMood {
-  if (c.slotsAvailable <= 1)
+function getCardMood(c: CourtWithLive): CardMood {
+  /* Real data — scarcity signals first */
+  if (c.slotsLeft === 1)
     return { label: 'Último horario', color: '#FF6B6B', bg: 'rgba(255,107,107,0.12)', border: 'rgba(255,107,107,0.24)', pulse: true  };
-  if (c.slotsAvailable <= 3)
+  if (c.slotsLeft !== null && c.slotsLeft > 0 && c.slotsLeft <= 3)
     return { label: 'Se llena rápido', color: '#FACC15', bg: 'rgba(250,204,21,0.10)', border: 'rgba(250,204,21,0.22)', pulse: true  };
+  if (c.bookingsToday >= 3)
+    return { label: 'Muy popular hoy', color: '#F97316', bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.22)', pulse: false };
+
+  /* Owner-set tags */
   if (c.tag === 'Popular')
-    return { label: 'Trending tonight', color: '#F97316', bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.22)', pulse: false };
+    return { label: 'Popular',         color: '#F97316', bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.22)', pulse: false };
   if (c.tag === 'Premium')
-    return { label: 'Top valorada',     color: '#FACC15', bg: 'rgba(250,204,21,0.10)', border: 'rgba(250,204,21,0.22)', pulse: false };
+    return { label: 'Premium',         color: '#FACC15', bg: 'rgba(250,204,21,0.10)', border: 'rgba(250,204,21,0.22)', pulse: false };
   if (c.tag === 'Nuevo')
-    return { label: 'Recién agregada',  color: '#60A5FA', bg: 'rgba(96,165,250,0.10)', border: 'rgba(96,165,250,0.22)', pulse: false };
-  const n = typeof c.id === 'number' ? c.id : (parseInt(String(c.id), 10) || 1);
-  const defaults: CardMood[] = [
-    { label: 'Alta demanda',     color: '#F97316', bg: 'rgba(249,115,22,0.09)',  border: 'rgba(249,115,22,0.20)',  pulse: false },
-    { label: 'Retos activos',    color: '#4ADE80', bg: 'rgba(74,222,128,0.09)', border: 'rgba(74,222,128,0.18)', pulse: false },
-    { label: 'Cancha iluminada', color: '#60A5FA', bg: 'rgba(96,165,250,0.09)', border: 'rgba(96,165,250,0.18)', pulse: false },
-    { label: 'Más competitiva',  color: '#A78BFA', bg: 'rgba(167,139,250,0.09)',border: 'rgba(167,139,250,0.18)',pulse: false },
-    { label: 'Equipos activos',  color: '#4ADE80', bg: 'rgba(74,222,128,0.09)', border: 'rgba(74,222,128,0.18)', pulse: true  },
-  ];
-  return defaults[n % defaults.length];
+    return { label: 'Recién agregada', color: '#60A5FA', bg: 'rgba(96,165,250,0.10)', border: 'rgba(96,165,250,0.22)', pulse: false };
+
+  /* Rating signals */
+  if (c.rating >= 4.5)
+    return { label: 'Top valorada',    color: '#FACC15', bg: 'rgba(250,204,21,0.08)', border: 'rgba(250,204,21,0.18)', pulse: false };
+
+  /* Default: no mood badge if no real signal */
+  return { label: '', color: '', bg: 'transparent', border: 'transparent', pulse: false };
 }
 
-/* ─── Social signals — community layer ───────────────────── */
-const SOCIAL_SIGNALS = [
-  '3 equipos formándose en Escazú ahora',
-  'Herradura Sharks busca rival esta noche',
-  '5 jugadores sin equipo buscando partido',
-  'Último partido terminó hace 18 min · Pinares',
-  'Escazú United abrió reto · responde antes de las 8PM',
-];
+/* Social signals — populated from real open retos, empty if none */
+let SOCIAL_SIGNALS: string[] = [];
 
 /* ─── live football ecosystem ────────────────────────────────
    5 distinct signal types — each tells a different part of
@@ -182,32 +189,28 @@ const SOCIAL_SIGNALS = [
 
 type LiveSignal = { text: string; dot: boolean; dotColor: string };
 
-function getLiveEcosystem(id: number | string): { signal: LiveSignal; slotsText: string } {
-  const n = typeof id === 'number' ? id : (parseInt(String(id), 10) || 1);
-
-  const signals: LiveSignal[] = [
-    /* Viewing — social proof */
-    { text: `${((n * 7 + 11) % 10) + 3} personas viendo`,          dot: true,  dotColor: '#4ADE80' },
-    /* Recency — FOMO */
-    { text: `Última reserva hace ${((n * 3 + 1) % 10) + 1} min`,   dot: false, dotColor: '' },
-    /* Urgency — match about to start */
-    { text: `Partido empieza en ${((n * 11 + 7) % 38) + 14} min`,  dot: true,  dotColor: '#FACC15' },
-    /* Community — teams forming */
-    { text: `${((n * 2 + 3) % 3) + 2} equipos armándose`,          dot: true,  dotColor: '#4ADE80' },
-    /* Demand — players searching */
-    { text: `${((n * 5 + 7) % 8) + 7} jugadores buscando rival`,   dot: true,  dotColor: '#F97316' },
-  ];
-
-  const slotsOptions = [
-    `${((n * 4 + 2) % 4) + 1} horarios libres`,
-    `Disponible esta noche`,
-    `Último horario disponible`,
-  ];
-
-  return {
-    signal:    signals[n % signals.length],
-    slotsText: slotsOptions[n % slotsOptions.length],
-  };
+/* Real live signal derived from actual booking data */
+function getCourtSignal(c: CourtWithLive): { signal: LiveSignal | null; slotsText: string } {
+  if (c.bookingsToday > 0 && c.slotsLeft !== null && c.slotsLeft > 0) {
+    return {
+      signal:    { text: `${c.bookingsToday} reservada${c.bookingsToday !== 1 ? 's' : ''} hoy`, dot: true, dotColor: '#4ADE80' },
+      slotsText: `${c.slotsLeft} libre${c.slotsLeft !== 1 ? 's' : ''}`,
+    };
+  }
+  if (c.bookingsToday > 0) {
+    return {
+      signal:    { text: `${c.bookingsToday} reservada${c.bookingsToday !== 1 ? 's' : ''} hoy`, dot: true, dotColor: '#4ADE80' },
+      slotsText: c.slotsLeft === 0 ? 'Sin horarios hoy' : '',
+    };
+  }
+  if (c.slotsLeft !== null && c.slotsLeft > 0) {
+    return {
+      signal:    { text: `${c.slotsLeft} horario${c.slotsLeft !== 1 ? 's' : ''} disponible${c.slotsLeft !== 1 ? 's' : ''}`, dot: false, dotColor: '' },
+      slotsText: '',
+    };
+  }
+  /* No real data — show nothing */
+  return { signal: null, slotsText: '' };
 }
 
 /* ─── SportPill ─────────────────────────────────────────── */
@@ -248,7 +251,7 @@ function SportPill({ p, active, onClick }: { p: typeof SPORT_PILLS[0]; active: b
 
 /* ─── CourtCard ──────────────────────────────────────────── */
 
-function CourtCard({ c, hero = false }: { c: Court; hero?: boolean }) {
+function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
   const [hov, setHov] = useState(false);
   const glowRef    = useRef<HTMLDivElement>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
@@ -257,7 +260,7 @@ function CourtCard({ c, hero = false }: { c: Court; hero?: boolean }) {
   const fieldStyle = FIELD_STYLE[c.sport] ?? FIELD_STYLE.Fútbol;
   const sportBadge = SPORT_BADGE[c.sport] ?? { bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.24)', border: 'rgba(255,255,255,0.055)' };
   const imgHeight  = hero ? 218 : 178;
-  const { signal, slotsText } = getLiveEcosystem(c.id);
+  const { signal, slotsText } = getCourtSignal(c);
 
   /* Spotlight: mouse tracks within image — direct DOM, 60fps */
   const handleImgMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -379,38 +382,42 @@ function CourtCard({ c, hero = false }: { c: Court; hero?: boolean }) {
           transition: 'opacity 0.28s ease',
         }} />
 
-        {/* Mood badge — unified card identity signal */}
-        <div style={{ position: 'absolute', top: 13, left: 13, zIndex: 4 }}>
-          <span className={mood.pulse ? 'urgency-badge' : ''} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 7,
-            background: mood.bg, color: mood.color, border: `1px solid ${mood.border}`,
-            letterSpacing: '0.03em', backdropFilter: 'blur(8px)',
+        {/* Mood badge — only shown when there's a real signal */}
+        {mood.label && (
+          <div style={{ position: 'absolute', top: 13, left: 13, zIndex: 4 }}>
+            <span className={mood.pulse ? 'urgency-badge' : ''} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 7,
+              background: mood.bg, color: mood.color, border: `1px solid ${mood.border}`,
+              letterSpacing: '0.03em', backdropFilter: 'blur(8px)',
+            }}>
+              {mood.pulse && (
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: mood.color, display: 'inline-block', flexShrink: 0, animation: 'live-dot 2s ease-in-out infinite' }} />
+              )}
+              {mood.label}
+            </span>
+          </div>
+        )}
+
+        {/* Bottom-left: real live signal — hidden when no data */}
+        {signal && (
+          <div style={{
+            position: 'absolute', bottom: 12, left: 13, zIndex: 4,
+            display: 'flex', alignItems: 'center', gap: 5,
+            fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 8,
+            background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(14px)',
+            color: 'rgba(255,255,255,0.70)', border: '1px solid rgba(255,255,255,0.06)',
+            letterSpacing: '-0.01em',
           }}>
-            {mood.pulse && (
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: mood.color, display: 'inline-block', flexShrink: 0, animation: 'live-dot 2s ease-in-out infinite' }} />
+            {signal.dot && (
+              <span className="live-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: signal.dotColor, display: 'inline-block', flexShrink: 0 }} />
             )}
-            {mood.label}
-          </span>
-        </div>
+            {signal.text}
+          </div>
+        )}
 
-        {/* Bottom-left: live ecosystem signal */}
-        <div style={{
-          position: 'absolute', bottom: 12, left: 13, zIndex: 4,
-          display: 'flex', alignItems: 'center', gap: 5,
-          fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 8,
-          background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(14px)',
-          color: 'rgba(255,255,255,0.70)', border: '1px solid rgba(255,255,255,0.06)',
-          letterSpacing: '-0.01em',
-        }}>
-          {signal.dot && (
-            <span className="live-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: signal.dotColor, display: 'inline-block', flexShrink: 0 }} />
-          )}
-          {signal.text}
-        </div>
-
-        {/* Bottom-right: slots */}
-        {c.slotsAvailable > 0 && (
+        {/* Bottom-right: real slots left — hidden when no data */}
+        {slotsText && (
           <div style={{
             position: 'absolute', bottom: 12, right: 13, zIndex: 4,
             display: 'flex', alignItems: 'center', gap: 5,
@@ -493,7 +500,7 @@ function CardSkeleton() {
 /* ─── ExplorarPage ───────────────────────────────────────── */
 
 export default function ExplorarPage() {
-  const [courts,      setCourts]  = useState<Court[]>([]);
+  const [courts,      setCourts]  = useState<CourtWithLive[]>([]);
   const [loading,     setLoading] = useState(true);
   const [dbError,     setDbError] = useState('');
   const [search,      setSearch]  = useState('');
@@ -501,28 +508,79 @@ export default function ExplorarPage() {
   const [zone,        setZone]    = useState('Todas');
   const [price,       setPrice]   = useState('Cualquiera');
   const [showFilters, setShow]    = useState(false);
-  const [countBookings, setCountBookings] = useState(0);
+  const [totalBookingsToday, setTotalBookingsToday] = useState(0);
   const [sigIdx,      setSigIdx]    = useState(0);
   const [phIdx,       setPhIdx]     = useState(0);
   const [socialIdx,   setSocialIdx] = useState(0);
   const [searchFocused, setSearchFocused] = useState(false);
   const countedRef = useRef(false);
 
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from('owner_courts')
-        .select('*')
-        .eq('active', true);
+  /* ── Load courts + today's bookings ── */
+  async function loadData() {
+    const today = new Date().toISOString().split('T')[0];
 
-      if (!error && data && data.length > 0) {
-        setCourts(data.map(normalise));
-      } else {
-        // Fallback to static seed
-        setCourts(STATIC_COURTS.map(normalise));
-      }
-      setLoading(false);
-    })();
+    const [courtsRes, bookingsRes, retosRes] = await Promise.all([
+      supabase.from('owner_courts').select('*').eq('active', true).is('deleted_at', null),
+      supabase.from('bookings').select('court_name, time').in('status', ['confirmed', 'paid', 'completed']).eq('date', today),
+      supabase.from('retos').select('team_name, location, time, format').eq('status', 'open').gte('date', today).order('created_at', { ascending: false }).limit(6),
+    ]);
+
+    const rawCourts = courtsRes.data ?? [];
+    const todayBookings = bookingsRes.data ?? [];
+    const openRetos     = retosRes.data   ?? [];
+
+    /* Group today's bookings by court name */
+    const byCourtName: Record<string, string[]> = {};
+    for (const b of todayBookings) {
+      if (!b.court_name) continue;
+      if (!byCourtName[b.court_name]) byCourtName[b.court_name] = [];
+      byCourtName[b.court_name].push(b.time ?? '');
+    }
+
+    /* Build courts with live data */
+    const baseCourts: Court[] = rawCourts.length > 0
+      ? rawCourts.map(normalise)
+      : STATIC_COURTS.map(r => ({ ...normalise(r), slots: [] }));
+
+    const liveCourts: CourtWithLive[] = baseCourts.map(c =>
+      attachLive(c, byCourtName[c.title] ?? [])
+    );
+
+    /* Sort: most booked today first, then by rating */
+    liveCourts.sort((a, b) => (b.bookingsToday - a.bookingsToday) || (b.rating - a.rating));
+
+    setCourts(liveCourts);
+    setTotalBookingsToday(todayBookings.length);
+
+    /* Build real live signals from open retos */
+    LIVE_SIGNALS = openRetos
+      .filter(r => r.team_name)
+      .map(r => {
+        const parts = [`⚽ ${r.team_name} busca rival`];
+        if (r.location) parts.push(r.location);
+        if (r.time)     parts.push(r.time);
+        return parts.join(' · ');
+      });
+    if (LIVE_SIGNALS.length === 0) LIVE_SIGNALS = ['⚽ Canchas disponibles para reservar esta semana'];
+
+    SOCIAL_SIGNALS = openRetos.slice(0, 4)
+      .filter(r => r.team_name)
+      .map(r => `${r.team_name} busca rival${r.location ? ` · ${r.location}` : ''}`);
+    if (SOCIAL_SIGNALS.length === 0) SOCIAL_SIGNALS = [];
+
+    setLoading(false);
+  }
+
+  useEffect(() => { loadData(); }, []);
+
+  /* Realtime: re-fetch when a booking is created/updated */
+  useEffect(() => {
+    const ch = supabase
+      .channel('explorar-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'retos'    }, loadData)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   const filtered = courts.filter(c =>
@@ -532,27 +590,24 @@ export default function ExplorarPage() {
     (!search || c.title.toLowerCase().includes(search.toLowerCase()) || c.location.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const activeFilters      = [zone !== 'Todas' && zone, price !== 'Cualquiera' && price].filter(Boolean);
-  const featured           = [...filtered].sort((a, b) => b.rating - a.rating)[0] ?? null;
-  const rest               = featured ? filtered.filter(c => c.id !== featured.id) : filtered;
-  const totalBookingsToday = Math.max(courts.length * 3 + 14, 24);
-  const activeCourts       = Math.max(courts.length, 8);
+  const activeFilters = [zone !== 'Todas' && zone, price !== 'Cualquiera' && price].filter(Boolean);
+  const featured      = filtered[0] ?? null;  // already sorted: most booked → highest rated
+  const rest          = featured ? filtered.filter(c => c.id !== featured.id) : filtered;
+  const activeCourts  = courts.length;
 
-  /* Count-up: ease-out cubic, triggers once */
+  /* Count-up animation driven by real totalBookingsToday */
+  const [countBookings, setCountBookings] = useState(0);
   useEffect(() => {
-    if (!courts.length || countedRef.current) return;
-    countedRef.current = true;
-    const target = totalBookingsToday;
-    let frame = 0;
-    const frames = 52;
+    if (totalBookingsToday === 0) return;
+    let frame = 0; const frames = 48;
     const id = setInterval(() => {
       frame++;
       const eased = 1 - Math.pow(1 - frame / frames, 3);
-      setCountBookings(Math.round(eased * target));
-      if (frame >= frames) { setCountBookings(target); clearInterval(id); }
+      setCountBookings(Math.round(eased * totalBookingsToday));
+      if (frame >= frames) { setCountBookings(totalBookingsToday); clearInterval(id); }
     }, 20);
     return () => clearInterval(id);
-  }, [courts.length, totalBookingsToday]);
+  }, [totalBookingsToday]);
 
   /* Live signal rotation — 3.8s per signal */
   useEffect(() => {
@@ -730,7 +785,7 @@ export default function ExplorarPage() {
               className="live-signal"
               style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.32)', fontWeight: 600, letterSpacing: '-0.01em' }}
             >
-              {LIVE_SIGNALS[sigIdx]}
+              {LIVE_SIGNALS.length > 0 ? LIVE_SIGNALS[sigIdx % LIVE_SIGNALS.length] : ''}
             </span>
           </div>
 
@@ -823,11 +878,10 @@ export default function ExplorarPage() {
       {/* ──────────────────────────────────────────────────────
           LIVE ACTIVITY BAR — football ecosystem pulse
       ──────────────────────────────────────────────────── */}
-      {!loading && courts.length > 0 && (
+      {!loading && courts.length > 0 && (totalBookingsToday > 0 || activeCourts > 0) && (
         <div style={{
           position: 'relative', zIndex: 1,
           padding: '10px 0 11px',
-          /* Reduced glow — subtle lime wash, not a bright band */
           background: 'linear-gradient(90deg, rgba(215,255,0,0.010) 0%, rgba(215,255,0,0.018) 50%, rgba(215,255,0,0.010) 100%)',
           borderTop: '1px solid rgba(215,255,0,0.042)',
           borderBottom: '1px solid rgba(215,255,0,0.028)',
@@ -835,20 +889,20 @@ export default function ExplorarPage() {
           <div className="container">
             <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 8px rgba(215,255,0,0.60)' }} />
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(215,255,0,0.82)', letterSpacing: '-0.01em' }}>
-                  <span key={countBookings} style={{ display: 'inline-block', minWidth: 20 }}>{countBookings}</span>{' '}reservas realizadas hoy
+              {totalBookingsToday > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 8px rgba(215,255,0,0.60)' }} />
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(215,255,0,0.82)', letterSpacing: '-0.01em' }}>
+                    <span key={countBookings} style={{ display: 'inline-block', minWidth: 20 }}>{countBookings}</span>{' '}reservas realizadas hoy
+                  </span>
+                </div>
+              )}
+
+              {activeCourts > 0 && (
+                <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', fontWeight: 600, letterSpacing: '-0.01em' }}>
+                  {activeCourts} cancha{activeCourts !== 1 ? 's' : ''} activa{activeCourts !== 1 ? 's' : ''}
                 </span>
-              </div>
-
-              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', fontWeight: 600, letterSpacing: '-0.01em' }}>
-                {activeCourts} canchas activas
-              </span>
-
-              <span className="activity-extra" style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', fontWeight: 400, letterSpacing: '-0.01em' }}>
-                Equipos formándose ahora
-              </span>
+              )}
             </div>
           </div>
         </div>
@@ -914,17 +968,19 @@ export default function ExplorarPage() {
 
         {!loading && !dbError && filtered.length > 0 && (
           <>
-            {/* ── Social activity strip ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-              <span className="section-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', flexShrink: 0 }} />
-              <span
-                key={socialIdx}
-                className="live-signal"
-                style={{ fontSize: 11, color: 'rgba(255,255,255,0.26)', fontWeight: 600, letterSpacing: '-0.01em' }}
-              >
-                {SOCIAL_SIGNALS[socialIdx]}
-              </span>
-            </div>
+            {/* ── Social activity strip — only shown when real retos exist ── */}
+            {SOCIAL_SIGNALS.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                <span className="section-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', flexShrink: 0 }} />
+                <span
+                  key={socialIdx}
+                  className="live-signal"
+                  style={{ fontSize: 11, color: 'rgba(255,255,255,0.26)', fontWeight: 600, letterSpacing: '-0.01em' }}
+                >
+                  {SOCIAL_SIGNALS[socialIdx % SOCIAL_SIGNALS.length]}
+                </span>
+              </div>
+            )}
 
             {/* ── Editorial grid — first card hero when 2+ results ── */}
             <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>

@@ -52,7 +52,8 @@ function normalise(row: Record<string, any>): Court {
     sport:           row.sport   ?? row.deporte ?? 'Fútbol',
     rating:          row.rating  ?? row.calificacion ?? 0,
     tag:             row.tag     ?? null,
-    slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? row.slots ?? 0,
+    slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? 0,
+    slots:           Array.isArray(row.slots) ? row.slots : [],
     imageUrl:        row.image_url ?? row.imageUrl ?? row.photo_url ?? row.photo
                   ?? row.cover_image ?? row.cover_url ?? row.thumbnail_url ?? row.thumbnail
                   ?? row.picture_url ?? row.picture ?? row.img_url ?? row.img
