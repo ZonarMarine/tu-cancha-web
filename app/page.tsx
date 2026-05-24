@@ -25,7 +25,7 @@ function normaliseOwnerCourt(r: Record<string, any>) {
     sport:           r.sport   ?? 'Fútbol',
     rating:          r.rating  ?? 5.0,
     tag:             r.tag     ?? null,
-    slotsAvailable:  r.slots_available ?? 5,
+    slots:           Array.isArray(r.slots) ? r.slots as string[] : [],
     imageUrl:        imgs[0] ?? r.image_url ?? null,
   };
 }
@@ -75,10 +75,31 @@ async function fetchCourts() {
   try {
     const sb = makeSB();
     const { data, error } = await sb
-      .from('owner_courts').select('*').eq('active', true).limit(9);
+      .from('owner_courts').select('*').eq('active', true).is('deleted_at', null).limit(9);
     if (!error && data && data.length > 0) return data.map(normaliseOwnerCourt);
   } catch (_) {}
-  return STATIC_COURTS;
+  return STATIC_COURTS.map((r: Record<string,any>) => ({ ...normaliseOwnerCourt(r), slots: [] as string[] }));
+}
+
+/* Returns a map of court title → number of confirmed bookings today */
+async function fetchTodayBookings(): Promise<Record<string, number>> {
+  try {
+    const sb    = makeSB();
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await sb
+      .from('bookings')
+      .select('court_name')
+      .in('status', ['confirmed', 'paid', 'completed'])
+      .eq('date', today);
+    if (!error && data) {
+      const map: Record<string, number> = {};
+      for (const b of data) {
+        if (b.court_name) map[b.court_name] = (map[b.court_name] ?? 0) + 1;
+      }
+      return map;
+    }
+  } catch (_) {}
+  return {};
 }
 
 async function fetchTopPlayers() {
@@ -266,9 +287,22 @@ function DarkBreath() {
 
 // ─────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const COURTS      = await fetchCourts();
-  const RETOS       = await fetchRetos();
-  const TOP_PLAYERS = await fetchTopPlayers();
+  const [COURTS, todayBookingsMap, RETOS, TOP_PLAYERS] = await Promise.all([
+    fetchCourts(),
+    fetchTodayBookings(),
+    fetchRetos(),
+    fetchTopPlayers(),
+  ]);
+
+  /* Attach live booking data + sort by most booked today */
+  type CourtWithLive = ReturnType<typeof normaliseOwnerCourt> & { bookingsToday: number; slotsLeft: number | null };
+  const courtsWithLive: CourtWithLive[] = COURTS.map(c => {
+    const bookingsToday = todayBookingsMap[(c as any).title] ?? 0;
+    const totalSlots    = ((c as any).slots as string[]).length > 0 ? ((c as any).slots as string[]).length : null;
+    const slotsLeft     = totalSlots !== null ? Math.max(0, totalSlots - bookingsToday) : null;
+    return { ...c, bookingsToday, slotsLeft } as CourtWithLive;
+  });
+  courtsWithLive.sort((a, b) => b.bookingsToday - a.bookingsToday || b.rating - a.rating);
   return (
     <div style={{ backgroundColor: 'var(--bg)' }}>
 
@@ -716,12 +750,12 @@ export default async function HomePage() {
             WebkitOverflowScrolling: 'touch' as any,
           }}>
             <div style={{ display: 'flex', gap: 18, width: 'max-content', paddingBottom: 8 }}>
-            {COURTS.map((c, ci) => {
-              const totalSlots = 8;
-              const reserved = totalSlots - c.slotsAvailable;
-              const fillPct = Math.round((reserved / totalSlots) * 100);
-              const isHot = c.slotsAvailable <= 2;
-              const isFilling = c.slotsAvailable <= 4;
+            {courtsWithLive.map((c) => {
+              const totalSlots  = c.slotsLeft !== null ? (c.bookingsToday + c.slotsLeft) : null;
+              const fillPct     = totalSlots ? Math.round((c.bookingsToday / totalSlots) * 100) : 0;
+              const isHot       = c.slotsLeft !== null && c.slotsLeft <= 2 && totalSlots !== null && totalSlots > 0;
+              const isFilling   = c.slotsLeft !== null && c.slotsLeft <= 4;
+              const showBadge   = c.bookingsToday > 0 || (c.slotsLeft !== null && c.slotsLeft <= 3);
               return (
                 <Link key={c.id} href={`/cancha/${c.id}`} className="court-home-card" style={{
                   display: 'block', borderRadius: 20, overflow: 'hidden', width: 300, flexShrink: 0,
@@ -734,56 +768,69 @@ export default async function HomePage() {
                   <div style={{ height: 178, position: 'relative', overflow: 'hidden' }}>
                     <FieldPreview sport={c.sport} tag={c.tag} />
 
-                    {/* Live badge top-left */}
-                    <span style={{
-                      position: 'absolute', top: 13, left: 13, zIndex: 3,
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                      fontSize: 10, fontWeight: 600, padding: '4px 9px', borderRadius: 7,
-                      background: 'rgba(0,0,0,0.65)',
-                      color: isHot ? '#FF6B6B' : '#4ADE80',
-                      border: `1px solid ${isHot ? 'rgba(255,107,107,0.20)' : 'rgba(74,222,128,0.15)'}`,
-                      backdropFilter: 'blur(8px)',
-                    }}>
+                    {/* Live badge top-left — only when there's real data */}
+                    {showBadge && (
                       <span style={{
-                        width: 5, height: 5, borderRadius: '50%',
-                        background: isHot ? '#FF6B6B' : '#4ADE80', display: 'inline-block',
-                        animation: 'slotPulse 2s ease-in-out infinite',
-                      }} />
-                      {isHot ? 'Últimos cupos' : `${reserved} reservadas hoy`}
-                    </span>
+                        position: 'absolute', top: 13, left: 13, zIndex: 3,
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        fontSize: 10, fontWeight: 600, padding: '4px 9px', borderRadius: 7,
+                        background: 'rgba(0,0,0,0.65)',
+                        color: isHot ? '#FF6B6B' : '#4ADE80',
+                        border: `1px solid ${isHot ? 'rgba(255,107,107,0.20)' : 'rgba(74,222,128,0.15)'}`,
+                        backdropFilter: 'blur(8px)',
+                      }}>
+                        <span style={{
+                          width: 5, height: 5, borderRadius: '50%',
+                          background: isHot ? '#FF6B6B' : '#4ADE80', display: 'inline-block',
+                          animation: 'slotPulse 2s ease-in-out infinite',
+                        }} />
+                        {isHot
+                          ? 'Últimos cupos'
+                          : c.bookingsToday > 0
+                          ? `${c.bookingsToday} reservada${c.bookingsToday !== 1 ? 's' : ''} hoy`
+                          : `${c.slotsLeft} horario${(c.slotsLeft??0) !== 1 ? 's' : ''} disponible${(c.slotsLeft??0) !== 1 ? 's' : ''}`
+                        }
+                      </span>
+                    )}
 
-                    {/* Slots top-right */}
-                    <span style={{
-                      position: 'absolute', top: 13, right: 13, zIndex: 3,
-                      fontSize: 10, fontWeight: 600, padding: '4px 9px', borderRadius: 7,
-                      background: 'rgba(0,0,0,0.60)',
-                      color: 'rgba(255,255,255,0.50)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                    }}>{c.slotsAvailable} libres</span>
+                    {/* Slots top-right — only when we know the slot count */}
+                    {c.slotsLeft !== null && (
+                      <span style={{
+                        position: 'absolute', top: 13, right: 13, zIndex: 3,
+                        fontSize: 10, fontWeight: 600, padding: '4px 9px', borderRadius: 7,
+                        background: 'rgba(0,0,0,0.60)',
+                        color: 'rgba(255,255,255,0.50)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}>{c.slotsLeft} libre{c.slotsLeft !== 1 ? 's' : ''}</span>
+                    )}
 
-                    {/* Availability bar — bottom edge of image */}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(0,0,0,0.4)', zIndex: 3 }}>
-                      <div style={{
-                        height: '100%', width: `${fillPct}%`,
-                        background: isHot
-                          ? 'linear-gradient(to right, #FF6B6B, #FF8C42)'
-                          : isFilling
-                          ? 'linear-gradient(to right, rgba(215,255,0,0.6), rgba(215,255,0,0.9))'
-                          : 'rgba(74,222,128,0.7)',
-                        transition: 'width 0.6s ease',
-                        animation: isHot ? 'slotPulse 2.4s ease-in-out infinite' : undefined,
-                      }} />
-                    </div>
+                    {/* Availability bar — only shown when we have real data */}
+                    {totalSlots !== null && totalSlots > 0 && (
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(0,0,0,0.4)', zIndex: 3 }}>
+                        <div style={{
+                          height: '100%', width: `${fillPct}%`,
+                          background: isHot
+                            ? 'linear-gradient(to right, #FF6B6B, #FF8C42)'
+                            : isFilling
+                            ? 'linear-gradient(to right, rgba(215,255,0,0.6), rgba(215,255,0,0.9))'
+                            : 'rgba(74,222,128,0.7)',
+                          transition: 'width 0.6s ease',
+                          animation: isHot ? 'slotPulse 2.4s ease-in-out infinite' : undefined,
+                        }} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
                   <div style={{ padding: '18px 20px 20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                       <p style={{ fontWeight: 700, fontSize: 14 }}>{c.title}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0, marginLeft: 8, fontSize: 12, color: '#FACC15', fontWeight: 700 }}>
-                        <Star size={9} fill="currentColor" />{c.rating.toFixed(1)}
-                      </div>
+                      {c.rating > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0, marginLeft: 8, fontSize: 12, color: '#FACC15', fontWeight: 700 }}>
+                          <Star size={9} fill="currentColor" />{c.rating.toFixed(1)}
+                        </div>
+                      )}
                     </div>
                     <p style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 16 }}>📍 {c.location}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

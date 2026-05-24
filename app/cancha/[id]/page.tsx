@@ -552,6 +552,7 @@ export default function CanchaPage() {
   const [notFound,    setNotFound]    = useState(false);
   const [user,        setUser]        = useState<any>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [liveRetos,   setLiveRetos]   = useState<Array<{ id: string; team_name: string; time: string; format: string | null; status: string }>>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -571,6 +572,21 @@ export default function CanchaPage() {
       setLoading(false);
     })();
   }, [id]);
+
+  /* Fetch real open retos for this court */
+  useEffect(() => {
+    if (!court) return;
+    const today = new Date().toISOString().split('T')[0];
+    supabase
+      .from('retos')
+      .select('id, team_name, time, format, status')
+      .eq('court_name', court.title)
+      .eq('status', 'open')
+      .gte('date', today)
+      .order('created_at', { ascending: true })
+      .limit(5)
+      .then(({ data }) => setLiveRetos((data ?? []) as typeof liveRetos));
+  }, [court]);
 
   const handleReservar = () => {
     if (!user) router.push(`/auth?redirect=/cancha/${id}`);
@@ -1025,60 +1041,39 @@ export default function CanchaPage() {
               </div>
             </div>
 
-            {/* ── Esta noche — live section ── */}
-            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                <p className="sec-label" style={{ margin:0 }}>Esta noche</p>
-                <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:99, background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.18)', fontSize:9, fontWeight:800, color:'rgba(100,230,120,0.85)', letterSpacing:'0.08em' }}>
-                  <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.85)', display:'inline-block' }}/>
-                  EN VIVO
-                </span>
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {/* Active game 1 — searching */}
-                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(215,255,0,0.025)', border:'1px solid rgba(215,255,0,0.08)' }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(215,255,0,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Partido activo — buscando rival</span>
-                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div>
-                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Escazú United</p>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>7PM · 8v8 · Nivel Intermedio</p>
-                    </div>
-                    <button onClick={handleReservar} style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'var(--accent)', color:'#000', border:'none', whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>Retar a este equipo</button>
-                  </div>
+            {/* ── Retos activos en esta cancha — live from DB ── */}
+            {liveRetos.length > 0 && (
+              <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                  <p className="sec-label" style={{ margin:0 }}>Retos activos aquí</p>
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:99, background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.18)', fontSize:9, fontWeight:800, color:'rgba(100,230,120,0.85)', letterSpacing:'0.08em' }}>
+                    <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.85)', display:'inline-block' }}/>
+                    EN VIVO
+                  </span>
                 </div>
-                {/* Active game 2 — confirmed */}
-                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(74,222,128,0.60)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Partido confirmado</span>
-                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div>
-                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Los Clavos FC vs Arena FC</p>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>8PM · 5v5</p>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {liveRetos.map(r => (
+                    <div key={r.id} style={{ padding:'12px 14px', borderRadius:12, background:'rgba(215,255,0,0.025)', border:'1px solid rgba(215,255,0,0.08)' }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                        <span style={{ fontSize:9, fontWeight:800, color:'rgba(215,255,0,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Buscando rival</span>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <div>
+                          <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>{r.team_name}</p>
+                          <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>
+                            {[r.time, r.format].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                        <Link href="/juegos" style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'var(--accent)', color:'#000', border:'none', whiteSpace:'nowrap', letterSpacing:'-0.01em', textDecoration:'none' }}>
+                          Ver reto
+                        </Link>
+                      </div>
                     </div>
-                    <button style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:600, cursor:'pointer', background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(255,255,255,0.07)', whiteSpace:'nowrap' }}>Ver partido</button>
-                  </div>
-                </div>
-                {/* Active game 3 — filling */}
-                <div style={{ padding:'12px 14px', borderRadius:12, background:'rgba(251,146,60,0.025)', border:'1px solid rgba(251,146,60,0.08)' }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:9, fontWeight:800, color:'rgba(251,146,60,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Cupos disponibles</span>
-                    <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div>
-                      <p style={{ fontWeight:700, fontSize:13, color:'rgba(255,255,255,0.82)', marginBottom:2, letterSpacing:'-0.01em' }}>Herradura United</p>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.30)' }}>9PM · 7v7 · 4 cupos libres</p>
-                    </div>
-                    <button onClick={handleReservar} style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'rgba(251,146,60,0.12)', color:'rgba(251,146,60,0.80)', border:'1px solid rgba(251,146,60,0.18)', whiteSpace:'nowrap' }}>Unirme</button>
-                  </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* ── Reviews ── */}
             <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
