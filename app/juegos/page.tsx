@@ -316,16 +316,38 @@ export default function JuegosPage() {
   const [liveRetos,   setLiveRetos]   = useState<typeof GAMES>([]);
   const [loading,     setLoading]     = useState(true);
 
-  /* Fetch live retos from DB */
+  /* Fetch live retos from DB — only future/today and not yet started */
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+
     supabase
       .from('retos')
       .select('*')
       .eq('status', 'open')
+      .gte('date', today)           // only today or future dates
+      .order('date', { ascending: true })
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(30)
       .then(({ data }) => {
-        if (data && data.length > 0) setLiveRetos(data.map(retoToGame));
+        if (data && data.length > 0) {
+          const now = new Date();
+          const valid = data.filter(r => {
+            // Future dates always valid
+            if (!r.date || r.date > today) return true;
+            // Today: check if the time slot has already passed
+            if (!r.time) return true;
+            const m = String(r.time).match(/(\d+):(\d+)\s*(AM|PM)?/i);
+            if (!m) return true;
+            let h = parseInt(m[1]);
+            const p = m[3]?.toUpperCase();
+            if (p === 'PM' && h !== 12) h += 12;
+            if (p === 'AM' && h === 12)  h  = 0;
+            const start = new Date(r.date + 'T00:00:00');
+            start.setHours(h, parseInt(m[2]), 0, 0);
+            return start > now;
+          });
+          setLiveRetos(valid.map(retoToGame));
+        }
         setLoading(false);
       });
   }, []);
