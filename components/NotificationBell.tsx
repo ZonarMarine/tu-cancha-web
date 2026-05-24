@@ -12,39 +12,7 @@ type Notif = {
   created_at: string;
 };
 
-/* Realistic seed — shown until real notifications load */
-const SEED: Notif[] = [
-  {
-    id: 's1', type: 'invite_accepted',
-    title: 'Diego M. aceptó tu invitación',
-    body: 'Se unió a tu equipo', read: false,
-    created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 's2', type: 'rival_search',
-    title: 'Escazú United busca rival esta noche',
-    body: '7PM · Pinares · 8v8', read: false,
-    created_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: 's3', type: 'club_promoted',
-    title: 'Tu equipo subió a División Plata',
-    body: 'Nuevo rango desbloqueado', read: false,
-    created_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: 's4', type: 'reservation',
-    title: 'Partido comienza en 2 horas',
-    body: 'Twelve Academy · 7PM', read: true,
-    created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: 's5', type: 'tournament',
-    title: 'Torneo disponible · Mayo 2026',
-    body: 'Liga Relámpago abierta', read: true,
-    created_at: new Date(Date.now() - 86400 * 1000).toISOString(),
-  },
-];
+/* No seed data — panel shows only real notifications from DB */
 
 const TYPE_META: Record<string, { icon: string; color: string }> = {
   invite_accepted: { icon: '👤', color: '#D7FF00' },
@@ -66,7 +34,8 @@ function timeAgo(iso: string) {
 
 export default function NotificationBell() {
   const [open,      setOpen]      = useState(false);
-  const [notifs,    setNotifs]    = useState<Notif[]>(SEED);
+  const [notifs,    setNotifs]    = useState<Notif[]>([]);
+  const [loading,   setLoading]   = useState(false);
   const [userId,    setUserId]    = useState<string | null>(null);
   const [panelPos,  setPanelPos]  = useState({ top: 0, right: 0 });
   const bellRef  = useRef<HTMLButtonElement>(null);
@@ -98,14 +67,16 @@ export default function NotificationBell() {
   /* ── Load + realtime ── */
   useEffect(() => {
     if (!userId) return;
+    setLoading(true);
     supabase
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(30)
       .then(({ data }) => {
-        if (data && data.length > 0) setNotifs(data as Notif[]);
+        setNotifs((data ?? []) as Notif[]);
+        setLoading(false);
       });
 
     const ch = supabase
@@ -157,6 +128,8 @@ export default function NotificationBell() {
           from { opacity:0; transform:translateY(-10px) scale(0.96); }
           to   { opacity:1; transform:translateY(0)    scale(1);    }
         }
+        @keyframes skPulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+        @keyframes notifIn  { from{opacity:0;transform:translateX(-8px);} to{opacity:1;transform:translateX(0);} }
         .notif-row:hover { background: rgba(255,255,255,0.025) !important; }
       `}</style>
 
@@ -247,10 +220,26 @@ export default function NotificationBell() {
 
           {/* List */}
           <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-            {notifs.length === 0 ? (
+            {loading ? (
+              /* Skeleton while fetching */
+              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.05)', flexShrink: 0, animation: 'skPulse 1.4s ease-in-out infinite' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: 12, width: '65%', borderRadius: 5, background: 'rgba(255,255,255,0.05)', marginBottom: 7, animation: 'skPulse 1.4s ease-in-out infinite' }} />
+                      <div style={{ height: 10, width: '40%', borderRadius: 5, background: 'rgba(255,255,255,0.03)', animation: 'skPulse 1.4s ease-in-out infinite' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : notifs.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '36px 16px' }}>
-                <div style={{ fontSize: 32, marginBottom: 10 }}>⚽</div>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.22)' }}>Nada nuevo por ahora</p>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🔔</div>
+                <p style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,0.32)', marginBottom: 4 }}>Todo tranquilo por aquí</p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>
+                  {userId ? 'Las notificaciones aparecerán cuando haya actividad.' : 'Iniciá sesión para ver tu actividad.'}
+                </p>
               </div>
             ) : notifs.map((n, i) => {
               const meta = TYPE_META[n.type] ?? TYPE_META.general;
@@ -262,6 +251,7 @@ export default function NotificationBell() {
                   borderLeft: n.read ? '2px solid transparent' : '2px solid rgba(215,255,0,0.38)',
                   borderBottom: i < notifs.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                   cursor: 'default', transition: 'background 0.16s',
+                  animation: `notifIn 0.25s ${i * 0.04}s ease both`,
                 }}>
                   {/* Icon */}
                   <div style={{
