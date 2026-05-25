@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSport } from "@/context/SportContext";
 import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
@@ -499,7 +498,6 @@ function CardSkeleton() {
 
 export default function ExplorarPage() {
   const { sport: globalSport, setSport: setGlobalSport } = useSport();
-  const searchParams = useSearchParams();
 
   const [courts,      setCourts]  = useState<CourtWithLive[]>([]);
   const [loading,     setLoading] = useState(true);
@@ -522,7 +520,7 @@ export default function ExplorarPage() {
 
   /* ── Sync sport from URL param or global context on mount ── */
   useEffect(() => {
-    const urlSport = searchParams.get('sport');
+    const urlSport = new URLSearchParams(window.location.search).get('sport');
     if (urlSport === 'padel') {
       setSport('Pádel');
       setGlobalSport('padel');

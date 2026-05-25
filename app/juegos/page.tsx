@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { MapPin, Clock, Plus, CalendarDays, Zap } from "lucide-react";
 import Link from "next/link";
 import { fmtColones } from "@/lib/data";
@@ -400,12 +399,11 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
 export default function JuegosPage() {
   const { sport, setSport } = useSport();
   const t                   = SPORT_THEME[sport];
-  const searchParams        = useSearchParams();
 
   /* Sync ?sport= URL param → global context on mount */
   useEffect(() => {
-    const p = searchParams.get("sport");
-    if (p === "padel")               setSport("padel");
+    const p = new URLSearchParams(window.location.search).get("sport");
+    if (p === "padel")                          setSport("padel");
     else if (p === "futbol" || p === "football") setSport("futbol");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
