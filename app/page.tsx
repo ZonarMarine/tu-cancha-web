@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Star, ChevronRight } from "lucide-react";
-import { GAMES, fmtColones } from "@/lib/data";
 import LiveTicker from "@/components/LiveTicker";
 import MasReservadas from "@/components/MasReservadas";
 import HomeRetosSection from "@/components/HomeRetosSection";
@@ -10,6 +9,7 @@ import StatsCounter from "@/components/StatsCounter";
 import HeroSearch from "@/components/HeroSearch";
 import HeroStats from "@/components/HeroStats";
 import HeroLiveStrip from "@/components/HeroLiveStrip";
+import HeroLiveBadge from "@/components/HeroLiveBadge";
 import { SportProvider } from "@/context/SportContext";
 import { createClient } from "@supabase/supabase-js";
 
@@ -346,19 +346,7 @@ export default async function HomePage() {
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 860, padding: '0 28px' }}>
 
           {/* Live badge */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '7px 16px', borderRadius: 99, marginBottom: 52,
-            background: 'rgba(215,255,0,0.05)',
-            border: '1px solid rgba(215,255,0,0.13)',
-            fontSize: 11, fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.08em',
-          }}>
-            <span className="pulse-live" style={{
-              width: 6, height: 6, borderRadius: '50%',
-              backgroundColor: 'var(--accent)', display: 'inline-block',
-            }} />
-            {GAMES.length} PARTIDOS ACTIVOS · COSTA RICA
-          </div>
+          <HeroLiveBadge />
 
           {/* Headline */}
           <h1 style={{
