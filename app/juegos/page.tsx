@@ -409,70 +409,27 @@ export default function JuegosPage() {
   const load = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
 
-    // STEP 1: completely unrestricted query — no date/status filter at all
-    // This tells us definitively whether ANY rows exist in the table.
-    const { data: allData, error: allError } = await supabase
+    // Fetch with server-side status + date filters.
+    // Schema columns: id, user_id, team_name, court_name, date, time,
+    //                 hours, players, price, status, created_at,
+    //                 location, format, level, note, sport (added via migration)
+    const { data, error } = await supabase
       .from("retos")
-      .select("*")
+      .select("id, user_id, team_name, court_name, date, time, hours, players, price, status, created_at, location, format, level, note, sport")
+      .in("status", ACTIVE_STATUSES)
+      .gte("date", today)
+      .order("date", { ascending: true })
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(60);
 
-    console.log("[juegos] UNFILTERED query error:", allError);
-    console.log("[juegos] UNFILTERED total rows in table:", allData?.length ?? 0);
-    if (allData && allData.length > 0) {
-      console.table(allData.map(r => ({
-        id: r.id,
-        team_name: r.team_name,
-        status: r.status,
-        date: r.date,
-        time: r.time,
-        sport: r.sport ?? r.deporte ?? "(none)",
-        format: r.format,
-        level: r.level,
-      })));
-    } else {
-      console.warn("[juegos] ⚠️ Table is EMPTY or still RLS-blocked. Run retos-rls-fix.sql in Supabase and re-create a reto.");
-    }
+    if (error) console.error("[juegos] query error:", error);
 
-    // STEP 2: now apply filters client-side from the unfiltered set
-    const all = (allData ?? []) as Reto[];
+    const all = (data ?? []) as Reto[];
 
-    // Status filter (client-side)
-    const statusFiltered = all.filter(r => {
-      const pass = ACTIVE_STATUSES.includes(r.status);
-      if (!pass) console.log("[juegos] status-filtered OUT:", r.id, r.team_name, "status:", r.status);
-      return pass;
-    });
-    console.log("[juegos] after status filter:", statusFiltered.length, "/", all.length);
-
-    // Date filter (client-side)
-    const dateFiltered = statusFiltered.filter(r => {
-      if (!r.date) return true; // no date → show it
-      const pass = r.date >= today;
-      if (!pass) console.log("[juegos] date-filtered OUT:", r.id, r.team_name, "date:", r.date, "today:", today);
-      return pass;
-    });
-    console.log("[juegos] after date filter:", dateFiltered.length, "/", statusFiltered.length);
-
-    // Sport filter (client-side)
-    const sportFiltered = dateFiltered.filter(r => {
-      const pass = isSportMatch(r, sport);
-      if (!pass) console.log("[juegos] sport-filtered OUT:", r.id, r.team_name, "sport:", r.sport ?? r.deporte ?? "(none)");
-      return pass;
-    });
-    console.log("[juegos] after sport filter:", sportFiltered.length, "/", dateFiltered.length);
-
-    // Time filter (client-side, with grace period)
-    const valid = sportFiltered.filter(r => {
-      const pass = isStillFuture(r, today);
-      if (!pass) console.log("[juegos] time-filtered OUT (expired):", r.id, r.team_name, "date:", r.date, "time:", r.time);
-      return pass;
-    });
-    console.log("[juegos] FINAL visible retos:", valid.length);
-
-    if (all.length > 0 && valid.length === 0) {
-      console.warn("[juegos] ⚠️ Rows exist in DB but ALL filtered out — see logs above for which step cut them.");
-    }
+    // Client-side: sport match + not yet expired (30-min grace period)
+    const valid = all.filter(r =>
+      isSportMatch(r, sport) && isStillFuture(r, today)
+    );
 
     setRetos(valid);
     setLoading(false);
