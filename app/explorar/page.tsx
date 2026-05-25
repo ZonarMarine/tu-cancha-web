@@ -64,7 +64,7 @@ function attachLive(court: Court, bookedTimesToday: string[]): CourtWithLive {
 const SPORT_PILLS = [
   { label: 'Todo',   icon: '🏟', val: 'Todo'   },
   { label: 'Fútbol', icon: '⚽', val: 'Fútbol' },
-  { label: 'Pádel',  icon: '🎾', val: 'Pádel'  },
+  { label: 'Pádel',  icon: '🏓', val: 'Pádel'  },
 ];
 
 /* Sport-specific hover accents — each discipline has its own energy */
@@ -72,6 +72,13 @@ const SPORT_ACCENT: Record<string, { bg: string; border: string; color: string; 
   Todo:   { bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.13)', color: 'rgba(255,255,255,0.72)', glow: 'rgba(255,255,255,0.04)' },
   Fútbol: { bg: 'rgba(215,255,0,0.08)',   border: 'rgba(215,255,0,0.20)',   color: 'rgba(215,255,0,0.82)',   glow: 'rgba(215,255,0,0.06)'   },
   Pádel:  { bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)',  color: 'rgba(96,165,250,0.82)',  glow: 'rgba(96,165,250,0.06)'  },
+};
+
+/* Solid active-state colors per sport (for pill active bg + buttons) */
+const SPORT_SOLID: Record<string, { bg: string; text: string; glow: string; icon: string }> = {
+  Todo:   { bg: 'rgba(255,255,255,0.14)', text: '#fff',  glow: 'rgba(255,255,255,0.12)', icon: '🏟' },
+  Fútbol: { bg: '#D7FF00',               text: '#000',  glow: 'rgba(215,255,0,0.28)',   icon: '⚽' },
+  Pádel:  { bg: '#60A5FA',               text: '#000',  glow: 'rgba(96,165,250,0.28)',  icon: '🏓' },
 };
 
 /* Live signals — populated from real retos data, falls back to empty */
@@ -214,7 +221,8 @@ function getCourtSignal(c: CourtWithLive): { signal: LiveSignal | null; slotsTex
 
 function SportPill({ p, active, onClick }: { p: typeof SPORT_PILLS[0]; active: boolean; onClick: () => void }) {
   const [hov, setHov] = useState(false);
-  const acc = SPORT_ACCENT[p.val] ?? SPORT_ACCENT.Todo;
+  const acc   = SPORT_ACCENT[p.val] ?? SPORT_ACCENT.Todo;
+  const solid = SPORT_SOLID[p.val]  ?? SPORT_SOLID.Todo;
   return (
     <button
       onClick={onClick}
@@ -225,11 +233,11 @@ function SportPill({ p, active, onClick }: { p: typeof SPORT_PILLS[0]; active: b
         display: 'inline-flex', alignItems: 'center', gap: 5,
         padding: '7px 16px', borderRadius: 99, cursor: 'pointer', border: 'none',
         fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
-        background: active ? 'var(--accent)' : hov ? acc.bg : 'rgba(255,255,255,0.048)',
-        color:      active ? '#000'          : hov ? acc.color : 'rgba(255,255,255,0.38)',
+        background: active ? solid.bg  : hov ? acc.bg : 'rgba(255,255,255,0.048)',
+        color:      active ? solid.text : hov ? acc.color : 'rgba(255,255,255,0.38)',
         outline: 'none',
         boxShadow: active
-          ? '0 0 20px rgba(215,255,0,0.22), 0 0 0 1px rgba(215,255,0,0.22)'
+          ? `0 0 20px ${solid.glow}, 0 0 0 1px ${solid.glow}`
           : hov
           ? `0 0 14px ${acc.glow}, 0 0 0 1px ${acc.border}`
           : '0 0 0 1px rgba(255,255,255,0.07)',
@@ -619,6 +627,9 @@ export default function ExplorarPage() {
 
   const activeFilters = [zone !== 'Todas' && zone, price !== 'Cualquiera' && price].filter(Boolean);
   const featured      = filtered[0] ?? null;  // already sorted: most booked → highest rated
+
+  /* Sport-aware accent for the current page — drives live bar, buttons, etc. */
+  const pageSolid = SPORT_SOLID[sport] ?? SPORT_SOLID.Fútbol;
   const rest          = featured ? filtered.filter(c => c.id !== featured.id) : filtered;
   const activeCourts  = courts.length;
 
@@ -909,17 +920,17 @@ export default function ExplorarPage() {
         <div style={{
           position: 'relative', zIndex: 1,
           padding: '10px 0 11px',
-          background: 'linear-gradient(90deg, rgba(215,255,0,0.010) 0%, rgba(215,255,0,0.018) 50%, rgba(215,255,0,0.010) 100%)',
-          borderTop: '1px solid rgba(215,255,0,0.042)',
-          borderBottom: '1px solid rgba(215,255,0,0.028)',
+          background: `linear-gradient(90deg, ${pageSolid.glow} 0%, ${pageSolid.glow} 50%, ${pageSolid.glow} 100%)`,
+          borderTop: `1px solid ${pageSolid.glow}`,
+          borderBottom: `1px solid ${pageSolid.glow}`,
         }}>
           <div className="container">
             <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
 
               {totalBookingsToday > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 8px rgba(215,255,0,0.60)' }} />
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(215,255,0,0.82)', letterSpacing: '-0.01em' }}>
+                  <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: pageSolid.bg, display: 'inline-block', flexShrink: 0, boxShadow: `0 0 8px ${pageSolid.glow}` }} />
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: pageSolid.bg, letterSpacing: '-0.01em' }}>
                     <span key={countBookings} style={{ display: 'inline-block', minWidth: 20 }}>{countBookings}</span>{' '}reservas realizadas hoy
                   </span>
                 </div>
@@ -974,24 +985,38 @@ export default function ExplorarPage() {
           </div>
         )}
 
-        {!loading && !dbError && courts.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '88px 24px' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 22, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 32 }}>🏟</div>
-            <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.025em' }}>Aún no hay canchas registradas</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)' }}>Pronto habrá opciones disponibles. Volvé más tarde.</p>
-          </div>
-        )}
+        {!loading && !dbError && courts.length === 0 && (() => {
+          const s = SPORT_SOLID[sport] ?? SPORT_SOLID.Todo;
+          return (
+            <div style={{ textAlign: 'center', padding: '88px 24px' }}>
+              <div style={{ width: 72, height: 72, borderRadius: 22, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${s.bg}18`, border: `1px solid ${s.bg}40`, fontSize: 32 }}>{s.icon}</div>
+              <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.025em' }}>Aún no hay canchas registradas</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)' }}>Pronto habrá opciones disponibles. Volvé más tarde.</p>
+            </div>
+          );
+        })()}
 
-        {!loading && !dbError && courts.length > 0 && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '88px 24px' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 22, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 32 }}>⚽</div>
-            <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.025em' }}>Sin canchas con esos filtros</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)', marginBottom: 24 }}>Intentá con otro deporte o zona</p>
-            <button onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); }} className="btn-primary" style={{ padding: '10px 24px', fontSize: 13, borderRadius: 10 }}>
-              Limpiar filtros
-            </button>
-          </div>
-        )}
+        {!loading && !dbError && courts.length > 0 && filtered.length === 0 && (() => {
+          const s = SPORT_SOLID[sport] ?? SPORT_SOLID.Todo;
+          return (
+            <div style={{ textAlign: 'center', padding: '88px 24px' }}>
+              <div style={{ width: 72, height: 72, borderRadius: 22, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${s.bg}18`, border: `1px solid ${s.bg}40`, fontSize: 32 }}>{s.icon}</div>
+              <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.025em' }}>Sin canchas con esos filtros</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)', marginBottom: 24 }}>Intentá con otro deporte o zona</p>
+              <button
+                onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); }}
+                style={{
+                  padding: '10px 24px', fontSize: 13, borderRadius: 10, cursor: 'pointer',
+                  border: 'none', fontWeight: 800, letterSpacing: '-0.01em',
+                  background: s.bg, color: s.text,
+                  boxShadow: `0 0 20px ${s.glow}`,
+                }}
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          );
+        })()}
 
         {!loading && !dbError && filtered.length > 0 && (
           <>
