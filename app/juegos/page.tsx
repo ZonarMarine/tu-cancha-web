@@ -29,7 +29,11 @@ type Reto = {
 const FORMATS = ["Todos", "5v5", "7v7", "11v11"];
 const LEVELS  = ["Todos", "Principiante", "Intermedio", "Avanzado"];
 
-const ACTIVE_STATUSES = ["open", "looking_for_rival", "active"];
+// All statuses that represent a reto that's visible/active
+const ACTIVE_STATUSES = [
+  "open", "looking_for_rival", "pending_rival",
+  "active", "published", "created",
+];
 
 /* ─── Helpers ───────────────────────────────────────────────── */
 const TEAM_COLORS = ["#D7FF00","#4ADE80","#60A5FA","#F97316","#A78BFA","#FF6B6B","#FACC15"];
@@ -68,26 +72,43 @@ function fmtCountdown(mins: number): string {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 function isStillFuture(r: Reto, today: string): boolean {
+  // Future date → always valid
   if (!r.date || r.date > today) return true;
+  // No time field → show it (can't determine expiry)
   if (!r.time) return true;
   const m = String(r.time).match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  // Unparseable time format → show it
   if (!m) return true;
   let h = parseInt(m[1]);
   const p = m[3]?.toUpperCase();
   if (p === "PM" && h !== 12) h += 12;
   if (p === "AM" && h === 12) h = 0;
-  const t = new Date(`${r.date}T00:00:00`);
-  t.setHours(h, parseInt(m[2]), 0, 0);
-  return t > new Date();
+  const gameTime = new Date(`${r.date}T00:00:00`);
+  gameTime.setHours(h, parseInt(m[2]), 0, 0);
+  // Keep reto visible until 30 min after game start (grace period)
+  const grace = new Date(gameTime.getTime() + 30 * 60 * 1000);
+  return grace > new Date();
 }
 function isSportMatch(r: Reto, sport: "futbol" | "padel"): boolean {
-  const rSport = (r.sport ?? r.deporte ?? "").toLowerCase();
-  const fmt    = (r.format ?? "").toLowerCase();
+  const rSport = (r.sport ?? r.deporte ?? "").toLowerCase().trim();
+
+  // If no sport field stored at all (crear-partido doesn't save sport),
+  // treat the reto as football by default — show it under football tab.
+  const noSportField = rSport === "";
+  const fmt = (r.format ?? "").toLowerCase();
+
+  const isPadel =
+    rSport.includes("padel") || rSport.includes("pádel") ||
+    fmt.includes("padel") || fmt.includes("dobles");
+
   if (sport === "padel") {
-    return rSport.includes("padel") || rSport.includes("pádel") || fmt.includes("padel") || fmt.includes("dobles");
+    if (noSportField) return false; // retos without sport = football by default
+    return isPadel;
   }
-  return !rSport.includes("padel") && !rSport.includes("pádel") && !fmt.includes("padel");
+  // football: include retos with no sport field OR any non-padel sport
+  return noSportField || !isPadel;
 }
+
 function dateLabel(r: Reto): string {
   if (!r.date) return "–";
   const today = new Date().toISOString().split("T")[0];
@@ -387,7 +408,8 @@ export default function JuegosPage() {
   /* ── Load retos ── */
   const load = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("retos")
       .select("*")
       .in("status", ACTIVE_STATUSES)
@@ -396,12 +418,41 @@ export default function JuegosPage() {
       .order("created_at", { ascending: false })
       .limit(60);
 
+    /* ── DEBUG: log raw Supabase result ── */
+    console.log("[juegos] query error:", error);
+    console.log("[juegos] raw rows from DB:", data?.length ?? 0, data?.map(r => ({
+      id: r.id,
+      team_name: r.team_name,
+      status: r.status,
+      date: r.date,
+      time: r.time,
+      sport: r.sport ?? r.deporte ?? "(no sport field)",
+      format: r.format,
+      level: r.level,
+      created_at: r.created_at,
+    })));
+
     const all = (data ?? []) as Reto[];
 
-    // Filter: sport match + still in the future
-    const valid = all.filter(r =>
-      isSportMatch(r, sport) && isStillFuture(r, today)
-    );
+    /* ── Filter 1: sport ── */
+    const sportFiltered = all.filter(r => {
+      const pass = isSportMatch(r, sport);
+      if (!pass) console.log("[juegos] sport-filtered OUT:", r.id, r.team_name, "sport:", r.sport ?? r.deporte, "selected:", sport);
+      return pass;
+    });
+    console.log("[juegos] after sport filter:", sportFiltered.length, "/", all.length);
+
+    /* ── Filter 2: still future ── */
+    const valid = sportFiltered.filter(r => {
+      const pass = isStillFuture(r, today);
+      if (!pass) console.log("[juegos] time-filtered OUT (expired):", r.id, r.team_name, "date:", r.date, "time:", r.time);
+      return pass;
+    });
+    console.log("[juegos] after time filter:", valid.length, "/", sportFiltered.length);
+
+    if (all.length > 0 && valid.length === 0) {
+      console.warn("[juegos] ⚠️ Retos exist in DB but ALL were filtered out. Check sport field and time values above.");
+    }
 
     setRetos(valid);
     setLoading(false);
