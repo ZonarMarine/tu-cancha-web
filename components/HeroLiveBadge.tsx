@@ -18,18 +18,42 @@ export default function HeroLiveBadge() {
       ? ["Fútbol", "Fútsal", "futbol"]
       : ["Pádel", "padel", "Padel"];
 
+    // Fetch reto rows (not just count) so we can filter by sport client-side.
+    // Retos may lack a sport column — treat no-sport as football by default.
     const [retosRes, courtsRes, bookingsRes] = await Promise.all([
-      supabase.from("retos").select("id", { count: "exact", head: true }).eq("status", "open").gte("date", today),
+      supabase
+        .from("retos")
+        .select("id, sport, deporte, format")
+        .in("status", ["open", "looking_for_rival", "active"])
+        .gte("date", today),
       supabase.from("owner_courts").select("id", { count: "exact", head: true }).eq("active", true).is("deleted_at", null).in("sport", sportVals),
       supabase.from("bookings").select("id", { count: "exact", head: true }).in("status", ["confirmed","paid","completed"]).eq("date", today),
     ]);
 
-    const retos    = retosRes.count    ?? 0;
+    // Client-side sport filter for retos
+    const allRetos = retosRes.data ?? [];
+    const filteredRetos = allRetos.filter(r => {
+      const rSport = (r.sport ?? r.deporte ?? "").toLowerCase().trim();
+      const fmt    = (r.format ?? "").toLowerCase();
+      const isPadel = rSport.includes("padel") || rSport.includes("pádel") || fmt.includes("padel");
+      if (sport === "padel") return isPadel;
+      // football: retos with no sport field OR non-padel sport
+      return rSport === "" || !isPadel;
+    });
+
+    const retos    = filteredRetos.length;
     const courts   = courtsRes.count   ?? 0;
     const bookings = bookingsRes.count ?? 0;
 
     const sigs: Signal[] = [];
-    if (retos    > 0) sigs.push({ text: `${retos} ${sport === "futbol" ? "reto" : "partida"}${retos !== 1 ? "s" : ""} activo${retos !== 1 ? "s" : ""} · Costa Rica` });
+    if (retos > 0) {
+      // "reto/retos activo/activos" (futbol) or "partida/s activa/s" (padel)
+      if (sport === "futbol") {
+        sigs.push({ text: `${retos} reto${retos !== 1 ? "s" : ""} activo${retos !== 1 ? "s" : ""} · Costa Rica` });
+      } else {
+        sigs.push({ text: `${retos} partida${retos !== 1 ? "s" : ""} activa${retos !== 1 ? "s" : ""} · Costa Rica` });
+      }
+    }
     if (courts   > 0) sigs.push({ text: `${courts} cancha${courts !== 1 ? "s" : ""} de ${sport === "futbol" ? "fútbol" : "pádel"} disponible${courts !== 1 ? "s" : ""}` });
     if (bookings > 0) sigs.push({ text: `${bookings} reserva${bookings !== 1 ? "s" : ""} confirmada${bookings !== 1 ? "s" : ""} hoy` });
 
