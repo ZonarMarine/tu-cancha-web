@@ -46,7 +46,7 @@ export const SPORT_THEME = {
     border:      "rgba(215,255,0,0.20)",
     radius:      14,          // sharper — football is aggressive
     label:       "Fútbol",
-    icon:        "⚽",
+    icon:        "⚽",   // football — renders fine everywhere
     eyebrow:     "FÚTBOL AMATEUR",
     tag:         "BUSCANDO RIVAL",
   },
@@ -58,7 +58,7 @@ export const SPORT_THEME = {
     border:      "rgba(96,165,250,0.20)",
     radius:      20,          // softer — padel is social/premium
     label:       "Pádel",
-    icon:        "🎾",
+    icon:        "🏓",   // table tennis paddle — renders reliably vs 🎾
     eyebrow:     "PÁDEL AMATEUR",
     tag:         "BUSCANDO PAREJA",
   },

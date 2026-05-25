@@ -10,8 +10,8 @@ const FOOTBALL_FEATURES = [
 ];
 
 const PADEL_FEATURES = [
-  { icon: "🎾", label: "Partidos de dobles",   desc: "Encontrá pareja o rival para tu próxima partida." },
-  { icon: "🏟",  label: "Clubes y canchas",     desc: "Reservá en los mejores clubes de pádel del país." },
+  { icon: "🏓", label: "Partidos de dobles",   desc: "Encontrá pareja o rival para tu próxima partida." },
+  { icon: "🏟",  label: "Clubes y canchas",    desc: "Reservá en los mejores clubes de pádel del país." },
   { icon: "📊", label: "Rankings de parejas",  desc: "Seguimiento de resultados y estadísticas por pareja." },
   { icon: "🤝", label: "Partidos amistosos",   desc: "Challengers, americano y torneos sociales." },
 ];
@@ -133,7 +133,7 @@ export default function DescubriDeporte() {
 
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <span style={{ fontSize: 32 }}>🎾</span>
+                <span style={{ fontSize: 32 }}>🏓</span>
                 <div>
                   <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "rgba(96,165,250,0.55)", textTransform: "uppercase", marginBottom: 2 }}>PÁDEL</p>
                   <h3 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#fff", lineHeight: 1 }}>
