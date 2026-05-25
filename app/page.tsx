@@ -10,7 +10,7 @@ import HeroSearch from "@/components/HeroSearch";
 import HeroStats from "@/components/HeroStats";
 import HeroLiveStrip from "@/components/HeroLiveStrip";
 import HeroLiveBadge from "@/components/HeroLiveBadge";
-import { SportProvider } from "@/context/SportContext";
+import SportHeroCTAs from "@/components/SportHeroCTAs";
 import { createClient } from "@supabase/supabase-js";
 
 // Always fetch fresh data — retos are live
@@ -215,7 +215,6 @@ function DarkBreath() {
 export default async function HomePage() {
   const TOP_PLAYERS = await fetchTopPlayers();
   return (
-    <SportProvider>
     <div style={{ backgroundColor: 'var(--bg)' }}>
 
       {/* ══════════════════════════════════
@@ -381,34 +380,8 @@ export default async function HomePage() {
             <HeroSearch />
           </div>
 
-          {/* CTAs */}
-          <div className="hero-cta-group" style={{
-            display: 'flex', flexWrap: 'wrap',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 12, marginBottom: 88,
-          }}>
-            <Link href="/juegos" className="btn-primary"
-              style={{
-                padding: '16px 44px', fontSize: 14.5, borderRadius: 15,
-                fontWeight: 800, letterSpacing: '-0.01em',
-                boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(215,255,0,0.10)',
-              }}>
-              Ver partidos activos →
-            </Link>
-            <Link href="/explorar" style={{
-              padding: '15px 30px', borderRadius: 15, fontSize: 14,
-              fontWeight: 500, color: 'rgba(255,255,255,0.46)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              background: 'rgba(255,255,255,0.025)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              transition: 'border-color 0.18s, color 0.18s',
-              display: 'inline-block',
-              letterSpacing: '-0.01em',
-            }}>
-              Explorar canchas
-            </Link>
-          </div>
+          {/* CTAs — sport-aware, reads global SportContext */}
+          <SportHeroCTAs />
 
           {/* Live activity strip — rotating signals */}
           <div style={{ marginBottom: 28 }}>
@@ -878,21 +851,12 @@ export default async function HomePage() {
               }}>
               Registrate ahora →
             </Link>
-            <Link href="/juegos" style={{
-              padding: '13px 28px', borderRadius: 14, fontSize: 14,
-              fontWeight: 500, color: 'var(--text3)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.02)',
-              display: 'inline-block',
-            }}>
-              Ver partidos activos
-            </Link>
+            <SportHeroCTAs variant="secondary" />
           </div>
           <p style={{ fontSize: 12, color: 'var(--text3)' }}>Sin tarjeta. Sin complicaciones. 30 segundos.</p>
         </div>
       </section>
 
     </div>
-    </SportProvider>
   );
 }

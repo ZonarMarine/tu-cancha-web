@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useSport } from "@/context/SportContext";
 import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtColones, COURTS as STATIC_COURTS } from "@/lib/data";
@@ -496,11 +498,18 @@ function CardSkeleton() {
 /* ─── ExplorarPage ───────────────────────────────────────── */
 
 export default function ExplorarPage() {
+  const { sport: globalSport, setSport: setGlobalSport } = useSport();
+  const searchParams = useSearchParams();
+
   const [courts,      setCourts]  = useState<CourtWithLive[]>([]);
   const [loading,     setLoading] = useState(true);
   const [dbError,     setDbError] = useState('');
   const [search,      setSearch]  = useState('');
-  const [sport,       setSport]   = useState('Todo');
+  /* Init local sport filter from URL param → global context → default "Fútbol" */
+  const [sport, setSport] = useState<string>(() => {
+    // Will be overridden by effect below; this is just the SSR-safe default
+    return 'Fútbol';
+  });
   const [zone,        setZone]    = useState('Todas');
   const [price,       setPrice]   = useState('Cualquiera');
   const [showFilters, setShow]    = useState(false);
@@ -510,6 +519,30 @@ export default function ExplorarPage() {
   const [socialIdx,   setSocialIdx] = useState(0);
   const [searchFocused, setSearchFocused] = useState(false);
   const countedRef = useRef(false);
+
+  /* ── Sync sport from URL param or global context on mount ── */
+  useEffect(() => {
+    const urlSport = searchParams.get('sport');
+    if (urlSport === 'padel') {
+      setSport('Pádel');
+      setGlobalSport('padel');
+    } else if (urlSport === 'futbol' || urlSport === 'football') {
+      setSport('Fútbol');
+      setGlobalSport('futbol');
+    } else {
+      // No URL param — use global context
+      setSport(globalSport === 'padel' ? 'Pádel' : 'Fútbol');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* When local sport pill changes, keep global context in sync */
+  const handleSportChange = (val: string) => {
+    setSport(val);
+    if (val === 'Pádel')  setGlobalSport('padel');
+    if (val === 'Fútbol') setGlobalSport('futbol');
+    // 'Todo' keeps whichever global sport was last selected
+  };
 
   /* ── Load courts + today's bookings ── */
   async function loadData() {
@@ -833,7 +866,7 @@ export default function ExplorarPage() {
           {/* Sport pills — sport-specific hover energy */}
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
             {SPORT_PILLS.map(p => (
-              <SportPill key={p.val} p={p} active={sport === p.val} onClick={() => setSport(p.val)} />
+              <SportPill key={p.val} p={p} active={sport === p.val} onClick={() => handleSportChange(p.val)} />
             ))}
           </div>
         </div>

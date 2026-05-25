@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { MapPin, Clock, Plus, CalendarDays, Zap } from "lucide-react";
 import Link from "next/link";
 import { fmtColones } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
-import { useSport, SPORT_THEME } from "@/context/SportContext";
+import { useSport, SPORT_THEME, Sport } from "@/context/SportContext";
 
 /* ─── Types ────────────────────────────────────────────────── */
 type Reto = {
@@ -397,8 +398,17 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
 
 /* ─── JuegosPage ─────────────────────────────────────────────── */
 export default function JuegosPage() {
-  const { sport }          = useSport();
-  const t                  = SPORT_THEME[sport];
+  const { sport, setSport } = useSport();
+  const t                   = SPORT_THEME[sport];
+  const searchParams        = useSearchParams();
+
+  /* Sync ?sport= URL param → global context on mount */
+  useEffect(() => {
+    const p = searchParams.get("sport");
+    if (p === "padel")               setSport("padel");
+    else if (p === "futbol" || p === "football") setSport("futbol");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [format, setFormat] = useState("Todos");
   const [level,  setLevel]  = useState("Todos");
   const [retos,  setRetos]  = useState<Reto[]>([]);

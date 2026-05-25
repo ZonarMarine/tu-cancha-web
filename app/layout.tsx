@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SportProvider } from "@/context/SportContext";
 
 export const metadata: Metadata = {
   title: "Tu Cancha — Juega hoy sin organizar nada",
@@ -19,9 +20,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <SportProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </SportProvider>
       </body>
     </html>
   );
