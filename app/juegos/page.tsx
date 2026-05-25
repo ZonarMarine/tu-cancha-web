@@ -409,49 +409,69 @@ export default function JuegosPage() {
   const load = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
 
-    const { data, error } = await supabase
+    // STEP 1: completely unrestricted query — no date/status filter at all
+    // This tells us definitively whether ANY rows exist in the table.
+    const { data: allData, error: allError } = await supabase
       .from("retos")
       .select("*")
-      .in("status", ACTIVE_STATUSES)
-      .gte("date", today)
-      .order("date", { ascending: true })
       .order("created_at", { ascending: false })
-      .limit(60);
+      .limit(100);
 
-    /* ── DEBUG: log raw Supabase result ── */
-    console.log("[juegos] query error:", error);
-    console.log("[juegos] raw rows from DB:", data?.length ?? 0, data?.map(r => ({
-      id: r.id,
-      team_name: r.team_name,
-      status: r.status,
-      date: r.date,
-      time: r.time,
-      sport: r.sport ?? r.deporte ?? "(no sport field)",
-      format: r.format,
-      level: r.level,
-      created_at: r.created_at,
-    })));
+    console.log("[juegos] UNFILTERED query error:", allError);
+    console.log("[juegos] UNFILTERED total rows in table:", allData?.length ?? 0);
+    if (allData && allData.length > 0) {
+      console.table(allData.map(r => ({
+        id: r.id,
+        team_name: r.team_name,
+        status: r.status,
+        date: r.date,
+        time: r.time,
+        sport: r.sport ?? r.deporte ?? "(none)",
+        format: r.format,
+        level: r.level,
+      })));
+    } else {
+      console.warn("[juegos] ⚠️ Table is EMPTY or still RLS-blocked. Run retos-rls-fix.sql in Supabase and re-create a reto.");
+    }
 
-    const all = (data ?? []) as Reto[];
+    // STEP 2: now apply filters client-side from the unfiltered set
+    const all = (allData ?? []) as Reto[];
 
-    /* ── Filter 1: sport ── */
-    const sportFiltered = all.filter(r => {
-      const pass = isSportMatch(r, sport);
-      if (!pass) console.log("[juegos] sport-filtered OUT:", r.id, r.team_name, "sport:", r.sport ?? r.deporte, "selected:", sport);
+    // Status filter (client-side)
+    const statusFiltered = all.filter(r => {
+      const pass = ACTIVE_STATUSES.includes(r.status);
+      if (!pass) console.log("[juegos] status-filtered OUT:", r.id, r.team_name, "status:", r.status);
       return pass;
     });
-    console.log("[juegos] after sport filter:", sportFiltered.length, "/", all.length);
+    console.log("[juegos] after status filter:", statusFiltered.length, "/", all.length);
 
-    /* ── Filter 2: still future ── */
+    // Date filter (client-side)
+    const dateFiltered = statusFiltered.filter(r => {
+      if (!r.date) return true; // no date → show it
+      const pass = r.date >= today;
+      if (!pass) console.log("[juegos] date-filtered OUT:", r.id, r.team_name, "date:", r.date, "today:", today);
+      return pass;
+    });
+    console.log("[juegos] after date filter:", dateFiltered.length, "/", statusFiltered.length);
+
+    // Sport filter (client-side)
+    const sportFiltered = dateFiltered.filter(r => {
+      const pass = isSportMatch(r, sport);
+      if (!pass) console.log("[juegos] sport-filtered OUT:", r.id, r.team_name, "sport:", r.sport ?? r.deporte ?? "(none)");
+      return pass;
+    });
+    console.log("[juegos] after sport filter:", sportFiltered.length, "/", dateFiltered.length);
+
+    // Time filter (client-side, with grace period)
     const valid = sportFiltered.filter(r => {
       const pass = isStillFuture(r, today);
       if (!pass) console.log("[juegos] time-filtered OUT (expired):", r.id, r.team_name, "date:", r.date, "time:", r.time);
       return pass;
     });
-    console.log("[juegos] after time filter:", valid.length, "/", sportFiltered.length);
+    console.log("[juegos] FINAL visible retos:", valid.length);
 
     if (all.length > 0 && valid.length === 0) {
-      console.warn("[juegos] ⚠️ Retos exist in DB but ALL were filtered out. Check sport field and time values above.");
+      console.warn("[juegos] ⚠️ Rows exist in DB but ALL filtered out — see logs above for which step cut them.");
     }
 
     setRetos(valid);
