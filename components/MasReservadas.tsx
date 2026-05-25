@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Star, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtColones } from "@/lib/data";
+import { useSport, SPORT_THEME } from "@/context/SportContext";
 
 /* ─── types ─────────────────────────────────────────────────── */
 
@@ -96,14 +97,21 @@ function CardSkeleton() {
 /* ─── MasReservadas ──────────────────────────────────────────── */
 
 export default function MasReservadas() {
+  const { sport }         = useSport();
+  const t                 = SPORT_THEME[sport];
   const [courts,  setCourts]  = useState<CourtLive[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* Sport → DB sport values */
+  const sportValues = sport === "futbol"
+    ? ["Fútbol", "Fútsal", "futbol"]
+    : ["Pádel", "padel"];
 
   const load = useCallback(async () => {
     const today = new Date().toISOString().split('T')[0];
 
     const [courtsRes, bookingsRes] = await Promise.all([
-      supabase.from('owner_courts').select('id, name, location, base_price, sport, rating, tag, slots, image_url').eq('active', true).is('deleted_at', null).limit(9),
+      supabase.from('owner_courts').select('id, name, location, base_price, sport, rating, tag, slots, image_url').eq('active', true).is('deleted_at', null).in('sport', sport === 'futbol' ? ['Fútbol','Fútsal','futbol'] : ['Pádel','padel','Padel']).limit(9),
       supabase.from('bookings').select('court_name').in('status', ['confirmed', 'paid', 'completed']).eq('date', today),
     ]);
 
@@ -144,8 +152,8 @@ export default function MasReservadas() {
     setLoading(false);
   }, []);
 
-  /* Initial load */
-  useEffect(() => { load(); }, [load]);
+  /* Reload when sport changes */
+  useEffect(() => { setCourts([]); setLoading(true); load(); }, [sport, load]);
 
   /* Realtime: re-compute whenever a booking is inserted/updated */
   useEffect(() => {
@@ -155,7 +163,7 @@ export default function MasReservadas() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'owner_courts' }, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [load]);
+  }, [load, sport]);
 
   /* Empty state — no courts at all */
   if (!loading && courts.length === 0) return null;
@@ -175,7 +183,7 @@ export default function MasReservadas() {
       {/* Section header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48 }}>
         <div>
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', marginBottom: 14 }}>CANCHAS</p>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: t.accentMuted, textTransform: 'uppercase', marginBottom: 14 }}>CANCHAS DE {sport === 'futbol' ? 'FÚTBOL' : 'PÁDEL'}</p>
           <h2 style={{ fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 10 }}>
             {hasAnyBookings ? 'Las más reservadas.' : 'Canchas disponibles.'}
           </h2>

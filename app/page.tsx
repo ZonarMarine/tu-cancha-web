@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { Star, ChevronRight, Zap } from "lucide-react";
+import { Star, ChevronRight } from "lucide-react";
 import { GAMES, fmtColones } from "@/lib/data";
 import LiveTicker from "@/components/LiveTicker";
-import MatchCard from "@/components/MatchCard";
 import MasReservadas from "@/components/MasReservadas";
-import RetoCard from "@/components/RetoCard";
+import HomeRetosSection from "@/components/HomeRetosSection";
+import DescubriDeporte from "@/components/DescubriDeporte";
+import SportSelector from "@/components/SportSelector";
 import StatsCounter from "@/components/StatsCounter";
 import HeroSearch from "@/components/HeroSearch";
 import HeroStats from "@/components/HeroStats";
 import HeroLiveStrip from "@/components/HeroLiveStrip";
+import { SportProvider } from "@/context/SportContext";
 import { createClient } from "@supabase/supabase-js";
 
 // Always fetch fresh data — retos are live
@@ -23,37 +25,6 @@ function makeSB() {
   );
 }
 
-async function fetchRetos() {
-  try {
-    const sb    = makeSB();
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const { data, error } = await sb
-      .from('retos')
-      .select('*')
-      .eq('status', 'open')
-      .gte('date', today)          // exclude past-date retos at DB level
-      .order('created_at', { ascending: false })
-      .limit(10);
-    if (!error && data) {
-      const now = new Date();
-      return data.filter(r => {
-        if (!r.date || r.date > today) return true; // future date → always show
-        // Same day: parse time to check if match already started
-        if (!r.time) return true;
-        const m = String(r.time).match(/(\d+):(\d+)\s*(AM|PM)?/i);
-        if (!m) return true;
-        let h = parseInt(m[1]);
-        const p = m[3]?.toUpperCase();
-        if (p === 'PM' && h !== 12) h += 12;
-        if (p === 'AM' && h === 12) h = 0;
-        const t = new Date(`${r.date}T00:00:00`);
-        t.setHours(h, parseInt(m[2]), 0, 0);
-        return t > now;
-      }).slice(0, 6);
-    }
-  } catch (_) {}
-  return [];
-}
 
 
 
@@ -242,11 +213,9 @@ function DarkBreath() {
 
 // ─────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const [RETOS, TOP_PLAYERS] = await Promise.all([
-    fetchRetos(),
-    fetchTopPlayers(),
-  ]);
+  const TOP_PLAYERS = await fetchTopPlayers();
   return (
+    <SportProvider>
     <div style={{ backgroundColor: 'var(--bg)' }}>
 
       {/* ══════════════════════════════════
@@ -408,11 +377,16 @@ export default async function HomePage() {
           {/* Subtitle */}
           <p style={{
             color: 'var(--text3)', fontSize: 17, lineHeight: 1.7,
-            maxWidth: 400, margin: '0 auto', marginBottom: 32,
+            maxWidth: 420, margin: '0 auto', marginBottom: 24,
           }}>
-            El sistema operativo del fútbol amateur en Costa Rica.
-            Partidos, canchas y rivales. En segundos.
+            El sistema operativo del fútbol y pádel amateur en Costa Rica.
+            Reservá canchas, encontrá rivales y jugá en minutos.
           </p>
+
+          {/* Sport selector */}
+          <div style={{ marginBottom: 24 }}>
+            <SportSelector size="lg" />
+          </div>
 
           {/* Search bar */}
           <div style={{ width: '100%', marginBottom: 20 }}>
@@ -474,86 +448,9 @@ export default async function HomePage() {
       <DarkBreath />
 
       {/* ══════════════════════════════════
-          RETOS ACTIVOS (live from DB)
+          RETOS — live, sport-filtered client component
       ══════════════════════════════════ */}
-      <section style={{ ...S.section }}>
-        <div className="container">
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <span className="pulse-live" style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#FF6B35', display: 'inline-block' }} />
-                <p className="eyebrow" style={{ color: '#FF6B35' }}>BUSCANDO RIVAL AHORA</p>
-              </div>
-              <h2 style={{ fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 10 }}>
-                Retos activos esta noche.
-              </h2>
-              <p style={{ fontSize: 15, color: 'var(--text3)' }}>
-                {RETOS.length > 0
-                  ? `${RETOS.length} equipo${RETOS.length > 1 ? 's' : ''} esperando rival. Aceptá el reto.`
-                  : 'Equipos buscando rival esta noche. Cupo libre disponible.'}
-              </p>
-            </div>
-            <Link href="/juegos" style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              fontSize: 13, color: 'var(--text3)', fontWeight: 500,
-              whiteSpace: 'nowrap', opacity: 0.8,
-            }}>
-              Ver todos <ChevronRight size={13} />
-            </Link>
-          </div>
-
-          {RETOS.length > 0 ? (
-            /* ── Live retos from DB — horizontal carousel ── */
-            <div className="scroll-row" style={{
-              overflowX: 'auto',
-              marginLeft: -24, marginRight: -24,
-              paddingLeft: 24, paddingRight: 24,
-              WebkitOverflowScrolling: 'touch' as any,
-            }}>
-              <div style={{ display: 'flex', gap: 20, width: 'max-content', paddingBottom: 8 }}>
-                {RETOS.map((r: any) => (
-                  <div key={r.id} style={{ width: 310, flexShrink: 0 }}>
-                    <RetoCard reto={r} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* ── Empty state: first mover CTA ── */
-            <div style={{
-              borderRadius: 20,
-              border: '1px dashed rgba(255,107,53,0.22)',
-              background: 'linear-gradient(145deg, rgba(255,107,53,0.04) 0%, transparent 60%)',
-              padding: '56px 40px',
-              textAlign: 'center',
-              maxWidth: 560,
-              margin: '0 auto',
-            }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: 16, margin: '0 auto 20px',
-                background: 'rgba(255,107,53,0.09)', border: '1px solid rgba(255,107,53,0.20)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22,
-              }}>⚡</div>
-              <p style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.03em', marginBottom: 8 }}>
-                Sé el primero en lanzar un reto esta noche.
-              </p>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', lineHeight: 1.65, marginBottom: 28, maxWidth: 360, margin: '0 auto 28px' }}>
-                Reservá tu cancha y publicá el reto — los equipos de la zona lo verán aquí en tiempo real.
-              </p>
-              <Link href="/explorar" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '12px 28px', borderRadius: 12, textDecoration: 'none',
-                background: 'var(--accent)', color: '#000',
-                fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em',
-                boxShadow: '0 0 24px rgba(215,255,0,0.20)',
-              }}>
-                <Zap size={14} fill="#000" /> Reservar cancha →
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
+      <HomeRetosSection />
 
       <DarkBreath />
 
@@ -663,17 +560,22 @@ export default async function HomePage() {
           CANCHAS — live client component
       ══════════════════════════════════ */}
       <section style={{ ...S.sectionAlt, position: 'relative', overflow: 'hidden' }}>
-        {/* Ambient lime glow */}
         <div style={{
           position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
           width: 900, height: 400, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(215,255,0,0.028) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(215,255,0,0.024) 0%, transparent 70%)',
         }} />
         <div className="container">
-          {/* MasReservadas handles its own header, cards, skeleton, realtime */}
           <MasReservadas />
         </div>
       </section>
+
+      <DarkBreath />
+
+      {/* ══════════════════════════════════
+          DESCUBRÍ TU DEPORTE
+      ══════════════════════════════════ */}
+      <DescubriDeporte />
 
       <DarkBreath />
 
@@ -1003,5 +905,6 @@ export default async function HomePage() {
       </section>
 
     </div>
+    </SportProvider>
   );
 }

@@ -61,20 +61,16 @@ function attachLive(court: Court, bookedTimesToday: string[]): CourtWithLive {
 /* ─── filters ────────────────────────────────────────────── */
 
 const SPORT_PILLS = [
-  { label: 'Todo',    icon: '🏟', val: 'Todo'    },
-  { label: 'Fútbol',  icon: '⚽', val: 'Fútbol'  },
-  { label: 'Pádel',   icon: '🎾', val: 'Pádel'   },
-  { label: 'Básquet', icon: '🏀', val: 'Básquet' },
-  { label: 'Tenis',   icon: '🎾', val: 'Tenis'   },
+  { label: 'Todo',   icon: '🏟', val: 'Todo'   },
+  { label: 'Fútbol', icon: '⚽', val: 'Fútbol' },
+  { label: 'Pádel',  icon: '🎾', val: 'Pádel'  },
 ];
 
 /* Sport-specific hover accents — each discipline has its own energy */
 const SPORT_ACCENT: Record<string, { bg: string; border: string; color: string; glow: string }> = {
-  Todo:    { bg: 'rgba(255,255,255,0.07)',  border: 'rgba(255,255,255,0.13)',  color: 'rgba(255,255,255,0.72)', glow: 'rgba(255,255,255,0.04)' },
-  Fútbol:  { bg: 'rgba(215,255,0,0.08)',    border: 'rgba(215,255,0,0.20)',    color: 'rgba(215,255,0,0.82)',   glow: 'rgba(215,255,0,0.06)'   },
-  Pádel:   { bg: 'rgba(96,165,250,0.08)',   border: 'rgba(96,165,250,0.20)',   color: 'rgba(96,165,250,0.82)',  glow: 'rgba(96,165,250,0.06)'  },
-  Básquet: { bg: 'rgba(249,115,22,0.08)',   border: 'rgba(249,115,22,0.20)',   color: 'rgba(249,115,22,0.82)',  glow: 'rgba(249,115,22,0.06)'  },
-  Tenis:   { bg: 'rgba(56,189,248,0.08)',   border: 'rgba(56,189,248,0.20)',   color: 'rgba(56,189,248,0.82)',  glow: 'rgba(56,189,248,0.06)'  },
+  Todo:   { bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.13)', color: 'rgba(255,255,255,0.72)', glow: 'rgba(255,255,255,0.04)' },
+  Fútbol: { bg: 'rgba(215,255,0,0.08)',   border: 'rgba(215,255,0,0.20)',   color: 'rgba(215,255,0,0.82)',   glow: 'rgba(215,255,0,0.06)'   },
+  Pádel:  { bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)',  color: 'rgba(96,165,250,0.82)',  glow: 'rgba(96,165,250,0.06)'  },
 };
 
 /* Live signals — populated from real retos data, falls back to empty */
