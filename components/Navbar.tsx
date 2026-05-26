@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NotificationBell from "@/components/NotificationBell";
@@ -18,6 +18,8 @@ export default function Navbar() {
   const [scrolled,  setScrolled]  = useState(false);
   const [user,      setUser]      = useState<any>(null);
   const [authReady, setAuthReady] = useState(false);
+  // Ref so the safety-timeout closure always sees the latest value
+  const authReadyRef = useRef(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -26,15 +28,35 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    let mounted = true;
+
+    const resolve = (sessionUser: any) => {
+      if (!mounted) return;
+      authReadyRef.current = true;
+      setUser(sessionUser);
       setAuthReady(true);
-    });
+    };
+
+    // Safari safety net: if getSession() hangs or throws (ITP / localStorage
+    // restriction), fall back to unauthenticated state after 2 s so the
+    // skeleton never shows as a permanent dark pill.
+    const safetyTimer = setTimeout(() => {
+      if (!authReadyRef.current) resolve(null);
+    }, 2000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => resolve(session?.user ?? null))
+      .catch(() => resolve(null));   // Safari may throw — always recover
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-      setAuthReady(true);
+      resolve(session?.user ?? null);
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -52,9 +74,11 @@ export default function Navbar() {
       height: 60,
       backgroundColor: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
       borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : '1px solid transparent',
+      // Safari fix: do NOT include backdrop-filter in transition — it triggers
+      // a compositing bug on position:fixed elements that hides child content.
       backdropFilter: scrolled ? 'blur(28px) saturate(1.8)' : 'none',
       WebkitBackdropFilter: scrolled ? 'blur(28px) saturate(1.8)' : 'none',
-      transition: 'background-color 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease',
+      transition: 'background-color 0.25s ease, border-color 0.25s ease',
     }}>
       <style>{`
         /* ── Desktop hide/show ── */
@@ -149,9 +173,17 @@ export default function Navbar() {
         </div>
 
         {/* ── Right: auth ── */}
-        <div className="nav-auth" style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        {/* Safari fix: explicit min-width prevents flex container collapsing;
+            position:relative creates own stacking context so content isn't
+            clipped by the navbar's backdrop-filter compositing layer. */}
+        <div className="nav-auth" style={{
+          display: 'flex', alignItems: 'center', gap: 16,
+          flexShrink: 0, minWidth: 'max-content', position: 'relative',
+        }}>
           {!authReady ? (
-            <div style={{ width: 72, height: 26, borderRadius: 7, backgroundColor: 'rgba(255,255,255,0.05)' }} />
+            /* Invisible spacer — avoids the "dark pill" during load.
+               The safety timeout ensures this resolves within 2 s max. */
+            <div style={{ width: 72, height: 26 }} aria-hidden="true" />
           ) : user ? (
             <>
               <NotificationBell />
@@ -177,6 +209,8 @@ export default function Navbar() {
                 background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: 13.5, fontWeight: 500, color: 'rgba(255,255,255,0.3)',
                 transition: 'color 0.16s', letterSpacing: '-0.01em',
+                // Safari: explicit color prevents inheriting transparent from button UA stylesheet
+                WebkitTextFillColor: 'rgba(255,255,255,0.3)',
               }}>
                 Salir
               </button>
@@ -216,6 +250,7 @@ export default function Navbar() {
           borderTop: '1px solid rgba(255,255,255,0.07)',
           padding: '14px 20px 22px',
           backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 14 }}>
             {NAV_LINKS.map(l => (
