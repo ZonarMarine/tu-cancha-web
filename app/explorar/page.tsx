@@ -23,8 +23,9 @@ export type Court = {
 };
 
 export type CourtWithLive = Court & {
-  bookingsToday: number;
-  slotsLeft:     number | null;
+  bookingsToday:     number;
+  slotsLeft:         number | null;
+  bookedTimesForDate: string[];   // actual booked slot strings for the queried date
 };
 
 function normalise(row: Record<string, any>): Court {
@@ -53,7 +54,7 @@ function attachLive(court: Court, bookedTimesToday: string[]): CourtWithLive {
   const bookingsToday = bookedTimesToday.length;
   const totalSlots    = court.slots.length > 0 ? court.slots.length : null;
   const slotsLeft     = totalSlots !== null ? Math.max(0, totalSlots - bookingsToday) : null;
-  return { ...court, bookingsToday, slotsLeft };
+  return { ...court, bookingsToday, slotsLeft, bookedTimesForDate: bookedTimesToday };
 }
 
 /* ─── filters ────────────────────────────────────────────── */
@@ -496,6 +497,8 @@ export default function ExplorarPage() {
     } else if (urlSport === 'futbol' || urlSport === 'football') {
       setSport('Fútbol');
       setGlobalSport('futbol');
+    } else if (urlSport === 'todos' || urlSport === 'todo' || urlSport === 'all') {
+      setSport('Todo');
     } else {
       setSport(globalSport === 'padel' ? 'Pádel' : 'Fútbol');
     }
@@ -594,11 +597,13 @@ export default function ExplorarPage() {
     if (zone !== 'Todas' && !c.location.toLowerCase().includes(zone.toLowerCase())) return false;
     if (!priceMatch(c.basePrice, price)) return false;
     if (search && !c.title.toLowerCase().includes(search.toLowerCase()) && !c.location.toLowerCase().includes(search.toLowerCase())) return false;
-    // Hora filter: only show courts that have the requested slot available
-    if (horaFilter && horaFilter !== 'Cualquier hora' && c.slots.length > 0) {
-      const normalise = (s: string) => s.trim().toLowerCase();
-      const hasSlot = c.slots.some(s => normalise(s) === normalise(horaFilter));
-      if (!hasSlot) return false;
+    // Hora filter: court must have the slot AND it must not already be booked
+    if (horaFilter && horaFilter !== 'Cualquier hora') {
+      const norm = (s: string) => s.trim().toLowerCase();
+      // If the court has a known schedule, the requested hour must be in it
+      if (c.slots.length > 0 && !c.slots.some(s => norm(s) === norm(horaFilter))) return false;
+      // The requested hour must not already be confirmed/booked for the selected date
+      if (c.bookedTimesForDate.some(t => norm(t) === norm(horaFilter))) return false;
     }
     return true;
   });
@@ -955,8 +960,8 @@ export default function ExplorarPage() {
                 </span>
               ))}
             </div>
-            {(activeFilters.length > 0 || sport !== 'Todo' || search) && (
-              <button onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); }} style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.24)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.01em' }}>
+            {(activeFilters.length > 0 || sport !== 'Todo' || search || horaFilter || dateFilter) && (
+              <button onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); setHoraFilter(''); setDateFilter(''); }} style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.24)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.01em' }}>
                 Limpiar filtros
               </button>
             )}
@@ -1007,7 +1012,7 @@ export default function ExplorarPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); }}
+                    onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); setHoraFilter(''); setDateFilter(''); }}
                     style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', fontWeight: 700, background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.38)', border: '1px solid rgba(255,255,255,0.09)', letterSpacing: '-0.01em' }}
                   >
                     Limpiar filtros
@@ -1038,14 +1043,14 @@ export default function ExplorarPage() {
                   fontSize: 38, boxShadow: `0 0 36px ${s.glow}20`,
                 }}>{s.icon}</div>
                 <p style={{ fontSize: 19, fontWeight: 800, marginBottom: 10, letterSpacing: '-0.028em', lineHeight: 1.25 }}>
-                  {sport === 'Pádel'
-                    ? 'Todavía no hay canchas de pádel activas.'
-                    : 'Sin canchas con esos filtros.'}
+                  No encontramos canchas disponibles con esos filtros.
                 </p>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.30)', marginBottom: 32, lineHeight: 1.6 }}>
-                  {sport === 'Pádel'
-                    ? 'Las primeras canchas aparecerán aquí automáticamente.'
-                    : 'Intentá con otro deporte o zona.'}
+                  {horaFilter
+                    ? `No hay canchas disponibles a las ${horaFilter}${dateFilter ? ' para esa fecha' : ''}. Intentá con otro horario o zona.`
+                    : dateFilter
+                    ? 'No hay canchas disponibles para esa fecha. Probá con otra fecha o zona.'
+                    : 'Intentá con otro deporte, zona o precio.'}
                 </p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                   {sport !== 'Fútbol' && (
@@ -1057,7 +1062,7 @@ export default function ExplorarPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); }}
+                    onClick={() => { setSport('Todo'); setZone('Todas'); setPrice('Cualquiera'); setSearch(''); setHoraFilter(''); setDateFilter(''); }}
                     style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', fontWeight: 700, background: s.bg, color: s.text, boxShadow: `0 0 20px ${s.glow}`, border: 'none', letterSpacing: '-0.01em' }}
                   >
                     Limpiar filtros
