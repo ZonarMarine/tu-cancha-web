@@ -1,8 +1,13 @@
 -- ============================================================
--- TuCancha Production Safety Migration
+-- TuCancha Production Safety Migration  [SUPERSEDED]
 -- ============================================================
--- Run this against your Supabase PostgreSQL database.
--- Safe to re-run: uses IF NOT EXISTS / IF EXISTS guards throughout.
+-- ⚠️  DO NOT RUN THIS FILE.
+-- This file contains a UUID = INTEGER comparison in the
+-- "Owners can read court bookings" RLS policy (line ~65) which
+-- causes a PostgreSQL type error and silently aborts the batch.
+--
+-- Use migrate-final.sql instead — it fixes all issues in one
+-- self-contained, exception-safe PL/pgSQL block.
 -- ============================================================
 
 

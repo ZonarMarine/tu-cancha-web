@@ -67,14 +67,15 @@ export default function CalendarioPage() {
 
       const { data: courts } = await supabase
         .from("owner_courts")
-        .select("name")
+        .select("id, name")
         .eq("owner_id", user.id)
         .is("deleted_at", null);
 
       const names = (courts ?? []).map((c: any) => c.name).filter(Boolean) as string[];
+      const ids   = (courts ?? []).map((c: any) => c.id).filter(Boolean)   as string[];
       setCourtNames(names);
 
-      if (names.length === 0) {
+      if (names.length === 0 && ids.length === 0) {
         setBookings([]);
         return;
       }
@@ -83,13 +84,26 @@ export default function CalendarioPage() {
       const from = `${viewYear}-${zeroPad(viewMonth + 1)}-01`;
       const to   = `${viewYear}-${zeroPad(viewMonth + 1)}-${zeroPad(lastDay)}`;
 
-      const { data: bks } = await supabase
+      // Primary: owner_court_id UUID FK. Fallback: court_name for legacy rows.
+      let bkQuery = supabase
         .from("bookings")
         .select("id, court_name, date, time, status, player_name, total_price")
-        .in("court_name", names)
         .gte("date", from)
         .lte("date", to)
         .order("time", { ascending: true });
+
+      if (ids.length > 0 && names.length > 0) {
+        bkQuery = bkQuery.or(
+          `owner_court_id.in.(${ids.join(',')}),` +
+          `and(owner_court_id.is.null,court_name.in.(${names.map(n => `"${n}"`).join(',')}))`
+        );
+      } else if (ids.length > 0) {
+        bkQuery = bkQuery.in("owner_court_id", ids);
+      } else {
+        bkQuery = bkQuery.in("court_name", names);
+      }
+
+      const { data: bks } = await bkQuery;
 
       setBookings((bks ?? []) as Booking[]);
     } finally {
