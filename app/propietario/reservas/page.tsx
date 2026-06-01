@@ -151,15 +151,16 @@ export default function ReservasPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      /* Get owner's court names */
+      /* Get owner's court names and IDs */
       const { data: courts } = await supabase
         .from("owner_courts")
-        .select("name")
+        .select("id, name")
         .eq("owner_id", user.id)
         .eq("active", true)
         .is("deleted_at", null);
 
       const names = (courts ?? []).map((c: any) => c.name).filter(Boolean) as string[];
+      const ids   = (courts ?? []).map((c: any) => c.id).filter(Boolean) as string[];
       setCourtNames(names);
 
       /* Fetch bookings for those courts */
@@ -169,13 +170,20 @@ export default function ReservasPage() {
         .order("created_at", { ascending: false })
         .limit(200);
 
-      if (names.length > 0) {
-        q = q.in("court_name", names);
-      } else {
+      if (names.length === 0 && ids.length === 0) {
         /* Owner has no courts yet — no bookings */
         setBookings([]);
         setLoading(false);
         return;
+      }
+
+      // Primary: match by court_id (secure FK). Fallback: court_name for legacy rows without court_id.
+      if (ids.length > 0 && names.length > 0) {
+        q = q.or(`court_id.in.(${ids.join(',')}),and(court_id.is.null,court_name.in.(${names.map(n => `"${n}"`).join(',')}))`);
+      } else if (ids.length > 0) {
+        q = q.in("court_id", ids);
+      } else {
+        q = q.in("court_name", names);
       }
 
       const { data, error } = await q;

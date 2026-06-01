@@ -19,22 +19,35 @@ export async function POST(req: NextRequest) {
       hours,
       players,
       basePrice,
-      userId,
-      userName,
-      userEmail,
       isSplit,
       splitCount,
     } = body;
 
     // Validate required fields
-    if (!courtName || !date || !time || !hours || !basePrice || !userId) {
+    if (!courtName || !date || !time || !hours || !basePrice) {
       return NextResponse.json({ error: 'Campos requeridos faltantes.' }, { status: 400 });
     }
 
-    const gross = Math.round(basePrice * hours);
-    const fees  = calculateFees(gross);
+    // Verify JWT and extract user identity server-side (prevents IDOR)
+    const authHeader = req.headers.get('authorization') ?? '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+    }
 
     const supabase = createServiceClient();
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+    }
+
+    const userId    = user.id;
+    const userEmail = user.email;
+    const userName  = (user.user_metadata?.name as string | undefined) ?? user.email;
+
+    const gross = Math.round(basePrice * hours);
+    const fees  = calculateFees(gross);
 
     // 1. Insert booking as pending_payment
     const bookingPayload: Record<string, unknown> = {
@@ -51,9 +64,8 @@ export async function POST(req: NextRequest) {
       expires_at:  new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
 
-    const maybeInt = Number(courtId);
-    if (!isNaN(maybeInt) && Number.isInteger(maybeInt)) {
-      bookingPayload.court_id = maybeInt;
+    if (courtId) {
+      bookingPayload.court_id = courtId;  // courtId is already a UUID string
     }
 
     const { data: booking, error: bookingErr } = await supabase

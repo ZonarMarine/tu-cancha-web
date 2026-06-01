@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
   const headerSecret = req.headers.get('x-webhook-secret') ?? '';
 
   // ── Signature verification ────────────────────────────────────────────────
-  const sandboxMode = process.env.ONVO_SANDBOX === 'true';
-  if (!sandboxMode && !verifyWebhookSignature(rawBody, headerSecret)) {
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (!headerSecret && isDev) {
+    console.warn('ONVO webhook: skipping signature check in dev (no secret provided)');
+  } else if (!verifyWebhookSignature(rawBody, headerSecret)) {
     console.warn('ONVO webhook: invalid X-Webhook-Secret');
     return NextResponse.json({ error: 'Invalid secret.' }, { status: 401 });
   }
@@ -37,24 +39,18 @@ export async function POST(req: NextRequest) {
   // ── Idempotency: use event type + session/payment id as dedup key ─────────
   const dedupKey = `${event.type}::${event.data?.id ?? event.data?.session_id ?? event.data?.payment_intent_id ?? JSON.stringify(event.data).slice(0, 64)}`;
 
-  const { data: existing } = await supabase
-    .from('webhook_events')
-    .select('id, processed')
-    .eq('onvo_event_id', dedupKey)
-    .maybeSingle();
-
-  if (existing?.processed) {
-    return NextResponse.json({ ok: true, skipped: true });
-  }
-
   const { data: eventRow } = await supabase
     .from('webhook_events')
     .upsert(
       { onvo_event_id: dedupKey, event_type: event.type, payload: event },
-      { onConflict: 'onvo_event_id' },
+      { onConflict: 'onvo_event_id', ignoreDuplicates: false },
     )
-    .select('id')
+    .select('id, processed')
     .single();
+
+  if (eventRow?.processed) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   try {
     await handleEvent(supabase, event);
@@ -74,8 +70,7 @@ export async function POST(req: NextRequest) {
       .update({ error: err.message })
       .eq('id', eventRow?.id);
 
-    // Return 200 so ONVO doesn't retry endlessly — we logged the error
-    return NextResponse.json({ ok: false, error: err.message });
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }
 

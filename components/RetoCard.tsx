@@ -89,16 +89,6 @@ function RetoModal({ reto, onClose }: { reto: RetoCardProps['reto']; onClose: ()
         setSaving(false);
         return;
       }
-      const userId = (reto as any).user_id;
-      if (userId) {
-        await supabase.from('notifications').insert({
-          user_id: userId,
-          type: 'invite_accepted',
-          title: '¡Tu reto fue aceptado!',
-          body: `${teamName.trim() || 'Un equipo'} aceptó tu reto en ${reto.court_name}`,
-          read: false,
-        });
-      }
       await supabase.from('notifications').insert({
         user_id: user.id,
         type: 'invite_accepted',

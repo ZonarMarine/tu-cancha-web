@@ -10,6 +10,7 @@ import {
 
 type Booking = {
   id: string;
+  court_id?: string | null;
   court_name: string;
   date: string;
   time: string | null;
@@ -142,19 +143,30 @@ export default function AnalyticsPage() {
       if (courts.length === 0) { setLoading(false); return; }
 
       const courtNames = courts.map(c => c.name).filter(Boolean);
+      const courtIds   = courts.map(c => c.id).filter(Boolean);
 
       /* 2 · Bookings — last 7 months */
       const since = new Date();
       since.setMonth(since.getMonth() - 7);
       const sinceStr = since.toISOString().split("T")[0];
 
-      const { data: bookingsRaw } = await supabase
+      let bookingsQuery = supabase
         .from("bookings")
-        .select("id, court_name, date, time, total_price, status, hours")
-        .in("court_name", courtNames)
+        .select("id, court_id, court_name, date, time, total_price, status, hours")
         .gte("date", sinceStr)
         .in("status", ["confirmed", "paid", "completed"])
         .order("date", { ascending: true });
+
+      // Primary: match by court_id (secure FK). Fallback: court_name for legacy rows without court_id.
+      if (courtIds.length > 0 && courtNames.length > 0) {
+        bookingsQuery = bookingsQuery.or(`court_id.in.(${courtIds.join(',')}),and(court_id.is.null,court_name.in.(${courtNames.map(n => `"${n}"`).join(',')}))`);
+      } else if (courtIds.length > 0) {
+        bookingsQuery = bookingsQuery.in("court_id", courtIds);
+      } else {
+        bookingsQuery = bookingsQuery.in("court_name", courtNames);
+      }
+
+      const { data: bookingsRaw } = await bookingsQuery;
 
       const bookings = (bookingsRaw ?? []) as Booking[];
       setHasBookings(bookings.length > 0);

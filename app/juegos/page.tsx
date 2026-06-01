@@ -346,14 +346,6 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
         setSaving(false);
         return;
       }
-      // Notify the reto creator
-      await supabase.from("notifications").insert({
-        user_id: r.user_id,
-        type: "invite_accepted",
-        title: "¡Tu reto fue aceptado!",
-        body: `${teamName.trim() || "Un equipo"} aceptó tu reto en ${r.court_name ?? "la cancha"}`,
-        read: false,
-      });
       // Notify the accepting user
       await supabase.from("notifications").insert({
         user_id: user.id,
