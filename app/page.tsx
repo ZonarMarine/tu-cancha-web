@@ -50,6 +50,23 @@ async function fetchTopPlayers() {
   return [];
 }
 
+async function fetchNearbyCourts() {
+  try {
+    const sb = makeSB();
+    const { data, error } = await sb
+      .from('owner_courts')
+      .select('id, court_name, sport, location, price_per_hour, slots')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (!error && data && data.length > 0) return data as Array<{
+      id: string; court_name: string; sport: string;
+      location: string | null; price_per_hour: number | null; slots: string[];
+    }>;
+  } catch (_) {}
+  return [];
+}
+
 // ─── Field preview (CSS-drawn courts by sport) ────────────────
 function FieldPreview({ sport, tag }: { sport: string; tag: string | null }) {
   const isPadel     = sport === 'Pádel';
@@ -175,22 +192,6 @@ function FieldPreview({ sport, tag }: { sport: string; tag: string | null }) {
 // ─── Static data ──────────────────────────────────────────────
 const RANK_COLORS = ['var(--accent)', '#888', '#9b7340', 'var(--text3)', 'var(--text3)'];
 
-// Tournament data with days-to-go (server-computed)
-function daysUntil(dateStr: string) {
-  const [d, mon] = dateStr.split(' ');
-  const months: Record<string,number> = { Ene:0,Feb:1,Mar:2,Abr:3,May:4,Jun:5,Jul:6,Ago:7,Sep:8,Oct:9,Nov:10,Dic:11 };
-  const now = new Date();
-  const target = new Date(now.getFullYear(), months[mon] ?? 5, parseInt(d));
-  if (target < now) target.setFullYear(target.getFullYear() + 1);
-  return Math.ceil((target.getTime() - now.getTime()) / 86400000);
-}
-
-const TOURNAMENTS = [
-  { name: 'Liga Nocturna Santa Ana', format: '5v5', teams: 12, maxTeams: 12, date: '15 Jun', prize: '₡200,000', spots: 4, spotsTotal: 12 },
-  { name: 'Copa Escazú 2026',        format: '7v7', teams: 6,  maxTeams: 8,  date: '22 Jun', prize: '₡350,000', spots: 2, spotsTotal: 8  },
-  { name: 'Torneo Heredia Abierto',  format: '5v5', teams: 8,  maxTeams: 16, date: '1 Jul',  prize: '₡500,000', spots: 8, spotsTotal: 16 },
-];
-
 const OWNER_FEATURES = [
   'Reservas 24/7', 'Analytics en tiempo real',
   'Precios dinámicos', 'Notificaciones instantáneas',
@@ -214,7 +215,10 @@ function DarkBreath() {
 
 // ─────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const TOP_PLAYERS = await fetchTopPlayers();
+  const [TOP_PLAYERS, NEARBY_COURTS] = await Promise.all([
+    fetchTopPlayers(),
+    fetchNearbyCourts(),
+  ]);
   return (
     <div style={{ backgroundColor: 'var(--bg)' }}>
 
@@ -268,6 +272,13 @@ export default async function HomePage() {
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0, height: '38%',
             background: 'linear-gradient(to top, rgba(5,4,0,0.62) 0%, rgba(5,4,0,0.18) 50%, transparent 100%)',
+          }} />
+
+          {/* Bottom fade-out — blends into the overlapping search card */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: 160,
+            background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)',
+            pointerEvents: 'none',
           }} />
 
           {/* Cinematic vignette — darkened edges */}
@@ -340,6 +351,10 @@ export default async function HomePage() {
           }
           .scroll-row { scrollbar-width: none; -ms-overflow-style: none; }
           .scroll-row::-webkit-scrollbar { display: none; }
+          .court-card-link:hover .court-card {
+            border-color: rgba(215,255,0,0.14) !important;
+            box-shadow: 0 0 0 1px rgba(215,255,0,0.06) inset;
+          }
         `}</style>
 
         {/* Hero content */}
@@ -411,6 +426,83 @@ export default async function HomePage() {
           ADVANCED SEARCH
       ══════════════════════════════════ */}
       <HomeAdvancedSearch />
+
+      {/* ══════════════════════════════════
+          CANCHAS DESTACADAS — real data only
+      ══════════════════════════════════ */}
+      {NEARBY_COURTS.length > 0 && (
+        <section style={{ padding: '0 0 64px' }}>
+          <div className="container">
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36 }}>
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 12 }}>CANCHAS DISPONIBLES</p>
+                <h2 style={{ fontSize: 'clamp(22px, 2.6vw, 34px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 8 }}>
+                  Canchas cerca de ti.
+                </h2>
+                <p style={{ fontSize: 14, color: 'var(--text3)' }}>Disponibilidad en tiempo real.</p>
+              </div>
+              <Link href="/explorar" style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                fontSize: 13, color: 'var(--text3)', fontWeight: 500, whiteSpace: 'nowrap', opacity: 0.8,
+              }}>
+                Ver todas <ChevronRight size={13} />
+              </Link>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+              {NEARBY_COURTS.map(court => {
+                const isPadel = court.sport?.toLowerCase() === 'padel' || court.sport?.toLowerCase() === 'pádel';
+                const slotsCount = Array.isArray(court.slots) ? court.slots.length : 0;
+                return (
+                  <Link key={court.id} href="/explorar" className="court-card-link" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                    <div className="court-card" style={{
+                      borderRadius: 18, overflow: 'hidden',
+                      background: '#0d0d0d',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      transition: 'border-color 0.18s, box-shadow 0.18s',
+                    }}>
+                      {/* Field preview */}
+                      <div style={{ position: 'relative', height: 110, overflow: 'hidden' }}>
+                        <FieldPreview sport={isPadel ? 'Pádel' : 'Fútbol'} tag={court.sport ?? null} />
+                      </div>
+
+                      {/* Info */}
+                      <div style={{ padding: '14px 16px 16px' }}>
+                        <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {court.court_name}
+                        </p>
+                        {court.location && (
+                          <p style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10 }}>
+                            📍 {court.location}
+                          </p>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          {court.price_per_hour != null && (
+                            <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--accent)', letterSpacing: '-0.02em' }}>
+                              ₡{court.price_per_hour.toLocaleString('es-CR')}
+                              <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text3)', marginLeft: 3 }}>/hr</span>
+                            </span>
+                          )}
+                          {slotsCount > 0 && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
+                              background: 'rgba(74,222,128,0.07)',
+                              color: 'rgba(74,222,128,0.8)',
+                              border: '1px solid rgba(74,222,128,0.12)',
+                            }}>
+                              {slotsCount} horario{slotsCount !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <DarkBreath />
 
@@ -543,127 +635,6 @@ export default async function HomePage() {
           DESCUBRÍ TU DEPORTE
       ══════════════════════════════════ */}
       <DescubriDeporte />
-
-      <DarkBreath />
-
-      {/* ══════════════════════════════════
-          TORNEOS
-      ══════════════════════════════════ */}
-      <section style={{ ...S.section, position: 'relative', overflow: 'hidden' }}>
-        {/* Ambient purple glow */}
-        <div style={{
-          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-          width: 800, height: 360, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 55% 45% at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%)',
-        }} />
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 52 }}>
-            <div>
-              <p className="eyebrow" style={{ marginBottom: 14, color: '#A78BFA' }}>TORNEOS</p>
-              <h2 style={{ fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 10 }}>
-                Competí por algo.
-              </h2>
-              <p style={{ fontSize: 15, color: 'var(--text3)' }}>Próximos torneos. Inscribí tu equipo antes de que se llene.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
-            {TOURNAMENTS.map(t => {
-              const days = daysUntil(t.date);
-              const spotsLeft = t.spots;
-              const isCritical = spotsLeft <= 2;
-              const filledPct = Math.round(((t.spotsTotal - spotsLeft) / t.spotsTotal) * 100);
-              return (
-                <div key={t.name} style={{
-                  borderRadius: 20, overflow: 'hidden',
-                  background: 'linear-gradient(155deg, #0f0f0f 0%, #0b0b0b 100%)',
-                  border: `1px solid ${isCritical ? 'rgba(167,139,250,0.14)' : 'rgba(255,255,255,0.055)'}`,
-                  display: 'flex', flexDirection: 'column',
-                  boxShadow: isCritical ? '0 0 0 1px rgba(167,139,250,0.05) inset' : 'none',
-                }}>
-                  {/* Top accent bar */}
-                  <div style={{
-                    height: 3,
-                    background: isCritical
-                      ? 'linear-gradient(to right, rgba(167,139,250,0.8), rgba(139,92,246,0.4))'
-                      : 'rgba(167,139,250,0.18)',
-                  }} />
-
-                  <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    {/* Header row */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 7,
-                        background: 'rgba(167,139,250,0.1)', color: '#A78BFA',
-                        letterSpacing: '0.06em', border: '1px solid rgba(167,139,250,0.14)',
-                      }}>{t.format}</span>
-                      <span style={{
-                        fontSize: 10.5, fontWeight: 600, color: days <= 7 ? '#FF6B6B' : 'var(--text3)',
-                        letterSpacing: '0.02em',
-                      }}>
-                        {days <= 1 ? 'Mañana' : `${days} días`}
-                      </span>
-                    </div>
-
-                    {/* Name */}
-                    <p style={{ fontWeight: 700, fontSize: 15.5, marginBottom: 4, lineHeight: 1.3 }}>{t.name}</p>
-                    <p style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 20 }}>{t.teams} equipos · {t.date}</p>
-
-                    {/* Prize */}
-                    <div style={{
-                      padding: '14px 16px', borderRadius: 12, marginBottom: 18,
-                      background: 'rgba(215,255,0,0.025)',
-                      border: '1px solid rgba(215,255,0,0.07)',
-                    }}>
-                      <p style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Premio</p>
-                      <p style={{
-                        fontWeight: 900, fontSize: 22, letterSpacing: '-0.025em',
-                        color: 'var(--accent)',
-                        textShadow: '0 0 28px rgba(215,255,0,0.18)',
-                      }}>{t.prize}</p>
-                    </div>
-
-                    {/* Occupancy bar */}
-                    <div style={{ marginBottom: 18 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 10.5, color: 'var(--text3)' }}>{t.spotsTotal - spotsLeft} de {t.spotsTotal} equipos</span>
-                        <span style={{
-                          fontSize: 10.5, fontWeight: 700,
-                          color: isCritical ? '#FF6B6B' : 'var(--text2)',
-                          animation: isCritical ? 'slotPulse 2s ease-in-out infinite' : undefined,
-                        }}>
-                          {isCritical ? '⚡ ' : ''}{spotsLeft} cupos libres
-                        </span>
-                      </div>
-                      <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)' }}>
-                        <div style={{
-                          height: '100%', width: `${filledPct}%`, borderRadius: 2,
-                          background: isCritical
-                            ? 'linear-gradient(to right, #A78BFA, #7C3AED)'
-                            : 'rgba(167,139,250,0.45)',
-                        }} />
-                      </div>
-                    </div>
-
-                    {/* CTA */}
-                    <button style={{
-                      width: '100%', padding: '11px', borderRadius: 11, marginTop: 'auto',
-                      fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                      background: isCritical ? 'rgba(167,139,250,0.12)' : 'rgba(167,139,250,0.06)',
-                      color: '#A78BFA',
-                      border: `1px solid ${isCritical ? 'rgba(167,139,250,0.22)' : 'rgba(167,139,250,0.12)'}`,
-                    }}>
-                      Inscribir equipo →
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <DarkBreath />
 
       {/* ══════════════════════════════════
           OWNER — 2-column premium
