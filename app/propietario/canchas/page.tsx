@@ -627,7 +627,7 @@ export default function CanchasPage() {
     const { count } = await supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
-      .eq("court_id", court.id)
+      .eq("owner_court_id", court.id)   // UUID FK — correct type match
       .gte("date", today)
       .eq("status", "confirmed");
     setFutureBook(count ?? 0);
