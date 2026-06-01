@@ -64,8 +64,10 @@ export async function POST(req: NextRequest) {
       expires_at:  new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
 
+    // owner_court_id is the correct UUID FK to owner_courts(id).
+    // The legacy integer court_id column is left as-is (never populated going forward).
     if (courtId) {
-      bookingPayload.court_id = courtId;  // courtId is already a UUID string
+      bookingPayload.owner_court_id = courtId;
     }
 
     const { data: booking, error: bookingErr } = await supabase

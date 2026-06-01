@@ -10,7 +10,7 @@ import {
 
 type Booking = {
   id: string;
-  court_id?: string | null;
+  owner_court_id?: string | null;
   court_name: string;
   date: string;
   time: string | null;
@@ -152,16 +152,17 @@ export default function AnalyticsPage() {
 
       let bookingsQuery = supabase
         .from("bookings")
-        .select("id, court_id, court_name, date, time, total_price, status, hours")
+        .select("id, owner_court_id, court_name, date, time, total_price, status, hours")
         .gte("date", sinceStr)
         .in("status", ["confirmed", "paid", "completed"])
         .order("date", { ascending: true });
 
-      // Primary: match by court_id (secure FK). Fallback: court_name for legacy rows without court_id.
+      // Primary: match by owner_court_id UUID FK (new rows). Fallback: court_name for legacy rows.
+      // Note: court_id is a legacy integer column; owner_court_id is the correct UUID FK.
       if (courtIds.length > 0 && courtNames.length > 0) {
-        bookingsQuery = bookingsQuery.or(`court_id.in.(${courtIds.join(',')}),and(court_id.is.null,court_name.in.(${courtNames.map(n => `"${n}"`).join(',')}))`);
+        bookingsQuery = bookingsQuery.or(`owner_court_id.in.(${courtIds.join(',')}),and(owner_court_id.is.null,court_name.in.(${courtNames.map(n => `"${n}"`).join(',')}))`);
       } else if (courtIds.length > 0) {
-        bookingsQuery = bookingsQuery.in("court_id", courtIds);
+        bookingsQuery = bookingsQuery.in("owner_court_id", courtIds);
       } else {
         bookingsQuery = bookingsQuery.in("court_name", courtNames);
       }

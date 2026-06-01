@@ -177,11 +177,12 @@ export default function ReservasPage() {
         return;
       }
 
-      // Primary: match by court_id (secure FK). Fallback: court_name for legacy rows without court_id.
+      // Primary: match by owner_court_id UUID FK (new rows). Fallback: court_name for legacy rows.
+      // Note: court_id is a legacy integer column unrelated to owner_courts.id (uuid); never use it here.
       if (ids.length > 0 && names.length > 0) {
-        q = q.or(`court_id.in.(${ids.join(',')}),and(court_id.is.null,court_name.in.(${names.map(n => `"${n}"`).join(',')}))`);
+        q = q.or(`owner_court_id.in.(${ids.join(',')}),and(owner_court_id.is.null,court_name.in.(${names.map(n => `"${n}"`).join(',')}))`);
       } else if (ids.length > 0) {
-        q = q.in("court_id", ids);
+        q = q.in("owner_court_id", ids);
       } else {
         q = q.in("court_name", names);
       }
