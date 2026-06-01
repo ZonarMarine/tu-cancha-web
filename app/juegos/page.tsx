@@ -9,6 +9,7 @@ import { useSport, SPORT_THEME, Sport } from "@/context/SportContext";
 /* ─── Types ────────────────────────────────────────────────── */
 type Reto = {
   id: string;
+  user_id?: string | null;
   team_name: string;
   court_name: string;
   date: string | null;
@@ -311,10 +312,63 @@ function MatchCard({ r }: { r: Reto }) {
 function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
   const [confirmed, setConfirmed] = useState(false);
   const [teamName, setTeamName]   = useState("");
+  const [saving,   setSaving]     = useState(false);
+  const [error,    setError]      = useState("");
   const color    = teamColor(r.team_name ?? "?");
   const initials = (r.team_name ?? "?").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   const format   = r.format ?? deriveFormat(r.players);
   const dlabel   = dateLabel(r);
+
+  const handleConfirm = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Necesitás iniciar sesión para aceptar un reto.");
+        setSaving(false);
+        return;
+      }
+      if (user.id === r.user_id) {
+        setError("No podés aceptar tu propio reto.");
+        setSaving(false);
+        return;
+      }
+      // Atomic update — only succeeds if reto is still in an active status (race condition guard)
+      const { data: updated, error: updateErr } = await supabase
+        .from("retos")
+        .update({ status: "accepted" })
+        .eq("id", r.id)
+        .in("status", ACTIVE_STATUSES)
+        .select("id");
+      if (updateErr || !updated || updated.length === 0) {
+        setError("Este reto ya fue aceptado por otro equipo. Buscá uno diferente.");
+        setSaving(false);
+        return;
+      }
+      // Notify the reto creator
+      await supabase.from("notifications").insert({
+        user_id: r.user_id,
+        type: "invite_accepted",
+        title: "¡Tu reto fue aceptado!",
+        body: `${teamName.trim() || "Un equipo"} aceptó tu reto en ${r.court_name ?? "la cancha"}`,
+        read: false,
+      });
+      // Notify the accepting user
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "invite_accepted",
+        title: "Reto confirmado ✓",
+        body: `Vas a jugar contra ${r.team_name} en ${r.court_name ?? "la cancha"}${r.time ? ` · ${r.time}` : ""}`,
+        read: false,
+      });
+      setConfirmed(true);
+    } catch (e: any) {
+      setError(e.message ?? "Error al aceptar el reto. Intentá de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (confirmed) return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.80)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -383,10 +437,15 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
             <input type="text" placeholder="ej. Los Clavos FC" value={teamName} onChange={e => setTeamName(e.target.value)}
               style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
+          {error && (
+            <div style={{ padding: "10px 14px", borderRadius: 10, marginBottom: 12, fontSize: 12, background: "rgba(239,68,68,0.07)", color: "#FF6B6B", border: "1px solid rgba(239,68,68,0.13)" }}>
+              {error}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onClose} style={{ flex: 1, padding: 13, borderRadius: 13, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--text3)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-            <button onClick={() => setConfirmed(true)} style={{ flex: 2, padding: 13, borderRadius: 13, background: "var(--accent)", color: "#000", fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: "0 0 24px rgba(215,255,0,0.22)" }}>
-              <Zap size={14} fill="#000" /> Confirmar reto
+            <button onClick={handleConfirm} disabled={saving} style={{ flex: 2, padding: 13, borderRadius: 13, background: saving ? "rgba(215,255,0,0.60)" : "var(--accent)", color: "#000", fontWeight: 800, fontSize: 14, border: "none", cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: "0 0 24px rgba(215,255,0,0.22)" }}>
+              {saving ? "Confirmando…" : <><Zap size={14} fill="#000" /> Confirmar reto</>}
             </button>
           </div>
         </div>

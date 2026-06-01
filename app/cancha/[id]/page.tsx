@@ -25,13 +25,13 @@ const TIME_SLOTS = [
   '6:00 PM','7:00 PM','8:00 PM','9:00 PM',
 ];
 
-// Heat levels 1–5: drive visual urgency on the slot grid
+
+// Heat levels 1–5: used by the booking modal slot picker for visual weight
 const SLOT_HEAT: Record<string, number> = {
   '6:00 AM':1,'7:00 AM':2,'8:00 AM':2,'9:00 AM':2,'10:00 AM':1,
   '11:00 AM':1,'12:00 PM':2,'1:00 PM':1,'2:00 PM':1,'3:00 PM':2,
   '4:00 PM':3,'5:00 PM':4,'6:00 PM':5,'7:00 PM':5,'8:00 PM':4,'9:00 PM':3,
 };
-// Pseudo-random but deterministic recent bookings count per slot
 function slotRecent(courtId: string|number, slot: string): number {
   const h = SLOT_HEAT[slot] ?? 1;
   const c = String(courtId).split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
@@ -343,11 +343,6 @@ function BookingModal({ court, user, onClose }: {
                       </div>
                     )}
 
-                    {/* Live signal */}
-                    <div style={{marginTop:12,display:'flex',alignItems:'center',gap:6}}>
-                      <span style={{width:5,height:5,borderRadius:'50%',background:'#4ADE80',display:'inline-block',animation:'slot-hot 1.8s ease-in-out infinite'}}/>
-                      <span style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>7 reservas hechas hoy en esta cancha</span>
-                    </div>
                   </div>
                 )}
 
@@ -612,14 +607,7 @@ export default function CanchaPage() {
   const fieldBg    = FIELD_BG[court.sport] ?? FIELD_BG.Fútbol;
   const sportEmoji = court.sport==='Fútbol'?'⚽':court.sport==='Pádel'?'🎾':court.sport==='Básquet'?'🏀':'🎾';
 
-  const PREVIEW_SLOTS = [
-    {time:'6:00 AM', ok:true}, {time:'7:00 AM', ok:false},{time:'8:00 AM', ok:true},
-    {time:'9:00 AM', ok:true}, {time:'10:00 AM',ok:false},{time:'11:00 AM',ok:true},
-    {time:'5:00 PM', ok:false},{time:'6:00 PM', ok:true}, {time:'7:00 PM', ok:true},
-    {time:'8:00 PM', ok:false},{time:'9:00 PM', ok:true},
-  ];
-
-  /* Shared card surface — TuCancha signature */
+/* Shared card surface — TuCancha signature */
   const card: React.CSSProperties = {
     borderRadius: 16,
     background: 'linear-gradient(145deg, rgba(255,255,255,0.032) 0%, transparent 52%), linear-gradient(160deg, #191919 0%, #111111 100%)',
@@ -891,7 +879,6 @@ export default function CanchaPage() {
                   <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.8)', display:'inline-block' }}/>
                   Disponible esta noche
                 </span>
-                <span className="badge-warn">⚡ Se llena rápido</span>
               </div>
 
               <h1 style={{ fontWeight:900, fontSize:27, letterSpacing:'-0.046em', lineHeight:1.04, marginBottom:6, color:'rgba(255,255,255,0.95)' }}>
@@ -915,40 +902,27 @@ export default function CanchaPage() {
               </div>
             </div>
 
-            {/* ── Time slots ── */}
+            {/* ── Reserve CTA card ── */}
             <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:28 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                <p className="sec-label" style={{ margin:0 }}>Horarios disponibles hoy</p>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:9.5, color:'rgba(255,255,255,0.2)', fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase' }}>
-                    <span style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.6)', display:'inline-block' }}/>libre
-                  </span>
-                  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:9.5, color:'rgba(255,255,255,0.2)', fontWeight:600, letterSpacing:'0.04em', textTransform:'uppercase' }}>
-                    <span style={{ width:5, height:5, borderRadius:'50%', background:'rgba(255,255,255,0.14)', display:'inline-block' }}/>ocupado
-                  </span>
-                </div>
+                <p className="sec-label" style={{ margin:0 }}>Reservá esta cancha</p>
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:9.5, color:'rgba(74,222,128,0.55)', fontWeight:700, letterSpacing:'0.06em' }}>
+                  <span style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.55)', display:'inline-block' }}/>
+                  DISPONIBLE
+                </span>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:5 }}>
-                {PREVIEW_SLOTS.map(s=>(
-                  <button
-                    key={s.time}
-                    disabled={!s.ok}
-                    onClick={s.ok ? handleReservar : undefined}
-                    className={s.ok ? 'slot-p' : undefined}
-                    style={{
-                      padding:'6px 3px', borderRadius:8,
-                      fontSize:10, fontWeight:600,
-                      cursor: s.ok ? 'pointer' : 'not-allowed',
-                      border:`1px solid ${s.ok ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'}`,
-                      background: s.ok ? 'rgba(74,222,128,0.035)' : 'rgba(255,255,255,0.015)',
-                      color: s.ok ? 'rgba(160,240,160,0.65)' : 'rgba(255,255,255,0.15)',
-                      opacity: s.ok ? 1 : 0.45,
-                      userSelect:'none',
-                    }}>
-                    {s.time}
-                  </button>
-                ))}
-              </div>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.32)', lineHeight:1.6, marginBottom:14 }}>
+                Elegí fecha y hora en el formulario de reserva. Horarios confirmados al instante.
+              </p>
+              <button onClick={handleReservar} style={{
+                width:'100%', padding:'12px', borderRadius:11,
+                background:'var(--accent)', color:'#000',
+                fontWeight:800, fontSize:13.5, border:'none', cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:7,
+                boxShadow:'0 0 20px rgba(215,255,0,0.20)',
+              }}>
+                Elegir fecha y hora →
+              </button>
             </div>
 
             {/* ── Details — Apple Wallet rows ── */}
@@ -1077,80 +1051,16 @@ export default function CanchaPage() {
 
             {/* ── Reviews ── */}
             <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                <p className="sec-label" style={{ margin:0 }}>Reseñas</p>
-                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                  <Star size={12} fill="#FACC15" color="#FACC15"/>
-                  <span style={{ fontWeight:800, fontSize:14, color:'rgba(255,255,255,0.80)', letterSpacing:'-0.02em' }}>4.8</span>
-                  <span style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)' }}>· 47 reseñas</span>
-                </div>
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {[
-                  {
-                    initials:'CM', name:'Carlos M.', stars:5,
-                    date:'hace 3 días',
-                    text:'Cancha en excelente estado, la iluminación es perfecta para jugar de noche. Llegamos a las 8PM y estaba de primera.',
-                    color:'rgba(215,255,0,0.10)', textColor:'rgba(215,255,0,0.75)',
-                  },
-                  {
-                    initials:'DP', name:'Diego P.', stars:5,
-                    date:'hace 1 semana',
-                    text:'Ya vamos cada jueves con el equipo. El piso sintético agarra bien y los vestidores están limpios. Muy recomendada.',
-                    color:'rgba(74,222,128,0.10)', textColor:'rgba(74,222,128,0.75)',
-                  },
-                  {
-                    initials:'LA', name:'Luis A.', stars:4,
-                    date:'hace 2 semanas',
-                    text:'Buena cancha para mejengas. A veces tarda un poco la respuesta del encargado pero el campo vale la pena.',
-                    color:'rgba(147,197,253,0.10)', textColor:'rgba(147,197,253,0.75)',
-                  },
-                ].map(r=>(
-                  <div key={r.name} style={{ padding:'12px 14px', borderRadius:12, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                      <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, background:r.color, border:`1px solid ${r.textColor.replace('0.75','0.25')}`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:r.textColor }}>
-                        {r.initials}
-                      </div>
-                      <div style={{ flex:1 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <span style={{ fontWeight:700, fontSize:12.5, color:'rgba(255,255,255,0.70)' }}>{r.name}</span>
-                          <span style={{ fontSize:10.5, color:'#FACC15', letterSpacing:'0.02em' }}>{'★'.repeat(r.stars)}</span>
-                        </div>
-                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>{r.date}</span>
-                      </div>
-                    </div>
-                    <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.40)', lineHeight:1.6, margin:0 }}>{r.text}</p>
-                  </div>
-                ))}
+              <p className="sec-label" style={{ marginBottom:14 }}>Reseñas</p>
+              <div style={{ textAlign:'center', padding:'28px 0' }}>
+                <div style={{ fontSize:26, marginBottom:10 }}>⭐</div>
+                <p style={{ fontSize:12.5, fontWeight:700, color:'rgba(255,255,255,0.28)', marginBottom:4 }}>Sin reseñas aún</p>
+                <p style={{ fontSize:11, color:'rgba(255,255,255,0.18)', lineHeight:1.55 }}>
+                  Las reseñas aparecerán después de las primeras reservas confirmadas.
+                </p>
               </div>
             </div>
 
-            {/* ── Equipos frecuentes ── */}
-            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
-              <p className="sec-label" style={{ marginBottom:14 }}>Equipos frecuentes</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                {[
-                  { initials:'LC', name:'Los Clavos FC',      matches:12, color:'rgba(215,255,0,0.10)',   textColor:'rgba(215,255,0,0.75)',   wins:9,  losses:3  },
-                  { initials:'EU', name:'Escazú United',       matches:9,  color:'rgba(74,222,128,0.10)', textColor:'rgba(74,222,128,0.75)',  wins:6,  losses:3  },
-                  { initials:'HK', name:'Heredia Kicks',       matches:7,  color:'rgba(147,197,253,0.10)',textColor:'rgba(147,197,253,0.75)', wins:4,  losses:3  },
-                  { initials:'AF', name:'Arena FC',            matches:5,  color:'rgba(251,146,60,0.10)', textColor:'rgba(251,146,60,0.75)',  wins:3,  losses:2  },
-                ].map(t=>(
-                  <div key={t.name} style={{ display:'flex', alignItems:'center', gap:11, padding:'10px 12px', borderRadius:11, background:'rgba(255,255,255,0.018)', border:'1px solid rgba(255,255,255,0.055)' }}>
-                    <div style={{ width:34, height:34, borderRadius:10, flexShrink:0, background:t.color, border:`1px solid ${t.textColor.replace('0.75','0.22')}`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:t.textColor }}>
-                      {t.initials}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ fontWeight:700, fontSize:12.5, color:'rgba(255,255,255,0.70)', marginBottom:2, letterSpacing:'-0.01em' }}>{t.name}</p>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.28)' }}>{t.matches} partidos este mes</p>
-                    </div>
-                    <div style={{ display:'flex', gap:4, flexShrink:0 }}>
-                      <span style={{ padding:'2px 7px', borderRadius:6, fontSize:9.5, fontWeight:700, background:'rgba(74,222,128,0.09)', color:'rgba(74,222,128,0.75)', letterSpacing:'0.02em' }}>{t.wins}G</span>
-                      <span style={{ padding:'2px 7px', borderRadius:6, fontSize:9.5, fontWeight:700, background:'rgba(255,107,107,0.09)', color:'rgba(255,107,107,0.60)', letterSpacing:'0.02em' }}>{t.losses}P</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* ════ RIGHT — booking sidebar ════ */}

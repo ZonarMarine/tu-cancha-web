@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Save, Bell, CreditCard, User, MapPin, Shield } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const SECTIONS = [
   { id: "perfil",    icon: User,        label: "Perfil del negocio" },
@@ -10,13 +11,91 @@ const SECTIONS = [
   { id: "seguridad", icon: Shield,      label: "Seguridad"         },
 ];
 
+type NotifKey = "nueva_reserva" | "reserva_confirmada" | "reserva_cancelada" | "recordatorio_2h" | "resumen_semanal" | "resenas_nuevas";
+
+const NOTIF_DEFAULTS: Record<NotifKey, boolean> = {
+  nueva_reserva:      true,
+  reserva_confirmada: true,
+  reserva_cancelada:  true,
+  recordatorio_2h:    false,
+  resumen_semanal:    true,
+  resenas_nuevas:     false,
+};
+
 export default function ConfiguracionPage() {
   const [activeSection, setActiveSection] = useState("perfil");
-  const [saved, setSaved] = useState(false);
+  const [saved,    setSaved]    = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(true);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2200);
+  // Perfil fields
+  const [complexName,  setComplexName]  = useState("");
+  const [ownerName,    setOwnerName]    = useState("");
+  const [email,        setEmail]        = useState("");
+  const [phone,        setPhone]        = useState("");
+  const [description,  setDescription]  = useState("");
+  const [address,      setAddress]      = useState("");
+
+  // Notifs
+  const [notifPrefs, setNotifPrefs] = useState<Record<NotifKey, boolean>>(NOTIF_DEFAULTS);
+
+  // Load existing data on mount
+  const loadProfile = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const meta = user.user_metadata ?? {};
+      setComplexName(meta.business_name    ?? "");
+      setOwnerName(meta.name               ?? "");
+      setEmail(user.email                  ?? "");
+      setPhone(meta.phone                  ?? "");
+      setDescription(meta.business_description ?? "");
+      setAddress(meta.business_address     ?? "");
+      if (meta.notif_prefs) {
+        setNotifPrefs({ ...NOTIF_DEFAULTS, ...meta.notif_prefs });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      if (activeSection === "perfil") {
+        const { error: updateErr } = await supabase.auth.updateUser({
+          email: email.trim() || undefined,
+          data: {
+            name:                 ownerName.trim(),
+            phone:                phone.trim(),
+            business_name:        complexName.trim(),
+            business_description: description.trim(),
+            business_address:     address.trim(),
+          },
+        });
+        if (updateErr) throw updateErr;
+      } else if (activeSection === "notifs") {
+        const { error: updateErr } = await supabase.auth.updateUser({
+          data: { notif_prefs: notifPrefs },
+        });
+        if (updateErr) throw updateErr;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
+    } catch (e: any) {
+      setError(e.message ?? "Error al guardar. Intentá de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleNotif = (key: NotifKey) => {
+    setNotifPrefs(p => ({ ...p, [key]: !p[key] }));
   };
 
   return (
@@ -56,7 +135,7 @@ export default function ConfiguracionPage() {
               <button
                 key={s.id}
                 className="section-tab"
-                onClick={() => setActiveSection(s.id)}
+                onClick={() => { setActiveSection(s.id); setError(""); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "9px 12px", borderRadius: 9, border: "none",
@@ -79,30 +158,45 @@ export default function ConfiguracionPage() {
           background: "rgba(10,10,10,0.8)", border: "1px solid rgba(255,255,255,0.07)",
           borderRadius: 14, padding: "22px 24px",
         }}>
-          {activeSection === "perfil" && (
+
+          {loading && activeSection === "perfil" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[1,2,3,4].map(i => (
+                <div key={i} style={{ height: 36, borderRadius: 9, background: "rgba(255,255,255,0.04)", animation: "fadeUp 0.5s ease both" }} />
+              ))}
+            </div>
+          )}
+
+          {!loading && activeSection === "perfil" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 18 }}>Perfil del negocio</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                {[
-                  { label: "Nombre del complejo", placeholder: "Twelve Academy", full: false },
-                  { label: "Nombre del propietario", placeholder: "Diego Morales", full: false },
-                  { label: "Correo electrónico", placeholder: "info@twelve.cr", full: false },
-                  { label: "Teléfono de contacto", placeholder: "+506 8800-0000", full: false },
-                  { label: "Descripción del complejo", placeholder: "Instalaciones premium en San José...", full: true },
-                  { label: "Dirección", placeholder: "San José, Escazú, Trejos Montealegre", full: true },
-                ].map((f, i) => (
-                  <div key={i} style={{ gridColumn: f.full ? "span 2" : "span 1" }}>
-                    <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
-                      {f.label.toUpperCase()}
-                    </label>
-                    {f.full ? (
-                      <textarea className="config-input" placeholder={f.placeholder} rows={3}
-                        style={{ resize: "none", fontFamily: "inherit" } as any} />
-                    ) : (
-                      <input className="config-input" placeholder={f.placeholder} />
-                    )}
-                  </div>
-                ))}
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>NOMBRE DEL COMPLEJO</label>
+                  <input className="config-input" placeholder="Twelve Academy" value={complexName} onChange={e => setComplexName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>NOMBRE DEL PROPIETARIO</label>
+                  <input className="config-input" placeholder="Tu nombre" value={ownerName} onChange={e => setOwnerName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>CORREO ELECTRÓNICO</label>
+                  <input className="config-input" type="email" placeholder="info@complejo.cr" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>TELÉFONO DE CONTACTO</label>
+                  <input className="config-input" placeholder="+506 8800-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>DESCRIPCIÓN DEL COMPLEJO</label>
+                  <textarea className="config-input" placeholder="Instalaciones premium en San José..." rows={3}
+                    value={description} onChange={e => setDescription(e.target.value)}
+                    style={{ resize: "none", fontFamily: "inherit" } as any} />
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>DIRECCIÓN</label>
+                  <input className="config-input" placeholder="San José, Escazú, Trejos Montealegre" value={address} onChange={e => setAddress(e.target.value)} />
+                </div>
               </div>
             </div>
           )}
@@ -110,15 +204,39 @@ export default function ConfiguracionPage() {
           {activeSection === "notifs" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 18 }}>Notificaciones</div>
-              {[
-                { label: "Nueva reserva pendiente",  sub: "Recibí un aviso al instante por email", on: true  },
-                { label: "Reserva confirmada",        sub: "Confirmación enviada al jugador",        on: true  },
-                { label: "Reserva cancelada",         sub: "Aviso cuando un jugador cancela",        on: true  },
-                { label: "Recordatorio 2h antes",     sub: "Resumen de las canchas del día",         on: false },
-                { label: "Resumen semanal",           sub: "Reporte de ingresos cada lunes",         on: true  },
-                { label: "Reseñas nuevas",            sub: "Cuando alguien califica tus canchas",    on: false },
-              ].map((n, i) => (
-                <ToggleRow key={i} label={n.label} sub={n.sub} defaultOn={n.on} />
+              {([
+                { key: "nueva_reserva"      as NotifKey, label: "Nueva reserva pendiente",  sub: "Recibí un aviso al instante por email" },
+                { key: "reserva_confirmada" as NotifKey, label: "Reserva confirmada",        sub: "Confirmación enviada al jugador"      },
+                { key: "reserva_cancelada"  as NotifKey, label: "Reserva cancelada",         sub: "Aviso cuando un jugador cancela"      },
+                { key: "recordatorio_2h"    as NotifKey, label: "Recordatorio 2h antes",     sub: "Resumen de las canchas del día"       },
+                { key: "resumen_semanal"    as NotifKey, label: "Resumen semanal",           sub: "Reporte de ingresos cada lunes"       },
+                { key: "resenas_nuevas"     as NotifKey, label: "Reseñas nuevas",            sub: "Cuando alguien califica tus canchas"  },
+              ] as const).map(n => (
+                <div key={n.key} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
+                }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>{n.label}</div>
+                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.22)", marginTop: 1 }}>{n.sub}</div>
+                  </div>
+                  <div
+                    className="toggle-track"
+                    onClick={() => toggleNotif(n.key)}
+                    style={{
+                      width: 38, height: 20, borderRadius: 99, flexShrink: 0,
+                      background: notifPrefs[n.key] ? "#D7FF00" : "rgba(255,255,255,0.08)",
+                      position: "relative",
+                    }}
+                  >
+                    <div style={{
+                      position: "absolute", top: 3, left: notifPrefs[n.key] ? "calc(100% - 17px)" : 3,
+                      width: 14, height: 14, borderRadius: "50%",
+                      background: notifPrefs[n.key] ? "#000" : "rgba(255,255,255,0.35)",
+                      transition: "left 0.18s cubic-bezier(0.4,0,0.2,1)",
+                    }} />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -128,9 +246,9 @@ export default function ConfiguracionPage() {
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 6 }}>Métodos de pago</div>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Configurá cómo recibís pagos de los jugadores</p>
               {[
-                { icon: "💳", label: "SINPE Móvil",    connected: true,  number: "8800-1234" },
+                { icon: "💳", label: "SINPE Móvil",     connected: true,  number: "8800-1234" },
                 { icon: "🏦", label: "BAC Credomatic",  connected: false, number: "" },
-                { icon: "💰", label: "Pago en efectivo",connected: true,  number: "Habilitado" },
+                { icon: "💰", label: "Pago en efectivo", connected: true,  number: "Habilitado" },
               ].map((m, i) => (
                 <div key={i} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -162,68 +280,50 @@ export default function ConfiguracionPage() {
           {(activeSection === "ubicacion" || activeSection === "seguridad") && (
             <div style={{ textAlign: "center", padding: "48px 0" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>{activeSection === "ubicacion" ? "📍" : "🔒"}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
-                Próximamente
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>Próximamente</div>
               <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>
                 Esta sección estará disponible en la próxima versión
               </div>
             </div>
           )}
 
+          {/* Error */}
+          {error && (
+            <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 9, fontSize: 12, background: "rgba(239,68,68,0.07)", color: "#FF6B6B", border: "1px solid rgba(239,68,68,0.13)" }}>
+              {error}
+            </div>
+          )}
+
           {/* Save button */}
-          {["perfil","notifs","pagos"].includes(activeSection) && (
+          {["perfil", "notifs", "pagos"].includes(activeSection) && (
             <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
               <button
                 onClick={handleSave}
+                disabled={saving || activeSection === "pagos"}
                 style={{
                   display: "flex", alignItems: "center", gap: 7,
                   padding: "10px 20px", borderRadius: 10, border: "none",
-                  background: saved ? "rgba(52,211,153,0.15)" : "#D7FF00",
+                  background: saved
+                    ? "rgba(52,211,153,0.15)"
+                    : saving
+                    ? "rgba(215,255,0,0.50)"
+                    : activeSection === "pagos"
+                    ? "rgba(215,255,0,0.15)"
+                    : "#D7FF00",
                   color: saved ? "#34D399" : "#000",
-                  fontSize: 13, fontWeight: 800, cursor: "pointer",
+                  fontSize: 13, fontWeight: 800,
+                  cursor: saving || activeSection === "pagos" ? "default" : "pointer",
                   letterSpacing: "-0.015em",
                   transition: "all 0.2s",
                   animation: saved ? "savedPop 0.3s ease both" : "none",
                 }}
               >
                 <Save size={13} />
-                {saved ? "Guardado ✓" : "Guardar cambios"}
+                {saved ? "Guardado ✓" : saving ? "Guardando…" : activeSection === "pagos" ? "Próximamente" : "Guardar cambios"}
               </button>
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ToggleRow({ label, sub, defaultOn }: { label: string; sub: string; defaultOn: boolean }) {
-  const [on, setOn] = useState(defaultOn);
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
-    }}>
-      <div>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>{label}</div>
-        <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.22)", marginTop: 1 }}>{sub}</div>
-      </div>
-      <div
-        className="toggle-track"
-        onClick={() => setOn(o => !o)}
-        style={{
-          width: 38, height: 20, borderRadius: 99, flexShrink: 0,
-          background: on ? "#D7FF00" : "rgba(255,255,255,0.08)",
-          position: "relative",
-        }}
-      >
-        <div style={{
-          position: "absolute", top: 3, left: on ? "calc(100% - 17px)" : 3,
-          width: 14, height: 14, borderRadius: "50%",
-          background: on ? "#000" : "rgba(255,255,255,0.35)",
-          transition: "left 0.18s cubic-bezier(0.4,0,0.2,1)",
-        }} />
       </div>
     </div>
   );
