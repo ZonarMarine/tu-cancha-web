@@ -429,6 +429,8 @@ export default function ExplorarPage() {
   const [sport,       setSport]   = useState<string>('Fútbol');
   const [zone,        setZone]    = useState('Todas');
   const [price,       setPrice]   = useState('Cualquiera');
+  const [horaFilter,  setHoraFilter] = useState('');      // from ?hora= param
+  const [dateFilter,  setDateFilter] = useState('');      // from ?date= param
   const [showFilters, setShow]    = useState(false);
   const [totalBookingsToday, setTotalBookingsToday] = useState(0);
   const [sigIdx,      setSigIdx]  = useState(0);
@@ -482,9 +484,12 @@ export default function ExplorarPage() {
     return sigs;
   }, [rawOpenRetos, sport, recentBookingText, isPadel]);
 
-  /* ── Sync sport from URL param or global context on mount ── */
+  /* ── Sync all URL params from advanced search on mount ── */
   useEffect(() => {
-    const urlSport = new URLSearchParams(window.location.search).get('sport');
+    const p = new URLSearchParams(window.location.search);
+
+    // sport
+    const urlSport = p.get('sport');
     if (urlSport === 'padel') {
       setSport('Pádel');
       setGlobalSport('padel');
@@ -494,6 +499,22 @@ export default function ExplorarPage() {
     } else {
       setSport(globalSport === 'padel' ? 'Pádel' : 'Fútbol');
     }
+
+    // location → zone (match explorar's ZONES list)
+    const urlLoc = p.get('location');
+    if (urlLoc) {
+      const matched = ZONES.find(z => z.toLowerCase() === urlLoc.toLowerCase());
+      if (matched) setZone(matched);
+    }
+
+    // date filter
+    const urlDate = p.get('date');
+    if (urlDate) setDateFilter(urlDate);
+
+    // hora filter
+    const urlHora = p.get('hora');
+    if (urlHora) setHoraFilter(urlHora);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -503,13 +524,14 @@ export default function ExplorarPage() {
     if (val === 'Fútbol') setGlobalSport('futbol');
   };
 
-  /* ── Load courts + today's bookings ── */
+  /* ── Load courts + bookings for selected date (or today) ── */
   async function loadData() {
-    const today = new Date().toISOString().split('T')[0];
+    const today       = new Date().toISOString().split('T')[0];
+    const queryDate   = dateFilter || today;
 
     const [courtsRes, bookingsRes, retosRes] = await Promise.all([
       supabase.from('owner_courts').select('*').eq('active', true).is('deleted_at', null),
-      supabase.from('bookings').select('court_name, time, created_at').in('status', ['confirmed', 'paid', 'completed']).eq('date', today),
+      supabase.from('bookings').select('court_name, time, created_at').in('status', ['confirmed', 'paid', 'completed']).eq('date', queryDate),
       supabase.from('retos').select('team_name, location, time, format, sport, deporte').in('status', ['open', 'looking_for_rival', 'active']).gte('date', today).order('created_at', { ascending: false }).limit(8),
     ]);
 
@@ -555,7 +577,7 @@ export default function ExplorarPage() {
     setLoading(false);
   }
 
-  useEffect(() => { loadData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(); }, [dateFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const ch = supabase
@@ -567,12 +589,19 @@ export default function ExplorarPage() {
     return () => { supabase.removeChannel(ch); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = courts.filter(c =>
-    (sport === 'Todo'  || c.sport === sport) &&
-    (zone  === 'Todas' || c.location.toLowerCase().includes(zone.toLowerCase())) &&
-    priceMatch(c.basePrice, price) &&
-    (!search || c.title.toLowerCase().includes(search.toLowerCase()) || c.location.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = courts.filter(c => {
+    if (sport !== 'Todo' && c.sport !== sport) return false;
+    if (zone !== 'Todas' && !c.location.toLowerCase().includes(zone.toLowerCase())) return false;
+    if (!priceMatch(c.basePrice, price)) return false;
+    if (search && !c.title.toLowerCase().includes(search.toLowerCase()) && !c.location.toLowerCase().includes(search.toLowerCase())) return false;
+    // Hora filter: only show courts that have the requested slot available
+    if (horaFilter && horaFilter !== 'Cualquier hora' && c.slots.length > 0) {
+      const normalise = (s: string) => s.trim().toLowerCase();
+      const hasSlot = c.slots.some(s => normalise(s) === normalise(horaFilter));
+      if (!hasSlot) return false;
+    }
+    return true;
+  });
 
   const activeFilters = [zone !== 'Todas' && zone, price !== 'Cualquiera' && price].filter(Boolean);
 

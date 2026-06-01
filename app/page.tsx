@@ -11,6 +11,7 @@ import HeroStats from "@/components/HeroStats";
 import HeroLiveStrip from "@/components/HeroLiveStrip";
 import HeroLiveBadge from "@/components/HeroLiveBadge";
 import SportHeroCTAs from "@/components/SportHeroCTAs";
+import HomeAdvancedSearch from "@/components/HomeAdvancedSearch";
 import { createClient } from "@supabase/supabase-js";
 
 // Always fetch fresh data — retos are live
@@ -405,6 +406,11 @@ export default async function HomePage() {
           <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom,transparent,rgba(255,255,255,0.15))', margin: '0 auto' }} />
         </div>
       </section>
+
+      {/* ══════════════════════════════════
+          ADVANCED SEARCH
+      ══════════════════════════════════ */}
+      <HomeAdvancedSearch />
 
       <DarkBreath />
 
