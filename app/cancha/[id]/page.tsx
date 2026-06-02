@@ -99,20 +99,29 @@ function BookingModal({ court, user, onClose }: {
     if (!selectedDay || !selectedTime) return;
     setSaving(true); setError('');
     try {
+      // Get current session token to authenticate the API call
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setError('Sesión expirada. Por favor iniciá sesión de nuevo.');
+        setSaving(false);
+        return;
+      }
+
       const res = await fetch('/api/payments/create-checkout', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          courtId:    court.id,
-          courtName:  court.title,
-          date:       selectedDay.toISOString().split('T')[0],
-          time:       selectedTime,
+          courtId:   court.id,
+          courtName: court.title,
+          date:      selectedDay.toISOString().split('T')[0],
+          time:      selectedTime,
           hours,
           players,
-          basePrice:  court.basePrice,
-          userId:     user.id,
-          userName:   user.user_metadata?.name ?? user.email ?? '',
-          userEmail:  user.email ?? '',
+          basePrice: court.basePrice,
         }),
       });
       const data = await res.json();
