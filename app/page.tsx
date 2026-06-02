@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import LiveTicker from "@/components/LiveTicker";
 import MasReservadas from "@/components/MasReservadas";
 import HomeRetosSection from "@/components/HomeRetosSection";
@@ -431,15 +431,15 @@ export default async function HomePage() {
           CANCHAS DESTACADAS — real data only
       ══════════════════════════════════ */}
       {NEARBY_COURTS.length > 0 && (
-        <section style={{ padding: '0 0 64px' }}>
+        <section style={{ padding: '8px 0 64px' }}>
           <div className="container">
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36 }}>
               <div>
-                <p className="eyebrow" style={{ marginBottom: 12 }}>CANCHAS DISPONIBLES</p>
+                <p className="eyebrow" style={{ marginBottom: 12 }}>CANCHAS DESTACADAS</p>
                 <h2 style={{ fontSize: 'clamp(22px, 2.6vw, 34px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 8 }}>
-                  Canchas cerca de ti.
+                  Canchas destacadas.
                 </h2>
-                <p style={{ fontSize: 14, color: 'var(--text3)' }}>Disponibilidad en tiempo real.</p>
+                <p style={{ fontSize: 14, color: 'var(--text3)' }}>Canchas activas en la plataforma.</p>
               </div>
               <Link href="/explorar" style={{
                 display: 'flex', alignItems: 'center', gap: 4,
@@ -451,8 +451,15 @@ export default async function HomePage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
               {NEARBY_COURTS.map(court => {
-                const isPadel = court.sport?.toLowerCase() === 'padel' || court.sport?.toLowerCase() === 'pádel';
-                const slotsCount = Array.isArray(court.slots) ? court.slots.length : 0;
+                // Normalise sport for FieldPreview
+                const sportLower = court.sport?.toLowerCase() ?? '';
+                const isPadel = sportLower === 'padel' || sportLower === 'pádel';
+                const isFutsal = sportLower === 'futsal' || sportLower === 'fútsal';
+                const fieldSport = isPadel ? 'Pádel' : isFutsal ? 'Fútsal' : 'Fútbol';
+                // Sport display label — use exactly what's in the DB, capitalised
+                const sportLabel = court.sport
+                  ? court.sport.charAt(0).toUpperCase() + court.sport.slice(1)
+                  : null;
                 return (
                   <Link key={court.id} href="/explorar" className="court-card-link" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div className="court-card" style={{
@@ -461,36 +468,48 @@ export default async function HomePage() {
                       border: '1px solid rgba(255,255,255,0.06)',
                       transition: 'border-color 0.18s, box-shadow 0.18s',
                     }}>
-                      {/* Field preview */}
+                      {/* Field preview — no tag badge inside, sport shown in info row */}
                       <div style={{ position: 'relative', height: 110, overflow: 'hidden' }}>
-                        <FieldPreview sport={isPadel ? 'Pádel' : 'Fútbol'} tag={court.sport ?? null} />
+                        <FieldPreview sport={fieldSport} tag={null} />
                       </div>
 
                       {/* Info */}
                       <div style={{ padding: '14px 16px 16px' }}>
+                        {/* Name */}
                         <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {court.court_name}
                         </p>
+
+                        {/* Location — real DB value only */}
                         {court.location && (
-                          <p style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10 }}>
+                          <p style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             📍 {court.location}
                           </p>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          {court.price_per_hour != null && (
-                            <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--accent)', letterSpacing: '-0.02em' }}>
+
+                        {/* Bottom row: price (real) + sport badge (real) */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          {/* Price — only if set in DB */}
+                          {court.price_per_hour != null ? (
+                            <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--accent)', letterSpacing: '-0.02em', flexShrink: 0 }}>
                               ₡{court.price_per_hour.toLocaleString('es-CR')}
                               <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text3)', marginLeft: 3 }}>/hr</span>
                             </span>
+                          ) : (
+                            <span style={{ fontSize: 11, color: 'var(--text3)' }}>Precio a consultar</span>
                           )}
-                          {slotsCount > 0 && (
+
+                          {/* Sport — real DB value, no availability implied */}
+                          {sportLabel && (
                             <span style={{
-                              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
-                              background: 'rgba(74,222,128,0.07)',
-                              color: 'rgba(74,222,128,0.8)',
-                              border: '1px solid rgba(74,222,128,0.12)',
+                              fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 6,
+                              background: isPadel ? 'rgba(96,165,250,0.08)' : 'rgba(215,255,0,0.07)',
+                              color: isPadel ? 'rgba(96,165,250,0.75)' : 'rgba(215,255,0,0.65)',
+                              border: `1px solid ${isPadel ? 'rgba(96,165,250,0.14)' : 'rgba(215,255,0,0.12)'}`,
+                              flexShrink: 0,
+                              textTransform: 'capitalize',
                             }}>
-                              {slotsCount} horario{slotsCount !== 1 ? 's' : ''}
+                              {sportLabel}
                             </span>
                           )}
                         </div>
