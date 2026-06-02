@@ -94,8 +94,10 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tucanchacr.com';
 
     // 2. Create ONVO checkout session
+    // ONVO expects unitAmount in the smallest currency unit (centimos).
+    // CRC: ₡25,000 → pass 2,500,000 centimos so ONVO displays ₡25,000.
     const session = await createCheckoutSession({
-      amount:       gross,
+      amount:       gross * 100,
       description:  `TuCancha — ${courtName} · ${date} ${time} (${hours}h)`,
       successUrl:   `${origin}/reserva/${booking.id}?status=success`,
       cancelUrl:    `${origin}/reserva/${booking.id}?status=cancelled`,

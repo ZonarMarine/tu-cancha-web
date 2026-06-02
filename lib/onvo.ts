@@ -82,7 +82,7 @@ async function onvoFetch<T>(
 // ─── Checkout sessions ───────────────────────────────────────────────────────
 
 export interface CreateCheckoutParams {
-  amount:         number;   // CRC integer (smallest unit)
+  amount:         number;   // CRC in centimos (smallest unit) — multiply whole colones × 100
   description:    string;   // shown on ONVO checkout page
   metadata?:      Record<string, string>;
   successUrl:     string;   // redirect after payment (maps to redirectUrl)
