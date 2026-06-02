@@ -71,8 +71,23 @@ function BookingModal({ court, user, onClose }: {
   const [error,        setError]        = useState('');
   const [success,      setSuccess]      = useState(false);
   const [visible,      setVisible]      = useState(false);
+  const [bookedTimes,  setBookedTimes]  = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+
+  // Fetch real-time availability whenever the selected date changes
+  useEffect(() => {
+    if (!selectedDay || !court.id) return;
+    const dateStr = selectedDay.toISOString().split('T')[0];
+    setLoadingSlots(true);
+    setBookedTimes([]);
+    fetch(`/api/court-availability?courtId=${encodeURIComponent(court.id)}&date=${dateStr}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d.bookedTimes)) setBookedTimes(d.bookedTimes); })
+      .catch(() => {/* silently ignore — all slots remain selectable */})
+      .finally(() => setLoadingSlots(false));
+  }, [selectedDay, court.id]);
   const handleClose = () => { setVisible(false); setTimeout(onClose, 220); };
 
   const goStep = (next: BkStep) => {
@@ -330,33 +345,54 @@ function BookingModal({ court, user, onClose }: {
                     </p>
 
                     {/* Slot grid — uses court.slots from DB; falls back to standard
-                        hourly slots when the owner hasn't configured specific hours yet */}
-                    {(()=>{
+                        hourly slots when the owner hasn't configured specific hours yet.
+                        Booked slots are disabled using real-time data from /api/court-availability */}
+                    {loadingSlots ? (
+                      <div style={{textAlign:'center',padding:'20px 0 14px',color:'rgba(255,255,255,0.28)',fontSize:12}}>
+                        Verificando disponibilidad…
+                      </div>
+                    ) : (()=>{
                       const DEFAULT_SLOTS = [
                         '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
                         '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
                         '6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM',
                       ];
                       const slots = court.slots.length > 0 ? court.slots : DEFAULT_SLOTS;
+                      const norm  = (s: string) => s.trim().toLowerCase();
                       return (
                         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
                           {slots.map(t=>{
-                            const active = selectedTime===t;
+                            const active  = selectedTime === t;
+                            const booked  = bookedTimes.some(b => norm(b) === norm(t));
                             return (
                               <button key={t}
-                                onClick={()=>setSelectedTime(t)}
+                                disabled={booked}
+                                onClick={()=>{ if (!booked) setSelectedTime(t); }}
+                                title={booked ? 'Horario reservado' : undefined}
                                 style={{
                                   padding:'10px 4px',borderRadius:10,
                                   fontSize:11,fontWeight:active?800:500,
-                                  cursor:'pointer',
-                                  background: active ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
-                                  color: active ? '#000' : 'rgba(255,255,255,0.65)',
+                                  cursor: booked ? 'not-allowed' : 'pointer',
+                                  position:'relative',
+                                  background: active
+                                    ? 'var(--accent)'
+                                    : booked
+                                    ? 'rgba(255,255,255,0.02)'
+                                    : 'rgba(255,255,255,0.04)',
+                                  color: active
+                                    ? '#000'
+                                    : booked
+                                    ? 'rgba(255,255,255,0.18)'
+                                    : 'rgba(255,255,255,0.65)',
                                   border: active
                                     ? '1px solid transparent'
+                                    : booked
+                                    ? '1px solid rgba(255,255,255,0.04)'
                                     : '1px solid rgba(255,255,255,0.07)',
                                   boxShadow: active
                                     ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
                                     : 'none',
+                                  textDecoration: booked ? 'line-through' : 'none',
                                   animation: active ? 'slot-select 0.24s ease' : 'none',
                                   transition: 'background 0.14s,border-color 0.14s,color 0.14s',
                                 }}>
