@@ -344,7 +344,7 @@ function BookingModal({ court, user, onClose }: {
                               style={{
                                 padding:'10px 4px',borderRadius:10,
                                 fontSize:11,fontWeight:active?800:500,
-                                cursor:'pointer',border:'none',
+                                cursor:'pointer',
                                 background: active ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
                                 color: active ? '#000' : 'rgba(255,255,255,0.65)',
                                 border: active
