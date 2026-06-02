@@ -5,6 +5,7 @@
  * Returns { checkoutUrl, bookingId, paymentId }
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient }               from '@supabase/supabase-js';
 import { createServiceClient }        from '@/lib/supabase-server';
 import { createCheckoutSession, calculateFees } from '@/lib/onvo';
 
@@ -28,19 +29,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Campos requeridos faltantes.' }, { status: 400 });
     }
 
-    // Verify JWT and extract user identity server-side (prevents IDOR)
+    // Verify JWT and extract user identity server-side (prevents IDOR).
+    // Use an anon-key client with the user JWT injected as the Bearer — this is
+    // the correct Supabase pattern for server-side JWT validation. The service
+    // role client is only used for the subsequent DB writes (bypasses RLS).
     const authHeader = req.headers.get('authorization') ?? '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!token) {
       return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
     }
 
-    const supabase = createServiceClient();
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const userClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
     }
+
+    // Service client for all subsequent DB operations (bypasses RLS)
+    const supabase = createServiceClient();
 
     const userId    = user.id;
     const userEmail = user.email;
