@@ -329,39 +329,44 @@ function BookingModal({ court, user, onClose }: {
                       {selectedDay?.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}
                     </p>
 
-                    {/* Slot grid — uses court.slots from DB; empty state if no slots configured */}
-                    {court.slots.length === 0 ? (
-                      <p style={{fontSize:13,color:'rgba(255,255,255,0.35)',textAlign:'center',padding:'24px 0 18px'}}>
-                        Esta cancha no tiene horarios configurados aún.
-                      </p>
-                    ) : (
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
-                        {court.slots.map(t=>{
-                          const active = selectedTime===t;
-                          return (
-                            <button key={t}
-                              onClick={()=>setSelectedTime(t)}
-                              style={{
-                                padding:'10px 4px',borderRadius:10,
-                                fontSize:11,fontWeight:active?800:500,
-                                cursor:'pointer',
-                                background: active ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
-                                color: active ? '#000' : 'rgba(255,255,255,0.65)',
-                                border: active
-                                  ? '1px solid transparent'
-                                  : '1px solid rgba(255,255,255,0.07)',
-                                boxShadow: active
-                                  ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
-                                  : 'none',
-                                animation: active ? 'slot-select 0.24s ease' : 'none',
-                                transition: 'background 0.14s,border-color 0.14s,color 0.14s',
-                              }}>
-                              {t}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                    {/* Slot grid — uses court.slots from DB; falls back to standard
+                        hourly slots when the owner hasn't configured specific hours yet */}
+                    {(()=>{
+                      const DEFAULT_SLOTS = [
+                        '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
+                        '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
+                        '6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM',
+                      ];
+                      const slots = court.slots.length > 0 ? court.slots : DEFAULT_SLOTS;
+                      return (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
+                          {slots.map(t=>{
+                            const active = selectedTime===t;
+                            return (
+                              <button key={t}
+                                onClick={()=>setSelectedTime(t)}
+                                style={{
+                                  padding:'10px 4px',borderRadius:10,
+                                  fontSize:11,fontWeight:active?800:500,
+                                  cursor:'pointer',
+                                  background: active ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
+                                  color: active ? '#000' : 'rgba(255,255,255,0.65)',
+                                  border: active
+                                    ? '1px solid transparent'
+                                    : '1px solid rgba(255,255,255,0.07)',
+                                  boxShadow: active
+                                    ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
+                                    : 'none',
+                                  animation: active ? 'slot-select 0.24s ease' : 'none',
+                                  transition: 'background 0.14s,border-color 0.14s,color 0.14s',
+                                }}>
+                                {t}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
 
                     {/* Duration + Players */}
                     <div style={{borderRadius:12,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.06)',overflow:'hidden',marginBottom:16}}>
