@@ -19,24 +19,8 @@ const FIELD_BG: Record<string, string> = {
   Tenis:   'linear-gradient(160deg, #091b38 0%, #050f22 100%)',
 };
 
-const TIME_SLOTS = [
-  '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
-  '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
-  '6:00 PM','7:00 PM','8:00 PM','9:00 PM',
-];
 
 
-// Heat levels 1–5: used by the booking modal slot picker for visual weight
-const SLOT_HEAT: Record<string, number> = {
-  '6:00 AM':1,'7:00 AM':2,'8:00 AM':2,'9:00 AM':2,'10:00 AM':1,
-  '11:00 AM':1,'12:00 PM':2,'1:00 PM':1,'2:00 PM':1,'3:00 PM':2,
-  '4:00 PM':3,'5:00 PM':4,'6:00 PM':5,'7:00 PM':5,'8:00 PM':4,'9:00 PM':3,
-};
-function slotRecent(courtId: string|number, slot: string): number {
-  const h = SLOT_HEAT[slot] ?? 1;
-  const c = String(courtId).split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
-  return Math.max(0, Math.min(9, Math.floor((c % 3) + h - 1)));
-}
 
 const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -336,73 +320,39 @@ function BookingModal({ court, user, onClose }: {
                       {selectedDay?.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}
                     </p>
 
-                    {/* Slot grid */}
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
-                      {TIME_SLOTS.map(t=>{
-                        const active  = selectedTime===t;
-                        const heat    = SLOT_HEAT[t] ?? 1;
-                        const recent  = slotRecent(court.id, t);
-                        const isHot   = heat >= 5;
-                        const isWarm  = heat >= 4;
-                        return (
-                          <button key={t}
-                            onClick={()=>setSelectedTime(t)}
-                            className={isHot&&!active?'bk-slot-hot':''}
-                            style={{
-                              padding:'9px 4px 7px',borderRadius:10,
-                              fontSize:11,fontWeight:active?800:600,
-                              cursor:'pointer',
-                              display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-                              background: active
-                                ? 'var(--accent)'
-                                : isHot
-                                ? 'rgba(215,255,0,0.055)'
-                                : isWarm
-                                ? 'rgba(215,255,0,0.025)'
-                                : 'rgba(255,255,255,0.03)',
-                              color: active?'#000'
-                                : isHot?'rgba(255,255,255,0.88)'
-                                : 'rgba(255,255,255,0.50)',
-                              border: active
-                                ? '1px solid transparent'
-                                : isHot
-                                ? '1px solid rgba(215,255,0,0.14)'
-                                : '1px solid rgba(255,255,255,0.06)',
-                              boxShadow: active
-                                ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
-                                : 'none',
-                              transform: active?'scale(1)':'scale(1)',
-                              animation: active?'slot-select 0.24s ease':'none',
-                              transition:'background 0.14s,border-color 0.14s,color 0.14s',
-                            }}>
-                            <span>{t}</span>
-                            {/* Occupancy micro-bar */}
-                            {!active&&(
-                              <div style={{width:'70%',height:2,borderRadius:1,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
-                                <div style={{
-                                  height:'100%',
-                                  width:`${Math.min(100,recent*14)}%`,
-                                  background:isHot?'rgba(215,255,0,0.50)':isWarm?'rgba(215,255,0,0.28)':'rgba(255,255,255,0.20)',
-                                  borderRadius:1,
-                                }}/>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Legend */}
-                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
-                      <div style={{display:'flex',alignItems:'center',gap:5}}>
-                        <span style={{width:5,height:5,borderRadius:'50%',background:'rgba(215,255,0,0.60)',display:'inline-block'}}/>
-                        <span style={{fontSize:10,color:'rgba(255,255,255,0.28)'}}>Alta demanda</span>
+                    {/* Slot grid — uses court.slots from DB; empty state if no slots configured */}
+                    {court.slots.length === 0 ? (
+                      <p style={{fontSize:13,color:'rgba(255,255,255,0.35)',textAlign:'center',padding:'24px 0 18px'}}>
+                        Esta cancha no tiene horarios configurados aún.
+                      </p>
+                    ) : (
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:18}}>
+                        {court.slots.map(t=>{
+                          const active = selectedTime===t;
+                          return (
+                            <button key={t}
+                              onClick={()=>setSelectedTime(t)}
+                              style={{
+                                padding:'10px 4px',borderRadius:10,
+                                fontSize:11,fontWeight:active?800:500,
+                                cursor:'pointer',border:'none',
+                                background: active ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
+                                color: active ? '#000' : 'rgba(255,255,255,0.65)',
+                                border: active
+                                  ? '1px solid transparent'
+                                  : '1px solid rgba(255,255,255,0.07)',
+                                boxShadow: active
+                                  ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
+                                  : 'none',
+                                animation: active ? 'slot-select 0.24s ease' : 'none',
+                                transition: 'background 0.14s,border-color 0.14s,color 0.14s',
+                              }}>
+                              {t}
+                            </button>
+                          );
+                        })}
                       </div>
-                      <div style={{display:'flex',alignItems:'center',gap:5}}>
-                        <span style={{width:5,height:5,borderRadius:'50%',background:'rgba(255,255,255,0.20)',display:'inline-block'}}/>
-                        <span style={{fontSize:10,color:'rgba(255,255,255,0.28)'}}>Disponible</span>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Duration + Players */}
                     <div style={{borderRadius:12,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.06)',overflow:'hidden',marginBottom:16}}>
