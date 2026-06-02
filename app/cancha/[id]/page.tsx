@@ -420,7 +420,7 @@ function BookingModal({ court, user, onClose }: {
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,padding:'14px 16px',borderRadius:13,background:'rgba(215,255,0,0.04)',border:'1px solid rgba(215,255,0,0.10)'}}>
                       <div>
                         <p style={{fontSize:10,color:'rgba(255,255,255,0.30)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:3}}>Total</p>
-                        <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>Cancha activa esta noche</p>
+                        <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>{court.title}</p>
                       </div>
                       <p style={{fontWeight:900,fontSize:24,color:'var(--accent)',letterSpacing:'-0.03em',textShadow:'0 0 24px rgba(215,255,0,0.20)'}}>{fmtColones(totalPrice)}</p>
                     </div>
@@ -815,11 +815,11 @@ export default function CanchaPage() {
 
             {/* ── Title + meta ── */}
             <div className="card-lift" style={{ ...card, padding:'22px 24px', marginBottom:20 }}>
-              {/* Emotional badge row */}
+              {/* Active badge */}
               <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:11, flexWrap:'wrap' }}>
                 <span className="badge-active">
                   <span className="live-dot" style={{ width:5, height:5, borderRadius:'50%', background:'rgba(74,222,128,0.8)', display:'inline-block' }}/>
-                  Disponible esta noche
+                  Disponible para reservar
                 </span>
               </div>
 
@@ -1063,7 +1063,7 @@ export default function CanchaPage() {
               <div style={{ padding:'10px 20px 0', display:'flex', alignItems:'center', gap:7 }}>
                 <span className="view-dot" style={{ width:5.5, height:5.5, borderRadius:'50%', background:'rgba(74,222,128,0.75)', display:'inline-block', flexShrink:0 }}/>
                 <span style={{ fontSize:10.5, color:'rgba(255,255,255,0.22)', fontWeight:500, lineHeight:1.4 }}>
-                  Disponible para reservar esta noche
+                  Abierto para reservas
                 </span>
               </div>
 
