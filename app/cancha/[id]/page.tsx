@@ -140,13 +140,6 @@ function BookingModal({ court, user, onClose }: {
     } finally { setSaving(false); }
   };
 
-  // Day "heat" — weekends feel hotter
-  const dayHeat = (d: Date) => {
-    const dow = d.getDay();
-    if (dow === 5 || dow === 6) return 'hot';   // Fri / Sat
-    if (dow === 0 || dow === 4) return 'warm';  // Sun / Thu
-    return 'normal';
-  };
 
   return (
     <>
@@ -155,7 +148,6 @@ function BookingModal({ court, user, onClose }: {
         @keyframes step-fwd  { from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);} }
         @keyframes step-back { from{opacity:0;transform:translateX(-18px);}to{opacity:1;transform:translateX(0);} }
         @keyframes slot-select { 0%{transform:scale(0.94);}60%{transform:scale(1.04);}100%{transform:scale(1);} }
-        @keyframes slot-hot  { 0%,100%{box-shadow:0 0 0 0 rgba(215,255,0,0);}50%{box-shadow:0 0 0 3px rgba(215,255,0,0.07);} }
         @keyframes stepper-press { 0%{transform:scale(1);}40%{transform:scale(0.88);}100%{transform:scale(1);} }
         @keyframes conn-fill { from{width:0;}to{width:100%;} }
         @keyframes spin      { to { transform: rotate(360deg) } }
@@ -163,7 +155,7 @@ function BookingModal({ court, user, onClose }: {
         .bk-day{transition:background 0.13s,transform 0.13s;}
         .bk-stepper:active{animation:stepper-press 0.22s ease;}
         .bk-stepper:hover{background:rgba(255,255,255,0.1)!important;}
-        .bk-slot-hot{animation:slot-hot 2.2s ease-in-out infinite;}
+
       `}</style>
 
       {/* Backdrop */}
@@ -295,37 +287,28 @@ function BookingModal({ court, user, onClose }: {
                         const disabled = isBefore(d);
                         const isSel    = selectedDay?.toDateString()===d.toDateString();
                         const isToday  = d.toDateString()===today.toDateString();
-                        const heat     = !disabled ? dayHeat(d) : 'normal';
                         return (
                           <button key={i} disabled={disabled} className="bk-day"
                             onClick={()=>{setSelectedDay(d);goStep('time');}}
                             style={{
                               height:32,borderRadius:8,fontSize:12.5,
-                              fontWeight:isSel?800:heat==='hot'?600:400,
+                              fontWeight:isSel?800:400,
                               cursor:disabled?'default':'pointer',border:'none',
                               background: isSel
                                 ? 'var(--accent)'
                                 : isToday
                                 ? 'rgba(215,255,0,0.08)'
-                                : heat==='hot'
-                                ? 'rgba(215,255,0,0.04)'
                                 : 'rgba(255,255,255,0.025)',
                               color: isSel?'#000'
                                 : disabled?'rgba(255,255,255,0.10)'
                                 : isToday?'var(--accent)'
-                                : heat==='hot'?'rgba(255,255,255,0.82)'
                                 : 'rgba(255,255,255,0.52)',
                               outline: isSel?'none'
                                 : isToday?'1px solid rgba(215,255,0,0.18)'
-                                : heat==='hot'?'1px solid rgba(215,255,0,0.06)':'none',
+                                : 'none',
                               boxShadow: isSel?'0 0 14px rgba(215,255,0,0.22)':'none',
-                              position:'relative',
                             }}>
                             {i+1}
-                            {/* Hot day micro-dot */}
-                            {heat==='hot'&&!disabled&&!isSel&&(
-                              <span style={{position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:3,height:3,borderRadius:'50%',background:'rgba(215,255,0,0.45)'}}/>
-                            )}
                           </button>
                         );
                       })}
