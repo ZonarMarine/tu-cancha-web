@@ -68,7 +68,7 @@ function AuthForm() {
         if (profile?.role === 'owner') {
           router.replace('/propietario');
         } else {
-          router.push('/perfil');
+          router.push('/');
         }
       }
     } catch (e: any) {
