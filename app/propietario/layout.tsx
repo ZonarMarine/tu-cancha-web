@@ -93,8 +93,35 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
     };
   }, [isAuthPage, router]);
 
-  // Mock pending count for now
-  useEffect(() => { setPending(0); }, []);
+  // Real pending count — scoped to courts owned by this user
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const fetchPendingCount = async () => {
+      // Fetch court IDs for this owner (use owner_court_id FK for accurate scoping)
+      const { data: courts } = await supabase
+        .from("owner_courts")
+        .select("id")
+        .eq("owner_id", user.id)
+        .is("deleted_at", null);
+      if (cancelled) return;
+
+      const courtIds = (courts ?? []).map((c: any) => c.id).filter(Boolean);
+      if (courtIds.length === 0) { setPending(0); return; }
+
+      const today = new Date().toISOString().split("T")[0];
+      const { count } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .in("owner_court_id", courtIds)
+        .in("status", ["pending_payment", "pending", "partially_paid"])
+        .gte("date", today);
+      if (cancelled) return;
+      setPending(count ?? 0);
+    };
+    fetchPendingCount();
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Auth page: show blank while checking (avoids flashing login form for already-logged-in owners)
   if (isAuthPage) {

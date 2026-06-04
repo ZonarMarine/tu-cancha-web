@@ -244,36 +244,45 @@ export default function ConfiguracionPage() {
           {activeSection === "pagos" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 6 }}>Métodos de pago</div>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Configurá cómo recibís pagos de los jugadores</p>
-              {[
-                { icon: "💳", label: "SINPE Móvil",     connected: true,  number: "8800-1234" },
-                { icon: "🏦", label: "BAC Credomatic",  connected: false, number: "" },
-                { icon: "💰", label: "Pago en efectivo", connected: true,  number: "Habilitado" },
-              ].map((m, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "13px 16px", borderRadius: 11, marginBottom: 8,
-                  background: "rgba(255,255,255,0.03)", border: `1px solid ${m.connected ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}`,
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 18 }}>{m.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>{m.label}</div>
-                      <div style={{ fontSize: 11, color: m.connected ? "rgba(52,211,153,0.6)" : "rgba(255,255,255,0.25)" }}>
-                        {m.connected ? m.number : "No conectado"}
-                      </div>
-                    </div>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Cómo recibís pagos de los jugadores</p>
+
+              {/* ONVO — active payment processor */}
+              <div style={{
+                padding: "16px 18px", borderRadius: 12, marginBottom: 12,
+                background: "rgba(215,255,0,0.04)", border: "1px solid rgba(215,255,0,0.14)",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>⚡</span>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>ONVO Pay</div>
+                    <div style={{ fontSize: 11, color: "rgba(52,211,153,0.7)", marginTop: 1 }}>Activo · Procesador oficial de pagos</div>
                   </div>
-                  <button style={{
-                    padding: "6px 12px", borderRadius: 8, border: "none", cursor: "pointer",
-                    background: m.connected ? "rgba(255,255,255,0.05)" : "rgba(215,255,0,0.08)",
-                    color: m.connected ? "rgba(255,255,255,0.35)" : "rgba(215,255,0,0.7)",
-                    fontSize: 11, fontWeight: 700,
-                  }}>
-                    {m.connected ? "Editar" : "Conectar"}
-                  </button>
                 </div>
-              ))}
+                <span style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
+                  padding: "4px 10px", borderRadius: 99,
+                  background: "rgba(52,211,153,0.08)", color: "rgba(52,211,153,0.8)",
+                  border: "1px solid rgba(52,211,153,0.15)",
+                }}>CONECTADO</span>
+              </div>
+
+              <div style={{
+                padding: "14px 16px", borderRadius: 10,
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                fontSize: 11.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.7,
+              }}>
+                Los jugadores pagan directamente a través de ONVO. Tu ingreso neto (después de la comisión de plataforma del 8% + tarifa ONVO) se transfiere a tu cuenta bancaria según el ciclo de pagos acordado con ONVO.<br />
+                Para configurar tu cuenta de desembolso, ingresá al panel de ONVO directamente.
+              </div>
+
+              <div style={{
+                marginTop: 10, padding: "12px 14px", borderRadius: 10,
+                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
+                fontSize: 11, color: "rgba(255,255,255,0.22)",
+              }}>
+                💡 Configuración de múltiples métodos de pago (SINPE, efectivo, transferencia) estará disponible próximamente.
+              </div>
             </div>
           )}
 

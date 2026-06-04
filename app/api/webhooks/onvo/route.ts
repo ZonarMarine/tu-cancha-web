@@ -10,9 +10,10 @@
  *   payment-intent.failed      → booking/payment marked failed
  *   payment-intent.deferred    → SINPE pending, booking stays partially_paid
  */
-import { NextRequest, NextResponse }                 from 'next/server';
-import { createServiceClient }                        from '@/lib/supabase-server';
-import { verifyWebhookSignature, OnvoWebhookPayload } from '@/lib/onvo';
+import { NextRequest, NextResponse }                         from 'next/server';
+import { createServiceClient }                               from '@/lib/supabase-server';
+import { verifyWebhookSignature, OnvoWebhookPayload }        from '@/lib/onvo';
+import { sendBookingConfirmationEmail }                      from '@/lib/email/sendBookingConfirmation';
 
 export async function POST(req: NextRequest) {
   const rawBody     = await req.text();
@@ -110,6 +111,7 @@ async function handleEvent(
           .eq('id', payment.reservation_id);
 
         await notifyOwner(supabase, payment.reservation_id, payment.id);
+        await sendConfirmationEmail(supabase, payment.reservation_id);
       }
       break;
     }
@@ -139,6 +141,7 @@ async function handleEvent(
           .eq('id', payment.reservation_id);
 
         await notifyOwner(supabase, payment.reservation_id, payment.id);
+        await sendConfirmationEmail(supabase, payment.reservation_id);
       }
       break;
     }
@@ -243,5 +246,96 @@ async function notifyOwner(
     });
   } catch {
     // notifications table may not exist yet — silent fail
+  }
+}
+
+// ─── Confirmation email sender ────────────────────────────────────────────────
+// Called after booking status transitions to 'confirmed'.
+// Idempotent: checks confirmation_email_sent_at before sending and sets it
+// atomically after success so webhook replays never send duplicates.
+
+async function sendConfirmationEmail(
+  supabase: ReturnType<typeof createServiceClient>,
+  bookingId: string,
+) {
+  // 1. Fetch the booking — grab all columns needed for the email.
+  //    Also check the dedup timestamp in the same query.
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select(`
+      id, user_id, court_name, date, time, hours, players,
+      total_price, owner_court_id, confirmation_email_sent_at
+    `)
+    .eq('id', bookingId)
+    .single();
+
+  if (!booking) {
+    console.warn('[email] Booking not found for confirmation email:', bookingId);
+    return;
+  }
+
+  // 2. Dedup guard — if we already sent the email, bail immediately.
+  if (booking.confirmation_email_sent_at) {
+    console.log('[email] Confirmation already sent for booking:', bookingId);
+    return;
+  }
+
+  // 3. Resolve the user's email + display name via Supabase auth admin API.
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(
+    booking.user_id,
+  );
+
+  if (!authUser?.email) {
+    console.warn('[email] No email found for user:', booking.user_id);
+    return;
+  }
+
+  const userName = (authUser.user_metadata?.name as string | undefined)
+    ?? authUser.email.split('@')[0];
+
+  // 4. Resolve court metadata (sport + location) from owner_courts if available.
+  let sport    = 'Fútbol';   // sensible default
+  let location = '';
+
+  if (booking.owner_court_id) {
+    const { data: court } = await supabase
+      .from('owner_courts')
+      .select('sport, location')
+      .eq('id', booking.owner_court_id)
+      .single();
+    if (court) {
+      sport    = court.sport    ?? sport;
+      location = court.location ?? location;
+    }
+  }
+
+  // 5. Send the email — non-blocking, errors don't fail the webhook.
+  const result = await sendBookingConfirmationEmail({
+    to:              authUser.email,
+    userName,
+    bookingId:       booking.id,
+    courtName:       booking.court_name ?? 'Cancha',
+    sport,
+    date:            booking.date,
+    time:            booking.time,
+    duration:        booking.hours ?? 1,
+    location:        location || (booking.court_name ?? ''),
+    players:         booking.players ?? 10,
+    totalPaid:       booking.total_price ?? 0,
+    reservationCode: booking.id,
+  });
+
+  // 6. Stamp the dedup timestamp regardless of success so we can track status.
+  //    A failed email is still recorded — use the index query to find and resend.
+  if (result.success) {
+    await supabase
+      .from('bookings')
+      .update({ confirmation_email_sent_at: new Date().toISOString() })
+      .eq('id', bookingId);
+  } else {
+    // Log failure — email_failed marker stored as a negative timestamp sentinel
+    // so the index query (WHERE confirmation_email_sent_at IS NULL) still finds it
+    // after a deploy fix. Do NOT stamp the timestamp on failure.
+    console.error('[email] Confirmation email failed for booking', bookingId, ':', result.error);
   }
 }

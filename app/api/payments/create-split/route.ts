@@ -6,11 +6,28 @@
  * Body: { paymentId, bookingId, players: [{name, email, amount}] }
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient }               from '@supabase/supabase-js';
 import { createServiceClient }        from '@/lib/supabase-server';
 import { createCheckoutSession }      from '@/lib/onvo';
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify caller identity — prevents unauthenticated IDOR abuse.
+    const authHeader = req.headers.get('authorization') ?? '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+    }
+    const userClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+    }
+
     const { paymentId, bookingId, players } = await req.json();
 
     if (!paymentId || !bookingId || !Array.isArray(players) || players.length === 0) {
@@ -19,6 +36,16 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient();
     const origin   = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tucanchacr.com';
+
+    // Verify the booking belongs to the authenticated user (prevents IDOR)
+    const { data: booking, error: bookingErr } = await supabase
+      .from('bookings')
+      .select('id, user_id')
+      .eq('id', bookingId)
+      .single();
+    if (bookingErr || !booking || booking.user_id !== user.id) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+    }
 
     // Fetch parent payment to get description context
     const { data: payment } = await supabase

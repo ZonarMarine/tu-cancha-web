@@ -59,6 +59,18 @@ export async function POST(req: NextRequest) {
     const gross = Math.round(basePrice * hours);
     const fees  = calculateFees(gross);
 
+    // Resolve the court owner so we can stamp owner_id on the payment record.
+    // This lets the owner dashboard filter payments without a cross-table join.
+    let courtOwnerId: string | null = null;
+    if (courtId) {
+      const { data: courtRow } = await supabase
+        .from('owner_courts')
+        .select('owner_id')
+        .eq('id', courtId)
+        .single();
+      courtOwnerId = courtRow?.owner_id ?? null;
+    }
+
     // 1. Insert booking as pending_payment
     const bookingPayload: Record<string, unknown> = {
       user_id:     userId,
@@ -122,6 +134,7 @@ export async function POST(req: NextRequest) {
         platform_fee:      fees.platform_fee,
         onvo_fee_estimate: fees.onvo_fee,
         owner_net_amount:  fees.owner_net,
+        owner_id:          courtOwnerId,
         currency:          'CRC',
         status:            'pending_payment',
         expires_at:        session.expires_at,

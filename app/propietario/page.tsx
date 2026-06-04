@@ -86,15 +86,17 @@ export default function OwnerDashboard() {
         const daysGone = new Date().getDate();
         const availSoFar = totalSlotsPerDay * daysGone;
 
-        const { count: bookedCount } = await supabase
+        // Sum hours booked (not count) so a 2-hour booking occupies 2 slots
+        const { data: bookedRows } = await supabase
           .from("bookings")
-          .select("id", { count: "exact", head: true })
+          .select("hours")
           .in("court_name", courtNames)
           .in("status", ["confirmed", "paid", "completed"])
           .gte("date", monthStartStr)
           .lte("date", today);
 
-        setOccPct(availSoFar > 0 ? Math.min(100, Math.round(((bookedCount ?? 0) / availSoFar) * 100)) : null);
+        const bookedHours = (bookedRows ?? []).reduce((s: number, r: any) => s + (r.hours ?? 1), 0);
+        setOccPct(availSoFar > 0 ? Math.min(100, Math.round((bookedHours / availSoFar) * 100)) : null);
       }
 
       // Week boundaries (Mon–Sun)
@@ -106,10 +108,10 @@ export default function OwnerDashboard() {
       const monStr  = monDate.toISOString().split("T")[0];
       const sunStr  = sunDate.toISOString().split("T")[0];
 
-      // Week bookings
+      // Week bookings — join payments to get owner_net_amount (net after fees)
       const weekQ = supabase
         .from("bookings")
-        .select("date, total_price")
+        .select("date, payments!payment_id(owner_net_amount)")
         .in("status", ["confirmed", "paid", "completed"])
         .gte("date", monStr)
         .lte("date", sunStr);
@@ -119,9 +121,10 @@ export default function OwnerDashboard() {
 
       const wd = [0,0,0,0,0,0,0];
       for (const r of wRows ?? []) {
-        const d = new Date(r.date + "T12:00:00");
+        const d = new Date((r as any).date + "T12:00:00");
         const i = (d.getDay() + 6) % 7; // Mon=0
-        wd[i] += r.total_price ?? 0;
+        // Use owner net amount from payment record; falls back to 0 if not yet paid
+        wd[i] += (r as any).payments?.owner_net_amount ?? 0;
       }
       setWeekData(wd);
       setWeekTotal(wd.reduce((s, v) => s + v, 0));
@@ -129,7 +132,7 @@ export default function OwnerDashboard() {
       // Pending bookings (today + tomorrow)
       const pendQ = supabase
         .from("bookings")
-        .select("id, court_name, date, time, players, total_price, status")
+        .select("id, court_name, date, time, players, total_price, status, profiles(name, email)")
         .in("status", ["pending_payment", "pending", "partially_paid"])
         .gte("date", today).lte("date", tomorrow)
         .order("date", { ascending: true }).order("time", { ascending: true }).limit(10);
@@ -140,7 +143,7 @@ export default function OwnerDashboard() {
       // Confirmed today
       const confQ = supabase
         .from("bookings")
-        .select("id, court_name, date, time, players, total_price, status")
+        .select("id, court_name, date, time, players, total_price, status, profiles(name, email)")
         .in("status", ["confirmed", "paid"])
         .eq("date", today)
         .order("time", { ascending: true }).limit(10);
