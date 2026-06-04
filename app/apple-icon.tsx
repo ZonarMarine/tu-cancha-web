@@ -37,18 +37,20 @@ export default function AppleIcon() {
           />
         </svg>
 
-        {/* Wordmark */}
+        {/* Wordmark — must use display:flex when mixing text nodes + spans */}
         <div
           style={{
+            display: 'flex',
+            alignItems: 'baseline',
             fontSize: 26,
             fontWeight: 900,
-            color: '#ffffff',
             letterSpacing: '-2px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             lineHeight: 1,
           }}
         >
-          Tu<span style={{ color: '#D7FF00' }}>Cancha</span>
+          <span style={{ color: '#ffffff' }}>Tu</span>
+          <span style={{ color: '#D7FF00' }}>Cancha</span>
         </div>
       </div>
     ),
