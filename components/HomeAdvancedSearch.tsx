@@ -87,12 +87,23 @@ export default function HomeAdvancedSearch() {
 
   const sportDd    = useDropdown();
   const locationDd = useDropdown();
+  const dateDd     = useDropdown();
   const horaDd     = useDropdown();
 
   function openOnly(dd: ReturnType<typeof useDropdown>) {
-    [sportDd, locationDd, horaDd].forEach(d => { if (d !== dd) d.close(); });
+    [sportDd, locationDd, dateDd, horaDd].forEach(d => { if (d !== dd) d.close(); });
     dd.toggle();
   }
+
+  // Build a list of the next 30 days for the date dropdown
+  const DATE_OPTIONS = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const iso  = d.toISOString().split("T")[0];
+    const disp = d.toLocaleDateString("es-CR", { weekday: "short", day: "numeric", month: "short" });
+    const label = i === 0 ? `Hoy — ${disp}` : i === 1 ? `Mañana — ${disp}` : disp;
+    return { iso, label };
+  });
 
   function handleSearch() {
     const p = new URLSearchParams();
@@ -557,27 +568,36 @@ export default function HomeAdvancedSearch() {
                 <div className="hads-divider" />
 
                 {/* Fecha */}
-                <div className="hads-field" style={{ position: "relative" }}>
+                <div ref={dateDd.ref} className="hads-field"
+                  onClick={() => openOnly(dateDd)}>
                   <span className="hads-label">
                     <Calendar size={9} /> Fecha
                   </span>
-                  <span className={`hads-value${dateDisp ? " hads-value--set" : ""}`}
-                    style={{ pointerEvents: "none" }}>
+                  <span className={`hads-value${dateDisp ? " hads-value--set" : ""}`}>
                     <Calendar size={12} style={{ flexShrink: 0, opacity: 0.45 }} />
                     <span className="hads-value-text">{dateDisp ?? "¿Cuándo jugás?"}</span>
+                    <ChevronDown size={12} style={{ opacity: 0.3, flexShrink: 0 }} />
                   </span>
-                  <input
-                    type="date"
-                    value={date}
-                    min={todayISO()}
-                    onChange={e => setDate(e.target.value)}
-                    aria-label="Fecha de reserva"
-                    style={{
-                      position: "absolute", inset: 0, opacity: 0,
-                      cursor: "pointer", width: "100%", height: "100%",
-                      fontSize: 16, /* prevents iOS auto-zoom */
-                    }}
-                  />
+                  {dateDd.open && (
+                    <div className="hads-dropdown" style={{ maxHeight: 260 }}>
+                      {/* Clear option */}
+                      {date && (
+                        <div className="hads-dropdown-item"
+                          style={{ color: "rgba(255,100,100,0.65)", fontSize: 12 }}
+                          onClick={e => { e.stopPropagation(); setDate(""); dateDd.close(); }}>
+                          <span style={{ opacity: 0.6 }}>✕</span> Quitar fecha
+                        </div>
+                      )}
+                      {DATE_OPTIONS.map(opt => (
+                        <div key={opt.iso}
+                          className={`hads-dropdown-item${date === opt.iso ? " selected" : ""}`}
+                          onClick={e => { e.stopPropagation(); setDate(opt.iso); dateDd.close(); }}>
+                          <Calendar size={11} style={{ opacity: 0.35, flexShrink: 0 }} />
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="hads-divider" />
