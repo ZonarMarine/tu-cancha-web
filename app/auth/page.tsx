@@ -11,10 +11,18 @@ const SOCIAL_PROOF = [
   { val: '4.9★',   label: 'Rating promedio' },
 ];
 
+type Role = 'player' | 'owner';
+
+const ROLES: { id: Role; icon: string; label: string; sub: string }[] = [
+  { id: 'player', icon: '⚽', label: 'Jugador',      sub: 'Reservá canchas y encontrá partidos' },
+  { id: 'owner',  icon: '🏟️', label: 'Propietario',  sub: 'Publicá y gestioná tus instalaciones' },
+];
+
 function AuthForm() {
   const params   = useSearchParams();
   const router   = useRouter();
   const [mode, setMode]         = useState<'login'|'signup'>(params.get('mode') === 'signup' ? 'signup' : 'login');
+  const [role, setRole]         = useState<Role>('player');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [name, setName]         = useState('');
@@ -28,9 +36,26 @@ function AuthForm() {
     setError(''); setSuccess(''); setLoading(true);
     try {
       if (mode === 'signup') {
-        const { error: err } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+        const { data: signUpData, error: err } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { name, role } },
+        });
         if (err) throw err;
-        setSuccess('¡Cuenta creada! Revisá tu email para confirmar.');
+
+        // Write role into profiles table so portal guards work immediately after confirmation
+        if (signUpData.user) {
+          await supabase.from('profiles').upsert(
+            { id: signUpData.user.id, email, name, role },
+            { onConflict: 'id' },
+          );
+        }
+
+        setSuccess(
+          role === 'owner'
+            ? '¡Cuenta creada! Revisá tu email para confirmar. Luego ingresá al Portal Propietario.'
+            : '¡Cuenta creada! Revisá tu email para confirmar.',
+        );
       } else {
         const { data: signInData, error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
@@ -193,6 +218,64 @@ function AuthForm() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+            {/* ── Role selector (signup only) ── */}
+            {mode === 'signup' && (
+              <div style={{ marginBottom: 2 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text3)', marginBottom: 10 }}>
+                  SOY UN
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {ROLES.map(r => {
+                    const active = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        style={{
+                          padding: '14px 12px',
+                          borderRadius: 14,
+                          border: `1.5px solid ${active ? 'rgba(215,255,0,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                          background: active ? 'rgba(215,255,0,0.06)' : 'rgba(255,255,255,0.02)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.16s',
+                          outline: 'none',
+                          position: 'relative',
+                        }}
+                      >
+                        {/* Selected dot */}
+                        {active && (
+                          <div style={{
+                            position: 'absolute', top: 10, right: 10,
+                            width: 8, height: 8, borderRadius: '50%',
+                            background: '#D7FF00',
+                            boxShadow: '0 0 6px rgba(215,255,0,0.7)',
+                          }} />
+                        )}
+                        <div style={{ fontSize: 22, marginBottom: 6 }}>{r.icon}</div>
+                        <div style={{
+                          fontSize: 13, fontWeight: 800,
+                          color: active ? '#D7FF00' : 'rgba(255,255,255,0.75)',
+                          letterSpacing: '-0.01em', marginBottom: 3,
+                          transition: 'color 0.16s',
+                        }}>
+                          {r.label}
+                        </div>
+                        <div style={{
+                          fontSize: 11, color: 'rgba(255,255,255,0.3)',
+                          lineHeight: 1.4,
+                        }}>
+                          {r.sub}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {mode === 'signup' && (
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text3)', marginBottom: 8 }}>
@@ -248,7 +331,13 @@ function AuthForm() {
 
             <button type="submit" disabled={loading} className="btn-primary"
               style={{ width: '100%', padding: '14px', fontSize: 14, borderRadius: 12, marginTop: 4 }}>
-              {loading ? 'Cargando...' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta gratis'}
+              {loading
+                ? 'Cargando...'
+                : mode === 'login'
+                ? 'Iniciar sesión'
+                : role === 'owner'
+                ? 'Crear cuenta de propietario'
+                : 'Crear cuenta gratis'}
             </button>
           </form>
 
