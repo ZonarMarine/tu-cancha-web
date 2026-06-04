@@ -12,7 +12,13 @@
  */
 import { Resend } from 'resend';
 
-const resend  = new Resend(process.env.RESEND_API_KEY ?? '');
+// Lazy — do NOT instantiate at module load time.
+// Resend throws in its constructor when the key is empty, which crashes
+// the Next.js build if RESEND_API_KEY isn't set in the build environment.
+function getResend(): Resend {
+  return new Resend(process.env.RESEND_API_KEY!);
+}
+
 const FROM    = process.env.EMAIL_FROM ?? 'TuCancha <reservas@tucanchacr.com>';
 const SITE    = (process.env.SITE_URL ?? 'https://www.tucanchacr.com').replace(/\/$/, '');
 
@@ -317,7 +323,7 @@ export async function sendBookingConfirmationEmail(
   }
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from:    FROM,
       to:      params.to,
       subject: 'Tu reserva en TuCancha está confirmada ✅',
