@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSport } from "@/context/SportContext";
 import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fmtColones, COURTS as STATIC_COURTS } from "@/lib/data";
+import { fmtColones } from "@/lib/data";
 
 /* ─── types ──────────────────────────────────────────────── */
 
@@ -549,9 +549,8 @@ export default function ExplorarPage() {
       byCourtName[b.court_name].push(b.time ?? '');
     }
 
-    const baseCourts: Court[] = rawCourts.length > 0
-      ? rawCourts.map(normalise)
-      : STATIC_COURTS.map(r => ({ ...normalise(r), slots: [] }));
+    // Real DB courts only — no static fallback (never show invented courts)
+    const baseCourts: Court[] = rawCourts.map(normalise);
 
     const liveCourts: CourtWithLive[] = baseCourts.map(c =>
       attachLive(c, byCourtName[c.title] ?? [])

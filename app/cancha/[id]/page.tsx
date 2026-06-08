@@ -544,7 +544,13 @@ export default function CanchaPage() {
       let found = false;
       for (const t of TABLES) {
         const { data, error } = await supabase.from(t).select('*').eq('id', id).maybeSingle();
-        if (!error && data) { setCourt(normalise(data)); found = true; break; }
+        if (!error && data) {
+          // Reject deleted or inactive courts — not reachable even by direct link
+          if (data.deleted_at || data.active === false) { break; }
+          setCourt(normalise(data));
+          found = true;
+          break;
+        }
       }
       if (!found) setNotFound(true);
       setLoading(false);

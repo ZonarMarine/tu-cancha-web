@@ -53,16 +53,25 @@ async function fetchTopPlayers() {
 async function fetchNearbyCourts() {
   try {
     const sb = makeSB();
+    // Use real schema columns: name, base_price, active, deleted_at
     const { data, error } = await sb
       .from('owner_courts')
-      .select('id, court_name, sport, location, price_per_hour, slots')
-      .eq('status', 'active')
+      .select('id, name, sport, location, base_price, slots')
+      .eq('active', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(6);
-    if (!error && data && data.length > 0) return data as Array<{
-      id: string; court_name: string; sport: string;
-      location: string | null; price_per_hour: number | null; slots: string[];
-    }>;
+    if (!error && data && data.length > 0) {
+      // Normalise to the shape the homepage card expects
+      return data.map((c: Record<string, any>) => ({
+        id:             c.id,
+        court_name:     c.name ?? 'Cancha',
+        sport:          c.sport ?? 'Fútbol',
+        location:       c.location ?? null,
+        price_per_hour: c.base_price ?? null,
+        slots:          Array.isArray(c.slots) ? c.slots : [],
+      }));
+    }
   } catch (_) {}
   return [];
 }
