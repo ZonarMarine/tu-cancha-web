@@ -637,15 +637,35 @@ export default function CanchasPage() {
   async function handleDelete() {
     if (!delCourt) return;
     setSaving(true);
-    const { error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Soft delete — return affected rows so we can detect RLS / ownership blocks.
+    // A zero-row update means RLS filtered it out (court owner_id ≠ current user),
+    // which Supabase reports WITHOUT an error — so we must check the returned rows.
+    const { data, error } = await supabase
       .from("owner_courts")
       .update({ deleted_at: new Date().toISOString(), active: false })
-      .eq("id", delCourt.id);
+      .eq("id", delCourt.id)
+      .eq("owner_id", user?.id ?? "")  // explicit ownership scope
+      .select("id");
+
+    if (error) {
+      setSaving(false);
+      toast(`Error al eliminar: ${error.message}`, false);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      // Update matched 0 rows — court isn't owned by this user (legacy owner_id mismatch)
+      setSaving(false);
+      toast("No se pudo eliminar: esta cancha no está vinculada a tu cuenta. Contactá soporte.", false);
+      return;
+    }
+
     setSaving(false);
-    if (error) { toast("Error al eliminar", false); return; }
     setCourts(p => p.filter(c => c.id !== delCourt.id));
     setDelCourt(null);
-    toast("Cancha eliminada");
+    toast("Cancha eliminada ✓");
   }
 
   /* ── Convert Court → FormState for edit ── */
