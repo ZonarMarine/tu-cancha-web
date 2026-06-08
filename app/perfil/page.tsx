@@ -1384,6 +1384,8 @@ export default function PerfilPage() {
   const router = useRouter();
   const [profile,  setProfile]  = useState<any>(null);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [retos,    setRetos]    = useState<any[]>([]);
+  const [cancelingReto, setCancelingReto] = useState<string | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [ready,    setReady]    = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -1400,16 +1402,45 @@ export default function PerfilPage() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { router.push('/auth'); return; }
-      const [{ data: p }, { data: b }] = await Promise.all([
+      const [{ data: p }, { data: b }, { data: r }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).single(),
         supabase.from('bookings').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.from('retos').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(10),
       ]);
       setProfile(p ?? { name: session.user.email, team: '' });
       setBookings(b ?? []);
+      setRetos(r ?? []);
       setLoading(false);
       requestAnimationFrame(() => setTimeout(() => setReady(true), 40));
     })();
   }, [router]);
+
+  /* ── Cancel a reto the player created ── */
+  const handleCancelReto = async (reto: any) => {
+    if (cancelingReto) return;
+    setCancelingReto(reto.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (!uid) throw new Error('Sesión expirada.');
+      // Scope to user_id — players can only cancel retos they created
+      const { data, error } = await supabase
+        .from('retos')
+        .update({ status: 'cancelled' })
+        .eq('id', reto.id)
+        .eq('user_id', uid)
+        .select('id');
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('No se pudo cancelar el reto.');
+      // Reflect the cancellation in local state
+      setRetos(prev => prev.map(x => x.id === reto.id ? { ...x, status: 'cancelled' } : x));
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      alert((e as Error).message ?? 'No se pudo cancelar el reto.');
+    } finally {
+      setCancelingReto(null);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -2205,6 +2236,85 @@ export default function PerfilPage() {
                 </div>
               )}
             </div>
+
+            {/* Mis Retos */}
+            {retos.length > 0 && (
+              <div className="card-fade" style={{ animationDelay: '0.10s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="section-label">Mis Retos</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 99,
+                    background: 'rgba(215,255,0,0.07)', color: 'rgba(215,255,0,0.7)',
+                    border: '1px solid rgba(215,255,0,0.14)',
+                  }}>{retos.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {retos.map(r => {
+                    const st = r.status ?? 'open';
+                    const stMeta =
+                      st === 'open'      ? { label: 'Abierto',   color: 'var(--accent)', bg: 'rgba(215,255,0,0.08)',  border: 'rgba(215,255,0,0.18)' } :
+                      st === 'accepted'  ? { label: 'Aceptado',  color: '#4ADE80',       bg: 'rgba(74,222,128,0.10)', border: 'rgba(74,222,128,0.22)' } :
+                      st === 'cancelled' ? { label: 'Cancelado', color: '#FF6B6B',       bg: 'rgba(255,107,107,0.10)',border: 'rgba(255,107,107,0.22)' } :
+                                           { label: 'Expirado',  color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)' };
+                    const sportEmoji = r.sport === 'Pádel' ? '🎾' : r.sport === 'Básquet' ? '🏀' : '⚽';
+                    return (
+                      <div key={r.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '13px 16px', borderRadius: 13, gap: 12,
+                        background: 'linear-gradient(145deg,#161616,#111111)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                        opacity: st === 'cancelled' || st === 'expired' ? 0.6 : 1,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                            background: 'rgba(215,255,0,0.06)', border: '1px solid rgba(215,255,0,0.12)',
+                          }}>{sportEmoji}</div>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 2, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {r.team_name || 'Mi equipo'}
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'rgba(255,255,255,0.32)' }}>
+                              <span>{r.sport || 'Fútbol'} · {r.format || '5v5'}</span>
+                              {r.date && <><span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span><span>{r.date}</span></>}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center',
+                            fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 99,
+                            background: stMeta.bg, color: stMeta.color, border: `1px solid ${stMeta.border}`,
+                          }}>{stMeta.label}</span>
+                          {st === 'open' && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelReto(r)}
+                              disabled={cancelingReto === r.id}
+                              title="Cancelar reto"
+                              style={{
+                                width: 28, height: 28, borderRadius: 8, border: 'none',
+                                background: 'rgba(255,107,107,0.10)', color: '#FF6B6B',
+                                cursor: cancelingReto === r.id ? 'default' : 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0, transition: 'background 0.15s',
+                              }}
+                            >
+                              {cancelingReto === r.id
+                                ? <span style={{ width: 11, height: 11, border: '2px solid rgba(255,107,107,0.3)', borderTopColor: '#FF6B6B', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                                : <X size={14} />
+                              }
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Historial */}
             <div className="card-fade" style={{ animationDelay: '0.13s' }}>
