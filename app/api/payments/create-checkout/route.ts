@@ -14,19 +14,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       courtId,
-      courtName,
+      courtName,   // display hint only — authoritative name comes from the DB
       date,        // 'YYYY-MM-DD'
       time,        // 'HH:MM'
       hours,
       players,
-      basePrice,
       isSplit,
       splitCount,
     } = body;
 
-    // Validate required fields
-    if (!courtName || !date || !time || !hours || !basePrice) {
+    // Validate required fields. courtId is now REQUIRED — the price is looked up
+    // server-side from owner_courts, never trusted from the client (P0-1 fix).
+    if (!courtId || !date || !time || hours == null) {
       return NextResponse.json({ error: 'Campos requeridos faltantes.' }, { status: 400 });
+    }
+
+    // hours must be a positive integer within a sane range (prevents fractional
+    // or zero-hour bookings that would understate the charged amount).
+    const numHours = Number(hours);
+    if (!Number.isInteger(numHours) || numHours < 1 || numHours > 24) {
+      return NextResponse.json({ error: 'Duración inválida.' }, { status: 400 });
     }
 
     // Verify JWT and extract user identity server-side (prevents IDOR).
@@ -56,41 +63,53 @@ export async function POST(req: NextRequest) {
     const userEmail = user.email;
     const userName  = (user.user_metadata?.name as string | undefined) ?? user.email;
 
-    const gross = Math.round(basePrice * hours);
+    // ── P0-1: authoritative price comes from the DB, never the client ────────
+    // Look up the court's real base_price and owner. The client no longer sends
+    // (or, if it does, we ignore) the price — this closes the "pay ₡1 for any
+    // court" exploit. Also rejects bookings against deleted/unknown courts.
+    const { data: courtRow, error: courtErr } = await supabase
+      .from('owner_courts')
+      .select('owner_id, base_price, name, deleted_at, active')
+      .eq('id', courtId)
+      .single();
+
+    if (courtErr || !courtRow) {
+      return NextResponse.json({ error: 'Cancha no encontrada.' }, { status: 404 });
+    }
+    if (courtRow.deleted_at || courtRow.active === false) {
+      return NextResponse.json({ error: 'Esta cancha no está disponible.' }, { status: 409 });
+    }
+
+    const dbBasePrice = Number(courtRow.base_price);
+    if (!Number.isFinite(dbBasePrice) || dbBasePrice <= 0) {
+      return NextResponse.json({ error: 'Esta cancha no tiene un precio configurado.' }, { status: 409 });
+    }
+
+    const courtOwnerId: string | null = courtRow.owner_id ?? null;
+    // Authoritative court name from the DB (fall back to the client hint only if absent).
+    const resolvedCourtName: string = courtRow.name ?? courtName ?? 'Cancha';
+
+    const gross = Math.round(dbBasePrice * numHours);
     const fees  = calculateFees(gross);
 
-    // Resolve the court owner so we can stamp owner_id on the payment record.
-    // This lets the owner dashboard filter payments without a cross-table join.
-    let courtOwnerId: string | null = null;
-    if (courtId) {
-      const { data: courtRow } = await supabase
-        .from('owner_courts')
-        .select('owner_id')
-        .eq('id', courtId)
-        .single();
-      courtOwnerId = courtRow?.owner_id ?? null;
-    }
-
-    // 1. Insert booking as pending_payment
+    // 1. Insert booking as pending_payment.
+    // This route is the SINGLE source of booking creation (P0-2 fix): the mobile
+    // client no longer inserts its own row. owner_court_id and expires_at are
+    // always set here so the slot is reaped by expire_stale_bookings() if abandoned.
     const bookingPayload: Record<string, unknown> = {
-      user_id:     userId,
-      court_name:  courtName,
+      user_id:        userId,
+      owner_court_id: courtId,   // correct UUID FK to owner_courts(id)
+      court_name:     resolvedCourtName,
       date,
       time,
-      hours,
-      players:     players ?? 10,
-      base_price:  basePrice,
-      service_fee: 0,
-      total_price: gross,
-      status:      'pending_payment',
-      expires_at:  new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      hours:          numHours,
+      players:        players ?? 10,
+      base_price:     dbBasePrice,   // authoritative DB price, not client-supplied
+      service_fee:    0,
+      total_price:    gross,
+      status:         'pending_payment',
+      expires_at:     new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
-
-    // owner_court_id is the correct UUID FK to owner_courts(id).
-    // The legacy integer court_id column is left as-is (never populated going forward).
-    if (courtId) {
-      bookingPayload.owner_court_id = courtId;
-    }
 
     const { data: booking, error: bookingErr } = await supabase
       .from('bookings')
@@ -99,6 +118,14 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (bookingErr || !booking) {
+      // 23505 = unique_violation on idx_bookings_*_slot → the slot is already taken.
+      const isDuplicate = bookingErr?.code === '23505';
+      if (isDuplicate) {
+        return NextResponse.json(
+          { error: 'SLOT_TAKEN', message: 'Este horario ya fue reservado. Elegí otro horario.' },
+          { status: 409 },
+        );
+      }
       console.error('Booking insert error:', bookingErr);
       return NextResponse.json({ error: bookingErr?.message ?? 'Error creando reserva.' }, { status: 500 });
     }
@@ -110,7 +137,7 @@ export async function POST(req: NextRequest) {
     // CRC: ₡25,000 → pass 2,500,000 centimos so ONVO displays ₡25,000.
     const session = await createCheckoutSession({
       amount:       gross * 100,
-      description:  `TuCancha — ${courtName} · ${date} ${time} (${hours}h)`,
+      description:  `TuCancha — ${resolvedCourtName} · ${date} ${time} (${numHours}h)`,
       successUrl:   `${origin}/reserva/${booking.id}?status=success`,
       cancelUrl:    `${origin}/reserva/${booking.id}?status=cancelled`,
       customerEmail: userEmail,
@@ -118,7 +145,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         booking_id: booking.id,
         user_id:    userId,
-        court_name: courtName,
+        court_name: resolvedCourtName,
       },
     });
 
