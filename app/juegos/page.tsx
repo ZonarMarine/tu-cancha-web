@@ -334,10 +334,16 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
         setSaving(false);
         return;
       }
+      // The accepting player's team name (mirrors mobile — needed so the
+      // leaderboard credits their XP and results can be reported).
+      const { data: myProf } = await supabase
+        .from("profiles").select("name, team").eq("id", user.id).single();
+      const opponentTeam = myProf?.team || myProf?.name || "Rival";
+
       // Atomic update — only succeeds if reto is still in an active status (race condition guard)
       const { data: updated, error: updateErr } = await supabase
         .from("retos")
-        .update({ status: "accepted" })
+        .update({ status: "accepted", opponent_user_id: user.id, opponent_team: opponentTeam })
         .eq("id", r.id)
         .in("status", ACTIVE_STATUSES)
         .select("id");

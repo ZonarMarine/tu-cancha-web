@@ -132,7 +132,7 @@ export default function OwnerDashboard() {
       // Pending bookings (today + tomorrow)
       const pendQ = supabase
         .from("bookings")
-        .select("id, court_name, date, time, players, total_price, status, profiles(name, email)")
+        .select("id, court_name, date, time, players, total_price, status, user_id")
         .in("status", ["pending_payment", "pending", "partially_paid"])
         .gte("date", today).lte("date", tomorrow)
         .order("date", { ascending: true }).order("time", { ascending: true }).limit(10);
@@ -143,7 +143,7 @@ export default function OwnerDashboard() {
       // Confirmed today
       const confQ = supabase
         .from("bookings")
-        .select("id, court_name, date, time, players, total_price, status, profiles(name, email)")
+        .select("id, court_name, date, time, players, total_price, status, user_id")
         .in("status", ["confirmed", "paid"])
         .eq("date", today)
         .order("time", { ascending: true }).limit(10);
@@ -159,8 +159,22 @@ export default function OwnerDashboard() {
         .gte("paid_at", `${today}T00:00:00.000Z`)
         .lte("paid_at", `${today}T23:59:59.999Z`);
 
-      setPending((pRows ?? []) as BookingRow[]);
-      setConfirmed((cRows ?? []) as BookingRow[]);
+      // Resolve booker names via public_profiles (profiles is now own-row RLS,
+      // so the old embedded profiles(name) join returns nothing for other users).
+      const bookerIds = Array.from(new Set(
+        [...(pRows ?? []), ...(cRows ?? [])].map((r: any) => r.user_id).filter(Boolean)
+      ));
+      let nameMap: Record<string, string> = {};
+      if (bookerIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("public_profiles").select("id, name").in("id", bookerIds);
+        nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.name]));
+      }
+      const attachName = (rows: any[] | null) =>
+        (rows ?? []).map((r: any) => ({ ...r, profiles: { name: nameMap[r.user_id] ?? null } }));
+
+      setPending(attachName(pRows) as BookingRow[]);
+      setConfirmed(attachName(cRows) as BookingRow[]);
       setTodayNet((payRows ?? []).reduce((s: number, p: any) => s + (p.owner_net_amount ?? 0), 0));
     } catch (e) {
       console.error("Dashboard fetch error:", e);

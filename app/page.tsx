@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { deriveProgress } from "@/lib/game";
 import LiveTicker from "@/components/LiveTicker";
 import MasReservadas from "@/components/MasReservadas";
 import HomeRetosSection from "@/components/HomeRetosSection";
@@ -32,19 +33,22 @@ function makeSB() {
 async function fetchTopPlayers() {
   try {
     const sb = makeSB();
-    const { data, error } = await sb
-      .from('profiles')
-      .select('id, name, avatar_url, created_at')
-      .not('name', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    // Real XP leaderboard (same source as the mobile app). Granted to anon.
+    const { data, error } = await sb.rpc('get_leaderboard', { lim: 5 });
     if (!error && data && data.length > 0) {
-      return data.map((p: Record<string,any>, i: number) => ({
-        rank:       i + 1,
-        id:         p.id,
-        name:       (p.name as string) ?? 'Jugador',
-        avatarUrl:  p.avatar_url ?? null,
-      }));
+      return (data as Record<string, any>[]).map((p, i) => {
+        const prog = deriveProgress({ bookings: Number(p.bookings) || 0, retos: Number(p.retos) || 0 });
+        return {
+          rank:      i + 1,
+          id:        p.id,
+          name:      (p.name as string) ?? 'Jugador',
+          avatarUrl: p.avatar_url ?? null,
+          level:     prog.level,
+          xp:        prog.xp,
+          rankName:  prog.rank.name,
+          rankSolid: prog.rank.solid,
+        };
+      });
     }
   } catch (_) {}
   return [];
@@ -579,7 +583,7 @@ export default async function HomePage() {
             display: 'grid', gridTemplateColumns: '36px 1fr 80px',
             gap: 16, padding: '0 20px 12px', alignItems: 'center',
           }}>
-            {['#', 'Jugador', 'Miembro'].map(h => (
+            {['#', 'Jugador', 'Nivel'].map(h => (
               <p key={h} className="eyebrow">{h}</p>
             ))}
           </div>
@@ -621,18 +625,23 @@ export default async function HomePage() {
                         {initials}
                       </div>
                     )}
-                    <p style={{ fontWeight: 600, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.name}
-                    </p>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.name}
+                      </p>
+                      <p style={{ fontSize: 10.5, fontWeight: 700, color: p.rankSolid, marginTop: 1, letterSpacing: '0.02em' }}>
+                        {p.rankName?.toUpperCase()} · {p.xp?.toLocaleString('es-CR')} XP
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Member badge */}
+                  {/* Level badge */}
                   <span style={{
-                    fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 6, textAlign: 'center',
-                    background: i === 0 ? 'rgba(215,255,0,0.07)' : 'rgba(255,255,255,0.04)',
-                    color: i === 0 ? 'var(--accent)' : 'var(--text3)',
-                    border: `1px solid ${i === 0 ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.05)'}`,
-                  }}>Activo</span>
+                    fontSize: 12, fontWeight: 900, padding: '4px 9px', borderRadius: 8, textAlign: 'center',
+                    background: i === 0 ? 'rgba(215,255,0,0.10)' : 'rgba(255,255,255,0.05)',
+                    color: i === 0 ? 'var(--accent)' : 'var(--text)',
+                    border: `1px solid ${i === 0 ? 'rgba(215,255,0,0.16)' : 'rgba(255,255,255,0.06)'}`,
+                  }}>Nv {p.level}</span>
                 </div>
               );
             })}
