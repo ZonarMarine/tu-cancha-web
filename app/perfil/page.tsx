@@ -6,9 +6,15 @@ import {
   LogOut, Edit2, Calendar, Clock, MapPin,
   TrendingUp, Shield, Zap, Target, X, Camera, Check, Loader2,
   Users, Plus, ChevronRight, Share2, Copy, ExternalLink, Search,
+  Trophy, Flame, Award, Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import TeamChat from "@/components/TeamChat";
+import { deriveProgress } from "@/lib/game";
+import { evalAll } from "@/lib/achievements";
+
+// lucide icon lookup for achievements (keys from lib/achievements.ts)
+const ACH_ICONS: Record<string, any> = { Trophy, Calendar, Flame, Zap, Shield, TrendingUp, Award, Sparkles };
 
 /* ─── constants ─────────────────────────────────────────── */
 
@@ -1397,19 +1403,27 @@ export default function PerfilPage() {
   const [hoveredStat,    setHoveredStat]    = useState<string | null>(null);
   const [hoveredBooking, setHoveredBooking] = useState<string | null>(null);
   const [detailBooking,  setDetailBooking]  = useState<any>(null);
+  const [bookingCount,   setBookingCount]   = useState(0);
+  const [retoCount,      setRetoCount]      = useState(0);
 
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { router.push('/auth'); return; }
-      const [{ data: p }, { data: b }, { data: r }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-        supabase.from('bookings').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(10),
-        supabase.from('retos').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(10),
+      const uid = session.user.id;
+      const [{ data: p }, { data: b }, { data: r }, { count: bCount }, { count: rCount }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', uid).single(),
+        supabase.from('bookings').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
+        supabase.from('retos').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
+        // Real counts for XP (same as the mobile app)
+        supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('user_id', uid).not('status', 'in', '(cancelled,failed,expired)'),
+        supabase.from('retos').select('id', { count: 'exact', head: true }).eq('status', 'accepted').or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`),
       ]);
       setProfile(p ?? { name: session.user.email, team: '' });
       setBookings(b ?? []);
       setRetos(r ?? []);
+      setBookingCount(bCount ?? 0);
+      setRetoCount(rCount ?? 0);
       setLoading(false);
       requestAnimationFrame(() => setTimeout(() => setReady(true), 40));
     })();
@@ -1463,7 +1477,15 @@ export default function PerfilPage() {
   const initials   = profile?.name
     ? profile.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : '?';
-  const level = bookings.length >= 10 ? 'Pro' : bookings.length >= 5 ? 'Semi-Pro' : 'Jugador';
+
+  // Real game identity — derived from real activity, mirrors the mobile app.
+  const progress = deriveProgress({ bookings: bookingCount, retos: retoCount });
+  const statsSet = [profile?.stat_atk, profile?.stat_def, profile?.stat_skl, profile?.stat_str].every(v => v != null);
+  const achievements = evalAll({
+    bookings: progress.bookings, retos: progress.retos,
+    matches: progress.matches, level: progress.level, statsSet,
+  });
+  const level = progress.rank.name; // rank tier (Bronce…Leyenda)
 
   return (
     <div style={{
@@ -1632,11 +1654,8 @@ export default function PerfilPage() {
           const teamInitials = profile?.team
             ? profile.team.split(' ').map((n: string) => n[0]).join('').slice(0,2).toUpperCase()
             : '??';
-          const division: string = 'Bronce'; // TODO: wire to DB
-          const divColor = division === 'Élite' ? '#D7FF00'
-                         : division === 'Oro'   ? '#FFD700'
-                         : division === 'Plata' ? '#C0C0C0'
-                         :                        '#CD7F32';
+          const division: string = progress.rank.name; // real rank tier
+          const divColor = progress.rank.solid;
           const played = bookings.filter((b: any) => b.status === 'confirmed').length;
           // Form: all dashes until real match data exists
           const form: string[] = Array(5).fill('–');
@@ -2033,6 +2052,85 @@ export default function PerfilPage() {
             </div>
           );
         })()}
+      </div>
+
+      {/* ── Career card: level / rank / OVR / XP (congruent with the app) ── */}
+      <div className="container" style={{ padding: '16px 40px 0' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+          borderRadius: 18, padding: '18px 22px',
+          background: 'linear-gradient(160deg, #161616, #111111)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          {/* OVR + rank */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ textAlign: 'center', minWidth: 62 }}>
+              <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: progress.rank.solid, letterSpacing: '-0.03em' }}>{progress.ovr}</div>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', color: 'var(--text3)', marginTop: 2 }}>OVR</div>
+            </div>
+            <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.08)' }} />
+            <div>
+              <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 900, letterSpacing: '0.06em', padding: '4px 10px', borderRadius: 8, background: `${progress.rank.solid}1c`, color: progress.rank.solid, border: `1px solid ${progress.rank.solid}33`, textTransform: 'uppercase' }}>
+                {progress.rank.name}
+              </span>
+              <div style={{ fontSize: 20, fontWeight: 900, marginTop: 6, letterSpacing: '-0.02em' }}>Nivel {progress.level}</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 600 }}>{progress.title} · {progress.matches} partidos</div>
+            </div>
+          </div>
+          {/* XP bar */}
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>{progress.intoLevel} / {progress.span} XP</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)' }}>faltan {progress.toNext} XP → Nivel {progress.level + 1}</span>
+            </div>
+            <div style={{ height: 9, borderRadius: 9, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress.pct * 100}%`, borderRadius: 9, background: 'linear-gradient(90deg, #EAFF6B, #B8DE00)', boxShadow: '0 0 10px rgba(215,255,0,0.4)' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Achievements (Logros) ── */}
+      <div className="container" style={{ padding: '16px 40px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span className="section-label">Logros</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', padding: '3px 9px', borderRadius: 8, background: 'rgba(215,255,0,0.08)', border: '1px solid rgba(215,255,0,0.16)' }}>
+            {achievements.earned}/{achievements.total}
+          </span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+          {achievements.list.map(a => {
+            const Icon = ACH_ICONS[a.icon] ?? Trophy;
+            return (
+              <div key={a.key} style={{
+                display: 'flex', alignItems: 'center', gap: 11, padding: '12px 13px', borderRadius: 14,
+                background: a.earned ? 'rgba(215,255,0,0.06)' : 'var(--surface)',
+                border: `1px solid ${a.earned ? 'rgba(215,255,0,0.18)' : 'rgba(255,255,255,0.05)'}`,
+              }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: a.earned ? 'linear-gradient(145deg,#EAFF6B,#B8DE00)' : 'rgba(255,255,255,0.05)',
+                }}>
+                  <Icon size={17} color={a.earned ? '#0c0d06' : 'var(--text3)'} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: a.earned ? 'var(--text)' : 'var(--text2)' }}>{a.title}</div>
+                  {a.earned ? (
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 3 }}><Check size={11} /> Listo</div>
+                  ) : (
+                    <>
+                      <div style={{ height: 3, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: 4 }}>
+                        <div style={{ height: '100%', width: `${a.pct * 100}%`, background: 'var(--accent)', borderRadius: 3 }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, marginTop: 3 }}>{a.value}/{a.goal}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Main content ── */}
