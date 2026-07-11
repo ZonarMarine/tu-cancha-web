@@ -11,14 +11,6 @@ type Msg = {
   created_at: string;
 };
 
-function buildSeed(): Msg[] {
-  return [
-    { id: 'seed1', user_id: 'seed', author_name: 'Marco V.',  body: '¿Quién juega esta noche?',   created_at: new Date(Date.now() - 4*3600*1000).toISOString() },
-    { id: 'seed2', user_id: 'seed', author_name: 'Diego M.',  body: 'Yo confirmo. Falta portero', created_at: new Date(Date.now() - 3*3600*1000).toISOString() },
-    { id: 'seed3', user_id: 'seed', author_name: 'Marco V.',  body: '⚽ ¡Vamos! Nos vemos 7PM',   created_at: new Date(Date.now() - 2*3600*1000).toISOString() },
-  ];
-}
-
 const QUICK = ['⚽', '✅', '🔥', '⚡', '👊'];
 
 function timeAgo(iso: string) {
@@ -38,7 +30,7 @@ interface Props {
 
 export default function TeamChat({ teamName, teamColor, userName, userId }: Props) {
   const [open,       setOpen]       = useState(false);
-  const [msgs,       setMsgs]       = useState<Msg[]>(buildSeed);
+  const [msgs,       setMsgs]       = useState<Msg[]>([]);
   const [input,      setInput]      = useState('');
   const [sending,    setSending]    = useState(false);
   const [canScrollUp,   setCanScrollUp]   = useState(false);
@@ -58,25 +50,30 @@ export default function TeamChat({ teamName, teamColor, userName, userId }: Prop
   /* ── Load + realtime ── */
   useEffect(() => {
     if (!teamName) return;
+    // Shared chat_messages table (same as the mobile app) → team chat syncs
+    // across web + app in realtime.
     supabase
-      .from('team_messages')
+      .from('chat_messages')
       .select('id, user_id, author_name, body, created_at')
-      .eq('team_name', teamName)
+      .eq('channel_type', 'team')
+      .eq('channel_id', teamName)
       .order('created_at', { ascending: true })
       .limit(60)
       .then(({ data, error }) => {
-        if (!error && data && data.length > 0) setMsgs(data as Msg[]);
+        if (!error && data) setMsgs(data as Msg[]);
       });
 
     const ch = supabase
-      .channel(`chat:${teamName}`)
+      .channel(`chat:team:${teamName}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public',
-        table: 'team_messages', filter: `team_name=eq.${teamName}`,
+        table: 'chat_messages', filter: `channel_id=eq.${teamName}`,
       }, payload => {
+        const fresh = payload.new as Msg & { channel_type?: string };
+        if (fresh.channel_type && fresh.channel_type !== 'team') return;
         setMsgs(prev => {
-          const fresh = payload.new as Msg;
           const withoutTemp = prev.filter(m => !m.id.startsWith('opt_'));
+          if (withoutTemp.some(m => m.id === fresh.id)) return withoutTemp;
           return [...withoutTemp, fresh];
         });
       })
@@ -133,7 +130,7 @@ export default function TeamChat({ teamName, teamColor, userName, userId }: Prop
     const optId = `opt_${Date.now()}`;
     setMsgs(prev => [...prev, { id: optId, user_id: userId, author_name: userName, body, created_at: new Date().toISOString() }]);
     scrollToBottom();
-    await supabase.from('team_messages').insert({ team_name: teamName, user_id: userId, author_name: userName, body });
+    await supabase.from('chat_messages').insert({ channel_type: 'team', channel_id: teamName, user_id: userId, author_name: userName, body });
     setSending(false);
     inputRef.current?.focus();
   };

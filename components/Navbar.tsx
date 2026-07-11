@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, MessageCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -186,6 +186,14 @@ export default function Navbar() {
             <div style={{ width: 72, height: 26 }} aria-hidden="true" />
           ) : user ? (
             <>
+              <Link href="/mensajes" className="nav-profile" aria-label="Mensajes" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 30, height: 30, borderRadius: 8, textDecoration: 'none',
+                color: path === '/mensajes' ? 'var(--accent)' : 'rgba(255,255,255,0.5)',
+                transition: 'color 0.16s',
+              }}>
+                <MessageCircle size={18} />
+              </Link>
               <NotificationBell />
               <Link href="/perfil" className="nav-profile" style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -269,6 +277,13 @@ export default function Navbar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
             {!authReady ? null : user ? (
               <>
+                <Link href="/mensajes" onClick={() => setOpen(false)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '11px 14px', borderRadius: 10, fontSize: 14, fontWeight: 500,
+                  color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.09)', textDecoration: 'none',
+                }}>
+                  <MessageCircle size={16} /> Mensajes
+                </Link>
                 <Link href="/perfil" onClick={() => setOpen(false)} style={{
                   padding: '11px 14px', borderRadius: 10, fontSize: 14, fontWeight: 500,
                   color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.09)', textDecoration: 'none',
