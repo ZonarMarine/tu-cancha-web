@@ -2,14 +2,29 @@
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Zap } from "lucide-react";
+import { Eye, EyeOff, Zap, Check } from "lucide-react";
 import Link from "next/link";
 
-const SOCIAL_PROOF = [
-  { val: '1,240+', label: 'Jugadores' },
-  { val: '320+',   label: 'Partidos este mes' },
-  { val: '4.9★',   label: 'Rating promedio' },
+// Honest product value props — no invented statistics.
+const FEATURES = [
+  'Reservá canchas en segundos',
+  'Encontrá rivales y armá tu partido',
+  'Chat, equipos y ranking en vivo',
 ];
+
+const AppleMark = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <path d="M16.365 1.43c0 1.14-.42 2.2-1.25 3.02-.9.9-2 .84-2.35.8-.06-1.02.44-2.12 1.13-2.83.79-.82 2.11-1.02 2.47-.99zM20.7 17.02c-.35.8-.52 1.16-.97 1.87-.63.99-1.52 2.22-2.63 2.23-.98.01-1.24-.64-2.57-.64-1.33 0-1.61.63-2.6.65-1.06.02-1.87-1.07-2.5-2.06-1.76-2.77-1.95-6.02-.86-7.75.77-1.23 1.98-1.95 3.12-1.95 1.16 0 1.9.64 2.85.64.93 0 1.5-.64 2.85-.64 1.02 0 2.1.56 2.87 1.52-2.52 1.38-2.11 4.98.44 6.13z"/>
+  </svg>
+);
+const GoogleMark = () => (
+  <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden>
+    <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+    <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+    <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+    <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+  </svg>
+);
 
 type Role = 'player' | 'owner';
 
@@ -28,8 +43,24 @@ function AuthForm() {
   const [name, setName]         = useState('');
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google'|'apple'|null>(null);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState('');
+
+  const handleOAuth = async (provider: 'google' | 'apple') => {
+    setError(''); setSuccess(''); setOauthLoading(provider);
+    try {
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/` },
+      });
+      if (err) throw err;
+      // Success → the browser is redirected to the provider; nothing else to do.
+    } catch (e: any) {
+      setError(e.message || 'No se pudo iniciar sesión.');
+      setOauthLoading(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,16 +180,17 @@ function AuthForm() {
             El sistema operativo del fútbol amateur en Costa Rica.
           </p>
 
-          {/* Social proof */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {SOCIAL_PROOF.map(s => (
-              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Feature highlights */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {FEATURES.map(f => (
+              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{
-                  fontWeight: 900, fontSize: 22,
-                  letterSpacing: '-0.02em', color: 'var(--accent)',
-                  minWidth: 72,
-                }}>{s.val}</span>
-                <span style={{ fontSize: 13, color: 'var(--text3)' }}>{s.label}</span>
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  background: 'rgba(215,255,0,0.1)', border: '1px solid rgba(215,255,0,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--accent)',
+                }}><Check size={14} /></span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
               </div>
             ))}
           </div>
@@ -340,6 +372,34 @@ function AuthForm() {
                 : 'Crear cuenta gratis'}
             </button>
           </form>
+
+          {/* ── Social sign-in ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>o continuá con</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {([
+              { id: 'apple' as const, mark: <AppleMark />, label: 'Continuar con Apple' },
+              { id: 'google' as const, mark: <GoogleMark />, label: 'Continuar con Google' },
+            ]).map(p => (
+              <button key={p.id} type="button" onClick={() => handleOAuth(p.id)}
+                disabled={!!oauthLoading || loading}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  width: '100%', padding: '13px', borderRadius: 12, cursor: 'pointer',
+                  fontSize: 14, fontWeight: 700, color: 'var(--text)',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  opacity: oauthLoading && oauthLoading !== p.id ? 0.5 : 1,
+                  transition: 'background 0.16s',
+                }}>
+                {oauthLoading === p.id ? 'Redirigiendo…' : <>{p.mark}{p.label}</>}
+              </button>
+            ))}
+          </div>
 
           <p style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', marginTop: 28 }}>
             {mode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?'}{' '}
