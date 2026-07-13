@@ -17,6 +17,33 @@ const timeAgo = (iso: string) => {
   if (d < 86400) return `${Math.floor(d / 3600)}h`; return `${Math.floor(d / 86400)}d`;
 };
 
+const FRIENDS_GOAL = 10;
+function FriendsGoal({ count }: { count: number }) {
+  const done = count >= FRIENDS_GOAL;
+  const pct = Math.min(100, Math.round((count / FRIENDS_GOAL) * 100));
+  const remaining = Math.max(0, FRIENDS_GOAL - count);
+  return (
+    <div style={{
+      borderRadius: 14, padding: "12px 14px", marginBottom: 12,
+      background: done ? "var(--accent-dark)" : "var(--surface2)",
+      border: `1px solid ${done ? "var(--accent-glow)" : "var(--border)"}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "var(--text3)" }}>META DE AMIGOS</span>
+        <span style={{ fontSize: 13, fontWeight: 900, color: "var(--accent)" }}>{Math.min(count, FRIENDS_GOAL)}/{FRIENDS_GOAL}</span>
+      </div>
+      <div style={{ height: 7, borderRadius: 99, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 99, background: "var(--accent)", transition: "width 0.4s ease" }} />
+      </div>
+      <p style={{ fontSize: 12, color: done ? "var(--accent)" : "var(--text3)", marginTop: 8, fontWeight: done ? 700 : 400 }}>
+        {done
+          ? "🎉 ¡Meta cumplida! Ya tenés 10 amigos."
+          : `Te ${remaining === 1 ? "falta" : "faltan"} ${remaining} para llegar a 10.`}
+      </p>
+    </div>
+  );
+}
+
 export default function MensajesPage() {
   const router = useRouter();
   const [meId, setMeId] = useState<string | null>(null);
@@ -213,6 +240,7 @@ export default function MensajesPage() {
                 ))
             ) : (
               <>
+                <FriendsGoal count={friends.length} />
                 {incoming.length > 0 && <>
                   <p style={S.label}>SOLICITUDES</p>
                   {incoming.map(r => (
