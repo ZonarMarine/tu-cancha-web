@@ -7,6 +7,7 @@ import { Search, Send, ChevronLeft, UserPlus, Check, MessageCircle } from "lucid
 type Prof = { id: string; name: string; team?: string | null; avatar_url?: string | null };
 type Msg = { id: string; user_id: string; author_name: string; body: string; created_at: string };
 type Convo = { channelId: string; otherId: string; name: string; avatarUrl?: string | null; last: string };
+type Friend = { id: string; name: string; avatarUrl?: string | null; last?: string };
 
 const dmChannelId = (a: string, b: string) => [a, b].sort().join("_");
 const initials = (n?: string) => (n || "J").trim().split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -28,6 +29,7 @@ export default function MensajesPage() {
   const [friendStatus, setFriendStatus] = useState<Record<string, "friend" | "outgoing" | "incoming">>({});
   const [incoming, setIncoming] = useState<Prof[]>([]);
   const [convos, setConvos] = useState<Convo[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const [active, setActive] = useState<{ otherId: string; name: string; channelId: string } | null>(null);
@@ -46,10 +48,10 @@ export default function MensajesPage() {
     setMeName(prof?.name || session.user.email?.split("@")[0] || "Jugador");
 
     const { data: fr } = await supabase.from("friendships").select("requester_id, addressee_id, status");
-    const statusMap: Record<string, any> = {}; const incomingIds: string[] = [];
+    const statusMap: Record<string, any> = {}; const incomingIds: string[] = []; const friendIds: string[] = [];
     (fr || []).forEach((f: any) => {
       const other = f.requester_id === uid ? f.addressee_id : f.requester_id;
-      if (f.status === "accepted") statusMap[other] = "friend";
+      if (f.status === "accepted") { statusMap[other] = "friend"; friendIds.push(other); }
       else if (f.requester_id === uid) statusMap[other] = "outgoing";
       else { statusMap[other] = "incoming"; incomingIds.push(f.requester_id); }
     });
@@ -61,17 +63,28 @@ export default function MensajesPage() {
     const seen = new Set<string>(); const latest: any[] = [];
     for (const m of (dmMsgs || [])) { if (!seen.has(m.channel_id)) { seen.add(m.channel_id); latest.push(m); } }
     const convoOtherIds = latest.map(m => { const [a, b] = m.channel_id.split("_"); return a === uid ? b : a; });
-    const allIds = Array.from(new Set([...incomingIds, ...convoOtherIds]));
+    const allIds = Array.from(new Set([...incomingIds, ...convoOtherIds, ...friendIds]));
     let pmap: Record<string, Prof> = {};
     if (allIds.length) {
       const { data: profs } = await supabase.from("public_profiles").select("id, name, avatar_url").in("id", allIds);
       pmap = Object.fromEntries((profs || []).map((p: any) => [p.id, p]));
     }
     setIncoming(incomingIds.map(id => ({ id, name: pmap[id]?.name || "Jugador", avatar_url: pmap[id]?.avatar_url })));
+
+    // Last DM per conversation, keyed by the other participant's id
+    const lastByOther: Record<string, string> = {};
+    latest.forEach(m => { const [a, b] = m.channel_id.split("_"); lastByOther[a === uid ? b : a] = m.body; });
     setConvos(latest.map(m => {
       const [a, b] = m.channel_id.split("_"); const otherId = a === uid ? b : a; const p = pmap[otherId] || {} as Prof;
       return { channelId: m.channel_id, otherId, name: p.name || "Jugador", avatarUrl: p.avatar_url, last: m.body };
     }));
+
+    // Every accepted friend — those with a recent chat first
+    setFriends(
+      friendIds
+        .map(id => ({ id, name: pmap[id]?.name || "Jugador", avatarUrl: pmap[id]?.avatar_url, last: lastByOther[id] }))
+        .sort((a, b) => (b.last ? 1 : 0) - (a.last ? 1 : 0) || a.name.localeCompare(b.name))
+    );
     setReady(true);
   }, [router]);
 
@@ -212,17 +225,27 @@ export default function MensajesPage() {
                       </div>
                     </div>
                   ))}
-                  <p style={{ ...S.label, marginTop: 14 }}>CONVERSACIONES</p>
                 </>}
-                {convos.length === 0
-                  ? <p style={S.hint}>Buscá un jugador y agregalo para chatear.</p>
-                  : convos.map(c => (
-                    <div key={c.channelId} onClick={() => openChat({ id: c.otherId, name: c.name })}
-                      style={{ ...S.row, cursor: "pointer", background: active?.channelId === c.channelId ? "var(--accent-dark)" : S.row.background }}>
-                      <Avatar url={c.avatarUrl} name={c.name} />
-                      <div style={{ flex: 1, minWidth: 0 }}><div style={S.rowName}>{c.name}</div><div style={{ ...S.rowSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.last}</div></div>
-                    </div>
-                  ))}
+                <p style={{ ...S.label, marginTop: incoming.length > 0 ? 14 : 0 }}>
+                  AMIGOS{friends.length > 0 ? ` · ${friends.length}` : ""}
+                </p>
+                {friends.length === 0
+                  ? <p style={S.hint}>Todavía no tenés amigos. Buscá un jugador y mandale una solicitud.</p>
+                  : friends.map(f => {
+                    const channelId = dmChannelId(meId!, f.id);
+                    return (
+                      <div key={f.id} onClick={() => openChat({ id: f.id, name: f.name })}
+                        style={{ ...S.row, cursor: "pointer", background: active?.channelId === channelId ? "var(--accent-dark)" : S.row.background }}>
+                        <Avatar url={f.avatarUrl} name={f.name} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={S.rowName}>{f.name}</div>
+                          <div style={{ ...S.rowSub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {f.last || "Mensaje directo"}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
               </>
             )}
           </div>
@@ -239,7 +262,7 @@ export default function MensajesPage() {
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
                   <button onClick={() => setActive(null)} className="msg-back" style={{ display: "none", background: "none", border: "none", cursor: "pointer" }}><ChevronLeft size={20} color="var(--text)" /></button>
-                  <Avatar url={convos.find(c => c.otherId === active.otherId)?.avatarUrl} name={active.name} size={34} />
+                  <Avatar url={convos.find(c => c.otherId === active.otherId)?.avatarUrl ?? friends.find(f => f.id === active.otherId)?.avatarUrl} name={active.name} size={34} />
                   <div><div style={{ fontWeight: 800, fontSize: 15 }}>{active.name}</div><div style={{ fontSize: 11, color: "var(--text3)" }}>Mensaje directo</div></div>
                 </div>
                 <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 8, maxHeight: 440 }}>
