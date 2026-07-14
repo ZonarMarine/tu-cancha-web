@@ -14,7 +14,7 @@ import { deriveProgress } from "@/lib/game";
 import { evalAll } from "@/lib/achievements";
 
 // lucide icon lookup for achievements (keys from lib/achievements.ts)
-const ACH_ICONS: Record<string, any> = { Trophy, Calendar, Flame, Zap, Shield, TrendingUp, Award, Sparkles };
+const ACH_ICONS: Record<string, any> = { Trophy, Calendar, Flame, Zap, Shield, TrendingUp, Award, Sparkles, Users };
 
 /* ─── constants ─────────────────────────────────────────── */
 
@@ -1405,25 +1405,28 @@ export default function PerfilPage() {
   const [detailBooking,  setDetailBooking]  = useState<any>(null);
   const [bookingCount,   setBookingCount]   = useState(0);
   const [retoCount,      setRetoCount]      = useState(0);
+  const [friendCount,    setFriendCount]    = useState(0);
 
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { router.push('/auth'); return; }
       const uid = session.user.id;
-      const [{ data: p }, { data: b }, { data: r }, { count: bCount }, { count: rCount }] = await Promise.all([
+      const [{ data: p }, { data: b }, { data: r }, { count: bCount }, { count: rCount }, { count: fCount }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', uid).single(),
         supabase.from('bookings').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
         supabase.from('retos').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(10),
         // Real counts for XP (same as the mobile app)
         supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('user_id', uid).not('status', 'in', '(cancelled,failed,expired)'),
         supabase.from('retos').select('id', { count: 'exact', head: true }).eq('status', 'accepted').or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`),
+        supabase.from('friendships').select('id', { count: 'exact', head: true }).eq('status', 'accepted').or(`requester_id.eq.${uid},addressee_id.eq.${uid}`),
       ]);
       setProfile(p ?? { name: session.user.email, team: '' });
       setBookings(b ?? []);
       setRetos(r ?? []);
       setBookingCount(bCount ?? 0);
       setRetoCount(rCount ?? 0);
+      setFriendCount(fCount ?? 0);
       setLoading(false);
       requestAnimationFrame(() => setTimeout(() => setReady(true), 40));
     })();
@@ -1483,7 +1486,7 @@ export default function PerfilPage() {
   const statsSet = [profile?.stat_atk, profile?.stat_def, profile?.stat_skl, profile?.stat_str].every(v => v != null);
   const achievements = evalAll({
     bookings: progress.bookings, retos: progress.retos,
-    matches: progress.matches, level: progress.level, statsSet,
+    matches: progress.matches, level: progress.level, statsSet, friends: friendCount,
   });
   const level = progress.rank.name; // rank tier (Bronce…Leyenda)
 

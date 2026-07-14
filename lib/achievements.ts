@@ -1,7 +1,7 @@
 // Web port of the app's lib/achievements.js — same 8 achievements, all derived
 // from the player's own real activity. `icon` is a lucide-react name mapped in
 // the profile render.
-export type AchCtx = { bookings: number; retos: number; matches: number; level: number; statsSet: boolean };
+export type AchCtx = { bookings: number; retos: number; matches: number; level: number; statsSet: boolean; friends: number };
 
 export type AchDef = {
   key: string; icon: string; title: string; desc: string; goal: number;
@@ -17,6 +17,7 @@ export const ACHIEVEMENTS: AchDef[] = [
   { key: 'ascenso',    icon: 'TrendingUp', title: 'Ascenso',  desc: 'Alcanzá el Nivel 5',     goal: 5,  val: c => c.level },
   { key: 'elite',      icon: 'Award',      title: 'Élite',    desc: 'Alcanzá el Nivel 10',    goal: 10, val: c => c.level },
   { key: 'carta',      icon: 'Sparkles',   title: 'Carta',    desc: 'Definí tus 4 atributos', goal: 1,  val: c => (c.statsSet ? 1 : 0) },
+  { key: 'amistoso',   icon: 'Users',      title: 'Amistoso', desc: 'Sumá 10 amigos',         goal: 10, val: c => c.friends },
 ];
 
 export function evalAll(ctx: AchCtx) {
