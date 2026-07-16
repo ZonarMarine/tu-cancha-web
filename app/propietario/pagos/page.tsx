@@ -63,14 +63,23 @@ export default function PagosPage() {
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState("");
   const [statusFlt, setStatusFlt] = useState("Todos");
+  const [loadError, setLoadError] = useState("");
   const [stats,     setStats]     = useState({
     totalNet: 0, thisMonth: 0, pending: 0, refunded: 0,
   });
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
-      const { data } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setPayments([]); return; }
+
+      // Scope to money owed to THIS owner. The payments RLS policy is
+      // (auth.uid() = user_id OR auth.uid() = owner_id), so without this filter an
+      // owner who has also booked as a player sees their own outgoing payments
+      // counted as revenue.
+      const { data, error } = await supabase
         .from("payments")
         .select(`
           id, status, gross_amount, platform_fee, onvo_fee_estimate, owner_net_amount,
@@ -78,8 +87,11 @@ export default function PagosPage() {
           failure_reason,
           bookings:reservation_id (id, court_name, date, time)
         `)
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false })
         .limit(100);
+
+      if (error) throw error;
 
       const rows = (data ?? []) as unknown as Payment[];
       setPayments(rows);
@@ -97,8 +109,11 @@ export default function PagosPage() {
                            .reduce((s, p) => s + p.gross_amount, 0);
 
       setStats({ totalNet, thisMonth, pending, refunded });
-    } catch (e) {
+    } catch (e: any) {
       console.error("Pagos fetch error:", e);
+      setPayments([]);
+      setStats({ totalNet: 0, thisMonth: 0, pending: 0, refunded: 0 });
+      setLoadError(e?.message || "No se pudieron cargar los pagos. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -133,6 +148,18 @@ export default function PagosPage() {
         <h1 style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", marginBottom: 4 }}>Pagos</h1>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Historial de transacciones ONVO Pay · Tu ingreso neto</p>
       </div>
+
+      {/* Never show ₡0 as if it were real when the query actually failed */}
+      {loadError && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "11px 14px", borderRadius: 10, marginBottom: 16, fontSize: 13,
+          background: "rgba(255,59,59,0.07)", color: "#FF6B6B",
+          border: "1px solid rgba(255,59,59,0.15)",
+        }}>
+          <AlertCircle size={15} /> {loadError}
+        </div>
+      )}
 
       {/* ── Stat cards ── */}
       <div style={{

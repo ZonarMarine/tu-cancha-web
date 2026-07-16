@@ -79,6 +79,18 @@ export default function ConfiguracionPage() {
           },
         });
         if (updateErr) throw updateErr;
+
+        // auth.users metadata is invisible to the rest of the platform — the app and
+        // website read names from profiles / public_profiles. Mirror it there too or
+        // the owner's rename never shows up anywhere else.
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error: profErr } = await supabase.from("profiles").update({
+            name:  ownerName.trim(),
+            phone: phone.trim() || null,
+          }).eq("id", user.id);
+          if (profErr) throw profErr;
+        }
       } else if (activeSection === "notifs") {
         const { error: updateErr } = await supabase.auth.updateUser({
           data: { notif_prefs: notifPrefs },

@@ -182,9 +182,9 @@ export default function AnalyticsPage() {
       const prevYear    = currMonth === 0 ? currYear - 1 : currYear;
 
       /* Map: "year-month" → aggregates */
-      const mMap: Record<string, { revenue: number; bookings: number }> = {};
+      const mMap: Record<string, { revenue: number; bookings: number; hours: number }> = {};
       lastNMonths(7).forEach(({ year, month }) => {
-        mMap[`${year}-${month}`] = { revenue: 0, bookings: 0 };
+        mMap[`${year}-${month}`] = { revenue: 0, bookings: 0, hours: 0 };
       });
 
       let ingresosMes = 0, ingresosAnt = 0;
@@ -200,6 +200,7 @@ export default function AnalyticsPage() {
         if (mMap[key]) {
           mMap[key].revenue  += price;
           mMap[key].bookings += 1;
+          mMap[key].hours    += b.hours ?? 1;
         }
 
         if (y === currYear && m === currMonth) { ingresosMes += price; reservasMes++; }
@@ -222,11 +223,16 @@ export default function AnalyticsPage() {
       /* 4 · Monthly chart data with occupancy */
       const totalSlotsPerDay = courts.reduce((s, c) => s + (c.slots?.length ?? 10), 0);
       const monthPoints: MonthPoint[] = lastNMonths(7).map(({ year, month }) => {
-        const md           = mMap[`${year}-${month}`];
-        const daysThisMonth = daysInMonth(year, month);
-        const availHours   = totalSlotsPerDay * daysThisMonth;
-        const occ          = availHours > 0
-          ? Math.min(100, Math.round((md.bookings / availHours) * 100))
+        const md = mMap[`${year}-${month}`];
+        // Compare hours booked against hours available (matching the dashboard):
+        // md.bookings is a ROW COUNT, so a 2-hour booking must not count as 1 hour.
+        // For the current, partial month only count the days elapsed so far —
+        // dividing by the full month would halve occupancy mid-month.
+        const isCurrent  = year === currYear && month === currMonth;
+        const daysCount  = isCurrent ? now.getDate() : daysInMonth(year, month);
+        const availHours = totalSlotsPerDay * daysCount;
+        const occ        = availHours > 0
+          ? Math.min(100, Math.round((md.hours / availHours) * 100))
           : 0;
         return { label: MONTH_ES[month], revenue: md.revenue, bookings: md.bookings, occ };
       });

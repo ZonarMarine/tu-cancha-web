@@ -115,9 +115,12 @@ export default function OwnerDashboard() {
         .in("status", ["confirmed", "paid", "completed"])
         .gte("date", monStr)
         .lte("date", sunStr);
+      // No courts → no reservations. Never run these unfiltered: bookings RLS also
+      // grants the owner their OWN player bookings, which would render here as if
+      // they were reservations on the owner's courts.
       const { data: wRows } = courtNames.length > 0
         ? await weekQ.in("court_name", courtNames)
-        : await weekQ;
+        : { data: [] as any[] };
 
       const wd = [0,0,0,0,0,0,0];
       for (const r of wRows ?? []) {
@@ -138,7 +141,7 @@ export default function OwnerDashboard() {
         .order("date", { ascending: true }).order("time", { ascending: true }).limit(10);
       const { data: pRows } = courtNames.length > 0
         ? await pendQ.in("court_name", courtNames)
-        : await pendQ;
+        : { data: [] as any[] };
 
       // Confirmed today
       const confQ = supabase
@@ -149,15 +152,20 @@ export default function OwnerDashboard() {
         .order("time", { ascending: true }).limit(10);
       const { data: cRows } = courtNames.length > 0
         ? await confQ.in("court_name", courtNames)
-        : await confQ;
+        : { data: [] as any[] };
 
-      // Today's net revenue from payments table
-      const { data: payRows } = await supabase
-        .from("payments")
-        .select("owner_net_amount, paid_at")
-        .in("status", ["paid", "confirmed"])
-        .gte("paid_at", `${today}T00:00:00.000Z`)
-        .lte("paid_at", `${today}T23:59:59.999Z`);
+      // Today's net revenue from payments table — scoped to money owed to THIS
+      // owner. The payments RLS policy is (user_id OR owner_id), so without the
+      // owner_id filter the owner's own bookings inflate the revenue KPI.
+      const { data: payRows } = user
+        ? await supabase
+            .from("payments")
+            .select("owner_net_amount, paid_at")
+            .eq("owner_id", user.id)
+            .in("status", ["paid", "confirmed"])
+            .gte("paid_at", `${today}T00:00:00.000Z`)
+            .lte("paid_at", `${today}T23:59:59.999Z`)
+        : { data: [] as any[] };
 
       // Resolve booker names via public_profiles (profiles is now own-row RLS,
       // so the old embedded profiles(name) join returns nothing for other users).
