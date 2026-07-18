@@ -973,36 +973,9 @@ export default function CanchaPage() {
               </div>
             </div>
 
-            {/* ── Amenities ── */}
-            <div className="card-lift" style={{ ...card, padding:'18px 22px', marginBottom:20 }}>
-              <p className="sec-label" style={{ marginBottom:14 }}>Instalaciones</p>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                {[
-                  { emoji:'💡', label:'Iluminación LED' },
-                  { emoji:'🅿️', label:'Estacionamiento' },
-                  { emoji:'🚿', label:'Vestidores' },
-                  { emoji:'⛳', label:'Césped sintético' },
-                  { emoji:'🏆', label:'Cancha techada' },
-                  { emoji:'📶', label:'WiFi disponible' },
-                  { emoji:'🔒', label:'Seguridad 24/7' },
-                  { emoji:'🥤', label:'Cafetería' },
-                  { emoji:'♻️', label:'Cancha ecológica' },
-                ].map(a=>(
-                  <div key={a.label} className="amenity-tile" style={{
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:5,
-                    padding:'10px 6px', borderRadius:10,
-                    background:'rgba(255,255,255,0.02)',
-                    border:'1px solid rgba(255,255,255,0.055)',
-                    textAlign:'center',
-                    cursor:'default',
-                    transition:'border-color 0.18s, background 0.18s',
-                  }}>
-                    <span style={{ fontSize:18, lineHeight:1 }}>{a.emoji}</span>
-                    <span style={{ fontSize:9.5, fontWeight:600, color:'rgba(255,255,255,0.42)', lineHeight:1.3, letterSpacing:'0.01em' }}>{a.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Amenities section removed: it was a hardcoded 9-item list shown for
+                every court regardless of reality (invented data). Reinstate only
+                when owner_courts stores real amenities the owner selected. */}
 
             {/* ── Retos activos en esta cancha — live from DB ── */}
             {liveRetos.length > 0 && (
