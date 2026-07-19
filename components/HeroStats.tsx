@@ -48,21 +48,16 @@ export default function HeroStats() {
   const [animKey, setAnimKey] = useState(0);
 
   const load = useCallback(async () => {
-    const today      = new Date().toISOString().split("T")[0];
-    const sportVals  = sport === "futbol"
-      ? ["Fútbol", "Fútsal", "futbol"]
-      : ["Pádel", "padel", "Padel"];
-
-    const [usersRes, retosRes, courtsRes] = await Promise.all([
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("retos").select("id", { count: "exact", head: true }).eq("status", "open").gte("date", today),
-      supabase.from("owner_courts").select("id", { count: "exact", head: true }).eq("active", true).is("deleted_at", null).in("sport", sportVals),
-    ]);
+    // Real aggregate counts via SECURITY DEFINER RPC — the anon client can't
+    // count `profiles` directly (own-row RLS), so a plain query reads 0 players.
+    const { data } = await supabase.rpc("platform_stats");
+    const s = (data ?? {}) as Record<string, number>;
+    const courts = sport === "futbol" ? (s.courts_futbol ?? 0) : (s.courts_padel ?? 0);
 
     setStats([
-      { label: "jugadores registrados",                                       value: usersRes.count  ?? 0, suffix: "" },
-      { label: sport === "futbol" ? "retos activos"  : "partidas abiertas",  value: retosRes.count  ?? 0, suffix: "" },
-      { label: sport === "futbol" ? "canchas fútbol" : "canchas pádel",      value: courtsRes.count ?? 0, suffix: "" },
+      { label: "jugadores registrados",                                       value: s.players ?? 0,   suffix: "" },
+      { label: sport === "futbol" ? "retos activos"  : "partidas abiertas",  value: s.retos_open ?? 0, suffix: "" },
+      { label: sport === "futbol" ? "canchas fútbol" : "canchas pádel",      value: courts,           suffix: "" },
     ]);
     setAnimKey(k => k + 1);
   }, [sport]);
