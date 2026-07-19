@@ -37,7 +37,7 @@ const ACTIVE_STATUSES = [
 ];
 
 /* ─── Helpers ───────────────────────────────────────────────── */
-const TEAM_COLORS = ["#D7FF00","#4ADE80","#60A5FA","#F97316","#A78BFA","#FF6B6B","#FACC15"];
+const TEAM_COLORS = ["#3B82F6","#4ADE80","#60A5FA","#F97316","#A78BFA","#FF6B6B","#FACC15"];
 function teamColor(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
@@ -169,7 +169,7 @@ function MatchCard({ r }: { r: Reto }) {
         {/* Header: format + level + badges */}
         <div style={{ padding: "16px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 9.5, fontWeight: 900, padding: "3px 9px", borderRadius: 7, background: "var(--accent)", color: "#000", letterSpacing: "0.04em" }}>
+            <span style={{ fontSize: 9.5, fontWeight: 900, padding: "3px 9px", borderRadius: 7, background: "var(--accent)", color: "#fff", letterSpacing: "0.04em" }}>
               {format}
             </span>
             <span style={{ fontSize: 9.5, fontWeight: 600, padding: "3px 9px", borderRadius: 7, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.48)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -236,7 +236,7 @@ function MatchCard({ r }: { r: Reto }) {
                 <p style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(255,255,255,0.36)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 2 }}>
                   ¿Tu equipo?
                 </p>
-                <p style={{ fontSize: 9.5, color: "rgba(215,255,0,0.55)", fontWeight: 600, letterSpacing: "0.01em" }}>
+                <p style={{ fontSize: 9.5, color: "rgba(59, 130, 246,0.55)", fontWeight: 600, letterSpacing: "0.01em" }}>
                   Sin rival
                 </p>
               </>
@@ -266,12 +266,12 @@ function MatchCard({ r }: { r: Reto }) {
           display: "flex", flexDirection: "column", gap: 5,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: "rgba(255,255,255,0.42)", letterSpacing: "-0.01em" }}>
-            <MapPin size={9} style={{ color: "rgba(215,255,0,0.55)", flexShrink: 0 }} />
+            <MapPin size={9} style={{ color: "rgba(59, 130, 246,0.55)", flexShrink: 0 }} />
             <span style={{ fontWeight: 600 }}>{r.court_name ?? "–"}</span>
             {r.location && <><span style={{ opacity: 0.5 }}>·</span><span>{r.location}</span></>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: "rgba(255,255,255,0.42)", letterSpacing: "-0.01em" }}>
-            <CalendarDays size={9} style={{ color: "rgba(215,255,0,0.55)", flexShrink: 0 }} />
+            <CalendarDays size={9} style={{ color: "rgba(59, 130, 246,0.55)", flexShrink: 0 }} />
             <span>
               <strong style={{ color: "rgba(255,255,255,0.65)", fontWeight: 700 }}>{dateLabel(r)}</strong>
               {r.time && <> · {r.time}</>}
@@ -385,7 +385,7 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: "linear-gradient(145deg, #141414 0%, #0f0f0f 100%)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, width: "100%", maxWidth: 480, overflow: "hidden", boxShadow: "0 48px 100px rgba(0,0,0,0.70)", position: "relative" }}>
-        <div style={{ height: 3, background: "linear-gradient(90deg, #D7FF00 0%, rgba(215,255,0,0.15) 60%, transparent 100%)" }} />
+        <div style={{ height: 3, background: "linear-gradient(90deg, #3B82F6 0%, rgba(59, 130, 246,0.15) 60%, transparent 100%)" }} />
         <div style={{ padding: "28px 28px 32px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
@@ -402,7 +402,7 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
               <p style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3 }}>{r.team_name}</p>
               <p style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{format}</p>
             </div>
-            <div style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(215,255,0,0.06)", border: "1px solid rgba(215,255,0,0.12)" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(59, 130, 246,0.06)", border: "1px solid rgba(59, 130, 246,0.12)" }}>
               <span style={{ fontWeight: 900, fontSize: 12, color: "var(--accent)" }}>VS</span>
             </div>
             <div style={{ flex: 1, textAlign: "center" }}>
@@ -426,7 +426,7 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 13, marginBottom: 20, background: "rgba(215,255,0,0.04)", border: "1px solid rgba(215,255,0,0.10)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 13, marginBottom: 20, background: "rgba(59, 130, 246,0.04)", border: "1px solid rgba(59, 130, 246,0.10)" }}>
             <span style={{ fontSize: 13, color: "var(--text3)" }}>Total por equipo</span>
             <span style={{ fontWeight: 900, fontSize: 20, color: "var(--accent)", letterSpacing: "-0.02em" }}>{fmtColones(r.price ?? 0)}</span>
           </div>
@@ -442,7 +442,7 @@ function RetoModal({ r, onClose }: { r: Reto; onClose: () => void }) {
           )}
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onClose} style={{ flex: 1, padding: 13, borderRadius: 13, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--text3)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-            <button onClick={handleConfirm} disabled={saving} style={{ flex: 2, padding: 13, borderRadius: 13, background: saving ? "rgba(215,255,0,0.60)" : "var(--accent)", color: "#000", fontWeight: 800, fontSize: 14, border: "none", cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: "0 0 24px rgba(215,255,0,0.22)" }}>
+            <button onClick={handleConfirm} disabled={saving} style={{ flex: 2, padding: 13, borderRadius: 13, background: saving ? "rgba(59, 130, 246,0.60)" : "var(--accent)", color: "#fff", fontWeight: 800, fontSize: 14, border: "none", cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: "0 0 24px rgba(59, 130, 246,0.22)" }}>
               {saving ? "Confirmando…" : <><Zap size={14} fill="#000" /> Confirmar reto</>}
             </button>
           </div>

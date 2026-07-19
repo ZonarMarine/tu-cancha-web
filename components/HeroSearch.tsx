@@ -60,12 +60,12 @@ export default function HeroSearch() {
     <>
       <style>{`
         @keyframes idleGlow {
-          0%,100% { box-shadow: 0 0 0 0 rgba(215,255,0,0.00), 0 6px 24px rgba(0,0,0,0.30); }
-          50%     { box-shadow: 0 0 22px rgba(215,255,0,0.07), 0 6px 24px rgba(0,0,0,0.30); }
+          0%,100% { box-shadow: 0 0 0 0 rgba(59, 130, 246,0.00), 0 6px 24px rgba(0,0,0,0.30); }
+          50%     { box-shadow: 0 0 22px rgba(59, 130, 246,0.07), 0 6px 24px rgba(0,0,0,0.30); }
         }
         @keyframes focusGlow {
-          0%,100% { box-shadow: 0 0 0 4px rgba(215,255,0,0.07), 0 8px 32px rgba(0,0,0,0.35); }
-          50%     { box-shadow: 0 0 0 6px rgba(215,255,0,0.11), 0 8px 32px rgba(0,0,0,0.35); }
+          0%,100% { box-shadow: 0 0 0 4px rgba(59, 130, 246,0.07), 0 8px 32px rgba(0,0,0,0.35); }
+          50%     { box-shadow: 0 0 0 6px rgba(59, 130, 246,0.11), 0 8px 32px rgba(0,0,0,0.35); }
         }
         @keyframes stadiumSweep {
           0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0;   }
@@ -78,7 +78,7 @@ export default function HeroSearch() {
         .hero-search-input::placeholder { color: rgba(255,255,255,0); }
         .hero-search-input:focus        { outline: none; box-shadow: none; }
         .hero-search-input {
-          caret-color: #D7FF00;
+          caret-color: #3B82F6;
           -webkit-appearance: none;
           appearance: none;
           padding-top: 0 !important;
@@ -101,8 +101,8 @@ export default function HeroSearch() {
             ? 'rgba(255,255,255,0.075)'
             : 'rgba(255,255,255,0.042)',
           border: `1.5px solid ${
-            glowing  ? 'rgba(215,255,0,0.32)' :
-            active   ? 'rgba(215,255,0,0.16)' :
+            glowing  ? 'rgba(59, 130, 246,0.32)' :
+            active   ? 'rgba(59, 130, 246,0.16)' :
                        'rgba(255,255,255,0.09)'}`,
           borderRadius: 18,
           height: 56,
@@ -115,7 +115,7 @@ export default function HeroSearch() {
           position: 'relative', overflow: 'hidden',
           /* Depth shadow */
           boxShadow: glowing
-            ? '0 0 0 4px rgba(215,255,0,0.07), 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.25)'
+            ? '0 0 0 4px rgba(59, 130, 246,0.07), 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.25)'
             : 'inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.20), 0 6px 24px rgba(0,0,0,0.30)',
         }}>
 
@@ -124,7 +124,7 @@ export default function HeroSearch() {
             <div style={{
               position: 'absolute', top: 0, left: 0, bottom: 0,
               width: '35%',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(215,255,0,0.06) 40%, rgba(255,255,255,0.09) 55%, rgba(215,255,0,0.04) 70%, transparent 100%)',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246,0.06) 40%, rgba(255,255,255,0.09) 55%, rgba(59, 130, 246,0.04) 70%, transparent 100%)',
               animation: 'stadiumSweep 1.4s ease-in-out forwards',
               pointerEvents: 'none', zIndex: 0,
             }} />
@@ -132,9 +132,9 @@ export default function HeroSearch() {
 
           {/* Search icon */}
           <Search size={15} style={{
-            color: glowing ? '#D7FF00' : active ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)',
+            color: glowing ? '#3B82F6' : active ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)',
             flexShrink: 0, transition: 'color 0.20s ease', position: 'relative', zIndex: 1,
-            filter: glowing ? 'drop-shadow(0 0 4px rgba(215,255,0,0.50))' : 'none',
+            filter: glowing ? 'drop-shadow(0 0 4px rgba(59, 130, 246,0.50))' : 'none',
           }} />
 
           {/* Input + floating placeholder */}
@@ -173,14 +173,14 @@ export default function HeroSearch() {
             style={{
               padding: '11px 24px', borderRadius: 13,
               background: active
-                ? 'linear-gradient(135deg, #e8ff3a 0%, #D7FF00 60%, #c8ef00 100%)'
+                ? 'linear-gradient(135deg, #5AB8FF 0%, #3B82F6 60%, #35C7F5 100%)'
                 : 'var(--accent)',
-              color: '#000',
+              color: '#fff',
               fontWeight: 800, fontSize: 13, border: 'none',
               cursor: 'pointer', flexShrink: 0, letterSpacing: '-0.01em',
               boxShadow: active
-                ? '0 0 28px rgba(215,255,0,0.30), 0 2px 8px rgba(0,0,0,0.30)'
-                : '0 0 16px rgba(215,255,0,0.14), 0 2px 6px rgba(0,0,0,0.25)',
+                ? '0 0 28px rgba(59, 130, 246,0.30), 0 2px 8px rgba(0,0,0,0.30)'
+                : '0 0 16px rgba(59, 130, 246,0.14), 0 2px 6px rgba(0,0,0,0.25)',
               transition: 'all 0.18s ease',
               position: 'relative', zIndex: 1,
               transform: active ? 'scale(1.02)' : 'scale(1)',

@@ -25,14 +25,14 @@ const STATUS: Record<string, { label: string; color: string; bg: string; dot: st
 };
 
 const STATS = [
-  { key: 'stat_atk', label: 'Ataque',  Icon: Zap,        color: '#D7FF00' },
+  { key: 'stat_atk', label: 'Ataque',  Icon: Zap,        color: '#3B82F6' },
   { key: 'stat_def', label: 'Defensa', Icon: Shield,     color: '#60A5FA' },
   { key: 'stat_str', label: 'Fuerza',  Icon: TrendingUp, color: '#F97316' },
   { key: 'stat_skl', label: 'Técnica', Icon: Target,     color: '#A78BFA' },
 ];
 
-const BOOKING_ICONS   = ['rgba(215,255,0,0.08)', 'rgba(96,165,250,0.08)', 'rgba(249,115,22,0.08)', 'rgba(167,139,250,0.08)'];
-const BOOKING_BORDERS = ['rgba(215,255,0,0.15)', 'rgba(96,165,250,0.15)', 'rgba(249,115,22,0.15)', 'rgba(167,139,250,0.15)'];
+const BOOKING_ICONS   = ['rgba(59, 130, 246,0.08)', 'rgba(96,165,250,0.08)', 'rgba(249,115,22,0.08)', 'rgba(167,139,250,0.08)'];
+const BOOKING_BORDERS = ['rgba(59, 130, 246,0.15)', 'rgba(96,165,250,0.15)', 'rgba(249,115,22,0.15)', 'rgba(167,139,250,0.15)'];
 
 const CARD = {
   borderRadius: 18,
@@ -165,8 +165,8 @@ function EditModal({
   return (
     <>
       <style>{`
-        .modal-input:focus { border-color: rgba(215,255,0,0.35) !important; }
-        .modal-stat-input:focus { border-color: rgba(215,255,0,0.35) !important; }
+        .modal-input:focus { border-color: rgba(59, 130, 246,0.35) !important; }
+        .modal-stat-input:focus { border-color: rgba(59, 130, 246,0.35) !important; }
         @keyframes modal-in { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
       `}</style>
 
@@ -242,7 +242,7 @@ function EditModal({
                   {/* Outer glow */}
                   <div style={{
                     position: 'absolute', inset: -5, borderRadius: 24,
-                    background: 'linear-gradient(145deg, rgba(215,255,0,0.2), rgba(180,220,0,0.04), rgba(215,255,0,0.16))',
+                    background: 'linear-gradient(145deg, rgba(59, 130, 246,0.2), rgba(180,220,0,0.04), rgba(59, 130, 246,0.16))',
                     filter: 'blur(7px)', pointerEvents: 'none',
                   }} />
                   {/* Gold frame */}
@@ -346,7 +346,7 @@ function EditModal({
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {([
                     { key: 'online',    label: 'En línea',         color: '#4ADE80' },
-                    { key: 'searching', label: 'Buscando partido', color: '#D7FF00' },
+                    { key: 'searching', label: 'Buscando partido', color: '#3B82F6' },
                     { key: 'available', label: 'Disponible',       color: '#60A5FA' },
                     { key: 'playing',   label: 'Jugando',          color: '#F97316' },
                     { key: 'offline',   label: 'Fuera de línea',   color: 'rgba(255,255,255,0.30)' },
@@ -379,7 +379,7 @@ function EditModal({
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
-                    { label: 'Ataque',  color: '#D7FF00', val: statAtk, set: setStatAtk },
+                    { label: 'Ataque',  color: '#3B82F6', val: statAtk, set: setStatAtk },
                     { label: 'Defensa', color: '#60A5FA', val: statDef, set: setStatDef },
                     { label: 'Fuerza',  color: '#F97316', val: statStr, set: setStatStr },
                     { label: 'Técnica', color: '#A78BFA', val: statSkl, set: setStatSkl },
@@ -432,8 +432,8 @@ function EditModal({
                 disabled={saving}
                 style={{
                   flex: 2, padding: '12px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                  background: saving ? 'rgba(215,255,0,0.6)' : 'var(--accent)',
-                  color: '#000',
+                  background: saving ? 'rgba(59, 130, 246,0.6)' : 'var(--accent)',
+                  color: '#fff',
                   border: 'none', cursor: saving ? 'default' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                   transition: 'background 0.18s',
@@ -459,7 +459,7 @@ function EditModal({
 const TEAM_FORMATS = ['5v5', '7v7', '11v11'];
 const TEAM_LEVELS  = ['Principiante', 'Intermedio', 'Avanzado'];
 const TEAM_COLORS  = [
-  { hex: '#D7FF00', label: 'Lima'     },
+  { hex: '#3B82F6', label: 'Lima'     },
   { hex: '#4ADE80', label: 'Verde'    },
   { hex: '#60A5FA', label: 'Azul'     },
   { hex: '#F97316', label: 'Naranja'  },
@@ -484,7 +484,7 @@ function CreateTeamModal({
     try { return localStorage.getItem('tc_team_level') ?? 'Intermedio'; } catch { return 'Intermedio'; }
   });
   const [color,   setColor]   = useState<string>(() => {
-    try { return localStorage.getItem('tc_team_color') ?? '#D7FF00'; } catch { return '#D7FF00'; }
+    try { return localStorage.getItem('tc_team_color') ?? '#3B82F6'; } catch { return '#3B82F6'; }
   });
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
@@ -543,7 +543,7 @@ function CreateTeamModal({
   return (
     <>
       <style>{`
-        .team-input:focus  { border-color: rgba(215,255,0,0.35) !important; }
+        .team-input:focus  { border-color: rgba(59, 130, 246,0.35) !important; }
         .color-swatch:hover { transform: scale(1.12); }
         @keyframes modal-in { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
       `}</style>
@@ -572,7 +572,7 @@ function CreateTeamModal({
         }}>
 
           {/* Accent top line */}
-          <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(215,255,0,0.6) 0%, rgba(215,255,0,0.08) 60%, transparent 100%)' }} />
+          <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(59, 130, 246,0.6) 0%, rgba(59, 130, 246,0.08) 60%, transparent 100%)' }} />
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0' }}>
@@ -653,7 +653,7 @@ function CreateTeamModal({
                       background: active ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
                       color:      active ? '#000'           : 'rgba(255,255,255,0.40)',
                       outline:    active ? 'none'           : '1px solid rgba(255,255,255,0.07)',
-                      boxShadow:  active ? '0 0 14px rgba(215,255,0,0.14)' : 'none',
+                      boxShadow:  active ? '0 0 14px rgba(59, 130, 246,0.14)' : 'none',
                       transition: 'all 0.14s ease',
                     }}>{f}</button>
                   );
@@ -673,9 +673,9 @@ function CreateTeamModal({
                     <button key={l} type="button" onClick={() => setLevel(l)} style={{
                       flex: 1, padding: '8px 0', borderRadius: 11, cursor: 'pointer', border: 'none',
                       fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em',
-                      background: active ? 'rgba(215,255,0,0.10)' : 'transparent',
+                      background: active ? 'rgba(59, 130, 246,0.10)' : 'transparent',
                       color:      active ? 'var(--accent)'         : 'rgba(255,255,255,0.35)',
-                      outline:    active ? '1px solid rgba(215,255,0,0.22)' : '1px solid rgba(255,255,255,0.06)',
+                      outline:    active ? '1px solid rgba(59, 130, 246,0.22)' : '1px solid rgba(255,255,255,0.06)',
                       transition: 'all 0.14s ease',
                     }}>{l}</button>
                   );
@@ -730,8 +730,8 @@ function CreateTeamModal({
               </button>
               <button onClick={handleSave} disabled={saving} style={{
                 flex: 2, padding: '12px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                background: saving ? 'rgba(215,255,0,0.55)' : 'var(--accent)',
-                color: '#000', border: 'none', cursor: saving ? 'default' : 'pointer',
+                background: saving ? 'rgba(59, 130, 246,0.55)' : 'var(--accent)',
+                color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 transition: 'background 0.18s', letterSpacing: '-0.01em',
               }}>
@@ -958,7 +958,7 @@ function BookingDetailModal({
 
           {/* ── Edit panel ── */}
           {editMode && (
-            <div style={{margin:'14px 20px 0',borderRadius:14,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(215,255,0,0.12)',padding:'16px 16px 14px'}}>
+            <div style={{margin:'14px 20px 0',borderRadius:14,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(59, 130, 246,0.12)',padding:'16px 16px 14px'}}>
               <p style={{fontSize:12,fontWeight:800,color:'rgba(255,255,255,0.55)',letterSpacing:'0.04em',textTransform:'uppercase',margin:'0 0 12px'}}>Editar reserva</p>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
                 {/* Date */}
@@ -1028,9 +1028,9 @@ function BookingDetailModal({
                 }}>Cancelar</button>
                 <button onClick={handleSaveEdit} disabled={editSaving||editDone} style={{
                   flex:2,padding:'10px',borderRadius:10,cursor:editSaving||editDone?'default':'pointer',
-                  background: editDone ? 'rgba(74,222,128,0.15)' : 'rgba(215,255,0,0.12)',
-                  border: `1px solid ${editDone ? 'rgba(74,222,128,0.30)' : 'rgba(215,255,0,0.22)'}`,
-                  color: editDone ? '#4ADE80' : '#D7FF00',
+                  background: editDone ? 'rgba(74,222,128,0.15)' : 'rgba(59, 130, 246,0.12)',
+                  border: `1px solid ${editDone ? 'rgba(74,222,128,0.30)' : 'rgba(59, 130, 246,0.22)'}`,
+                  color: editDone ? '#4ADE80' : '#3B82F6',
                   fontSize:12.5,fontWeight:700,
                   display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                 }}>
@@ -1054,7 +1054,7 @@ function BookingDetailModal({
                 background:'rgba(255,255,255,0.04)',
                 display:'flex',flexDirection:'column',alignItems:'center',gap:7,
               }}>
-                <div style={{width:34,height:34,borderRadius:10,background:'rgba(215,255,0,0.09)',border:'1px solid rgba(215,255,0,0.16)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{width:34,height:34,borderRadius:10,background:'rgba(59, 130, 246,0.09)',border:'1px solid rgba(59, 130, 246,0.16)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <Edit2 size={14} color="var(--accent)"/>
                 </div>
                 <span style={{fontSize:10.5,fontWeight:700,color:'rgba(255,255,255,0.55)',letterSpacing:'-0.01em'}}>Editar</span>
@@ -1302,10 +1302,10 @@ function InvitePlayersModal({
             {results.map(player => {
               const isInvited = invited.has(player.id);
               const lvl = level(player);
-              const lvlColor = lvl === 'Élite' ? '#D7FF00' : lvl === 'Semi-Pro' ? '#60A5FA' : lvl === 'Intermedio' ? '#F97316' : 'rgba(255,255,255,0.40)';
+              const lvlColor = lvl === 'Élite' ? '#3B82F6' : lvl === 'Semi-Pro' ? '#60A5FA' : lvl === 'Intermedio' ? '#F97316' : 'rgba(255,255,255,0.40)';
               const statusMeta: Record<string, { label: string; color: string; pulse?: boolean }> = {
                 online:     { label: 'En línea',          color: '#4ADE80' },
-                searching:  { label: 'Buscando partido',  color: '#D7FF00', pulse: true },
+                searching:  { label: 'Buscando partido',  color: '#3B82F6', pulse: true },
                 available:  { label: 'Disponible',        color: '#60A5FA' },
                 playing:    { label: 'Jugando ahora',     color: '#F97316' },
                 offline:    { label: 'Fuera de línea',    color: 'rgba(255,255,255,0.20)' },
@@ -1493,7 +1493,7 @@ export default function PerfilPage() {
   return (
     <div style={{
       minHeight: '100svh', paddingTop: 64, background: 'var(--bg)',
-      backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(215,255,0,0.03) 0%, transparent 60%)',
+      backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246,0.03) 0%, transparent 60%)',
       opacity: ready ? 1 : 0, transition: 'opacity 0.4s ease',
     }}>
 
@@ -1516,9 +1516,9 @@ export default function PerfilPage() {
         .stat-row { transition: background 0.15s, border-color 0.15s, transform 0.15s; }
         .stat-row:hover { background: rgba(255,255,255,0.035) !important; border-color: rgba(255,255,255,0.1) !important; transform: translateX(2px); }
         .booking-row { transition: background 0.15s, border-color 0.15s, box-shadow 0.18s, transform 0.15s; }
-        .booking-row:hover { border-color: rgba(215,255,0,0.18) !important; transform: translateY(-2px) !important; box-shadow: 0 10px 36px rgba(0,0,0,0.5) !important; background: linear-gradient(145deg,#1c1c1c,#151515) !important; }
+        .booking-row:hover { border-color: rgba(59, 130, 246,0.18) !important; transform: translateY(-2px) !important; box-shadow: 0 10px 36px rgba(0,0,0,0.5) !important; background: linear-gradient(145deg,#1c1c1c,#151515) !important; }
         .card-fade { animation: fade-up 0.45s ease both; }
-        .btn-edit:hover  { border-color: rgba(215,255,0,0.3) !important; color: var(--text) !important; background: rgba(215,255,0,0.05) !important; }
+        .btn-edit:hover  { border-color: rgba(59, 130, 246,0.3) !important; color: var(--text) !important; background: rgba(59, 130, 246,0.05) !important; }
         .btn-logout:hover { color: rgba(255,255,255,0.55) !important; }
         .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.32); text-transform: uppercase; }
       `}</style>
@@ -1556,7 +1556,7 @@ export default function PerfilPage() {
       {inviteOpen && (
         <InvitePlayersModal
           teamName={profile?.team ?? ''}
-          teamColor={profile?.team_color ?? '#D7FF00'}
+          teamColor={profile?.team_color ?? '#3B82F6'}
           onClose={() => setInviteOpen(false)}
         />
       )}
@@ -1576,8 +1576,8 @@ export default function PerfilPage() {
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <div style={{
                   width: 34, height: 34, borderRadius: 10, overflow: 'hidden',
-                  border: '1.5px solid rgba(215,255,0,0.20)',
-                  background: 'linear-gradient(145deg, rgba(215,255,0,0.10), rgba(215,255,0,0.03))',
+                  border: '1.5px solid rgba(59, 130, 246,0.20)',
+                  background: 'linear-gradient(145deg, rgba(59, 130, 246,0.10), rgba(59, 130, 246,0.03))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, fontWeight: 900, color: 'var(--accent)',
                 }}>
@@ -1603,7 +1603,7 @@ export default function PerfilPage() {
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.70)', letterSpacing: '-0.025em' }}>
                     {profile?.name ?? 'Usuario'}
                   </span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 99, background: 'rgba(215,255,0,0.07)', color: 'rgba(215,255,0,0.60)', border: '1px solid rgba(215,255,0,0.12)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 99, background: 'rgba(59, 130, 246,0.07)', color: 'rgba(59, 130, 246,0.60)', border: '1px solid rgba(59, 130, 246,0.12)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                     {level}
                   </span>
                 </div>
@@ -1653,7 +1653,7 @@ export default function PerfilPage() {
       {/* ── Club Identity Banner — the real page identity ── */}
       <div className="container club-banner-container" style={{ padding: '16px 40px 0', marginBottom: 0 }}>
         {(() => {
-          const teamColor  = profile?.team_color ?? '#D7FF00';
+          const teamColor  = profile?.team_color ?? '#3B82F6';
           const teamInitials = profile?.team
             ? profile.team.split(' ').map((n: string) => n[0]).join('').slice(0,2).toUpperCase()
             : '??';
@@ -1668,14 +1668,14 @@ export default function PerfilPage() {
             <div className="card-fade" style={{
               borderRadius: 20, overflow: 'hidden', position: 'relative',
               background: 'linear-gradient(160deg,#141414,#0f0f0f)',
-              border: '1px solid rgba(215,255,0,0.08)',
+              border: '1px solid rgba(59, 130, 246,0.08)',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.35)',
               marginBottom: 16,
             }}>
               <div style={{ position:'absolute',inset:0,opacity:0.016, backgroundImage:'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)', backgroundSize:'22px 22px', pointerEvents:'none' }}/>
               <div style={{ position:'relative', display:'flex', alignItems:'center', gap:24, padding:'28px 28px' }}>
-                <div style={{ width:72, height:72, borderRadius:18, flexShrink:0, background:'rgba(215,255,0,0.05)', border:'1.5px dashed rgba(215,255,0,0.20)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <Users size={28} color="rgba(215,255,0,0.35)"/>
+                <div style={{ width:72, height:72, borderRadius:18, flexShrink:0, background:'rgba(59, 130, 246,0.05)', border:'1.5px dashed rgba(59, 130, 246,0.20)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Users size={28} color="rgba(59, 130, 246,0.35)"/>
                 </div>
                 <div style={{ flex:1 }}>
                   <p style={{ fontSize:18, fontWeight:900, letterSpacing:'-0.04em', marginBottom:5 }}>Sin club todavía</p>
@@ -1686,9 +1686,9 @@ export default function PerfilPage() {
                 <button onClick={() => setTeamOpen(true)} style={{
                   flexShrink:0, display:'inline-flex', alignItems:'center', gap:7,
                   padding:'13px 24px', borderRadius:13, cursor:'pointer', border:'none',
-                  background:'linear-gradient(135deg,#e8ff3a,#D7FF00,#c8ef00)', color:'#000',
+                  background:'linear-gradient(135deg,#5AB8FF,#3B82F6,#35C7F5)', color:'#fff',
                   fontSize:13, fontWeight:800, letterSpacing:'-0.02em',
-                  boxShadow:'0 0 28px rgba(215,255,0,0.20)',
+                  boxShadow:'0 0 28px rgba(59, 130, 246,0.20)',
                 }}>
                   <Plus size={14}/> Crear mi club
                 </button>
@@ -1734,7 +1734,7 @@ export default function PerfilPage() {
                 .squad-avatar:hover   { transform:scale(1.12) !important; filter:brightness(1.18) !important; }
                 .action-cell          { transition: background 0.20s ease, transform 0.20s cubic-bezier(0.34,1.1,0.64,1), box-shadow 0.20s ease !important; }
                 .action-cell:hover    { transform: translateY(-1px) !important; }
-                .action-cell-primary:hover { background:rgba(215,255,0,0.07) !important; box-shadow:0 4px 18px rgba(215,255,0,0.10) !important; }
+                .action-cell-primary:hover { background:rgba(59, 130, 246,0.07) !important; box-shadow:0 4px 18px rgba(59, 130, 246,0.10) !important; }
                 .action-cell-secondary:hover { background:rgba(255,255,255,0.05) !important; }
               `}</style>
 
@@ -1849,7 +1849,7 @@ export default function PerfilPage() {
                   cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
                   color:'rgba(255,255,255,0.25)', transition:'all 0.15s',
                 }}
-                onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(215,255,0,0.09)';(e.currentTarget as HTMLButtonElement).style.color='#D7FF00';}}
+                onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(59, 130, 246,0.09)';(e.currentTarget as HTMLButtonElement).style.color='#3B82F6';}}
                 onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(255,255,255,0.04)';(e.currentTarget as HTMLButtonElement).style.color='rgba(255,255,255,0.25)';}}>
                   <Edit2 size={11}/>
                 </button>
@@ -1989,15 +1989,15 @@ export default function PerfilPage() {
                     className="action-cell action-cell-primary"
                     onClick={() => setInviteOpen(true)}
                     style={{
-                      background:'rgba(215,255,0,0.038)', border:'none', cursor:'pointer',
+                      background:'rgba(59, 130, 246,0.038)', border:'none', cursor:'pointer',
                       display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:5,
                       padding:'15px 8px',
                     }}
                   >
-                    <span style={{ fontSize:16, lineHeight:1, filter:'drop-shadow(0 0 4px rgba(215,255,0,0.35))' }}>👥</span>
+                    <span style={{ fontSize:16, lineHeight:1, filter:'drop-shadow(0 0 4px rgba(59, 130, 246,0.35))' }}>👥</span>
                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
-                      <span style={{ fontSize:9.5, fontWeight:800, color:'rgba(215,255,0,0.80)', letterSpacing:'-0.01em', lineHeight:1.4 }}>Invitar</span>
-                      <span style={{ fontSize:8, fontWeight:500, color:'rgba(215,255,0,0.42)', letterSpacing:'-0.01em', lineHeight:1.2 }}>jugadores</span>
+                      <span style={{ fontSize:9.5, fontWeight:800, color:'rgba(59, 130, 246,0.80)', letterSpacing:'-0.01em', lineHeight:1.4 }}>Invitar</span>
+                      <span style={{ fontSize:8, fontWeight:500, color:'rgba(59, 130, 246,0.42)', letterSpacing:'-0.01em', lineHeight:1.2 }}>jugadores</span>
                     </div>
                   </button>
                   {/* ── Compartir ── */}
@@ -2087,7 +2087,7 @@ export default function PerfilPage() {
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)' }}>faltan {progress.toNext} XP → Nivel {progress.level + 1}</span>
             </div>
             <div style={{ height: 9, borderRadius: 9, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress.pct * 100}%`, borderRadius: 9, background: 'linear-gradient(90deg, #EAFF6B, #B8DE00)', boxShadow: '0 0 10px rgba(215,255,0,0.4)' }} />
+              <div style={{ height: '100%', width: `${progress.pct * 100}%`, borderRadius: 9, background: 'linear-gradient(90deg, #7FD8FF, #B8DE00)', boxShadow: '0 0 10px rgba(59, 130, 246,0.4)' }} />
             </div>
           </div>
         </div>
@@ -2097,7 +2097,7 @@ export default function PerfilPage() {
       <div className="container" style={{ padding: '16px 40px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <span className="section-label">Logros</span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', padding: '3px 9px', borderRadius: 8, background: 'rgba(215,255,0,0.08)', border: '1px solid rgba(215,255,0,0.16)' }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', padding: '3px 9px', borderRadius: 8, background: 'rgba(59, 130, 246,0.08)', border: '1px solid rgba(59, 130, 246,0.16)' }}>
             {achievements.earned}/{achievements.total}
           </span>
         </div>
@@ -2107,13 +2107,13 @@ export default function PerfilPage() {
             return (
               <div key={a.key} style={{
                 display: 'flex', alignItems: 'center', gap: 11, padding: '12px 13px', borderRadius: 14,
-                background: a.earned ? 'rgba(215,255,0,0.06)' : 'var(--surface)',
-                border: `1px solid ${a.earned ? 'rgba(215,255,0,0.18)' : 'rgba(255,255,255,0.05)'}`,
+                background: a.earned ? 'rgba(59, 130, 246,0.06)' : 'var(--surface)',
+                border: `1px solid ${a.earned ? 'rgba(59, 130, 246,0.18)' : 'rgba(255,255,255,0.05)'}`,
               }}>
                 <div style={{
                   width: 38, height: 38, borderRadius: 11, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: a.earned ? 'linear-gradient(145deg,#EAFF6B,#B8DE00)' : 'rgba(255,255,255,0.05)',
+                  background: a.earned ? 'linear-gradient(145deg,#7FD8FF,#B8DE00)' : 'rgba(255,255,255,0.05)',
                 }}>
                   <Icon size={17} color={a.earned ? '#0c0d06' : 'var(--text3)'} />
                 </div>
@@ -2226,8 +2226,8 @@ export default function PerfilPage() {
             {/* CTA */}
             <div className="card-fade" style={{
               borderRadius: 14, padding: '14px 16px', animationDelay: '0.18s',
-              background: 'linear-gradient(145deg, rgba(215,255,0,0.055), rgba(215,255,0,0.018))',
-              border: '1px solid rgba(215,255,0,0.10)',
+              background: 'linear-gradient(145deg, rgba(59, 130, 246,0.055), rgba(59, 130, 246,0.018))',
+              border: '1px solid rgba(59, 130, 246,0.10)',
             }}>
               <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--accent)', marginBottom: 2, letterSpacing: '-0.01em' }}>
                 ¿Listo para jugar?
@@ -2237,7 +2237,7 @@ export default function PerfilPage() {
               </p>
               <Link href="/explorar" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 11, fontWeight: 700, color: '#000',
+                fontSize: 11, fontWeight: 700, color: '#fff',
                 background: 'var(--accent)', padding: '6px 13px',
                 borderRadius: 7, textDecoration: 'none', letterSpacing: '-0.01em',
               }}>
@@ -2257,8 +2257,8 @@ export default function PerfilPage() {
                 {bookings.length > 0 && (
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 99,
-                    background: 'rgba(215,255,0,0.07)', color: 'rgba(215,255,0,0.7)',
-                    border: '1px solid rgba(215,255,0,0.14)',
+                    background: 'rgba(59, 130, 246,0.07)', color: 'rgba(59, 130, 246,0.7)',
+                    border: '1px solid rgba(59, 130, 246,0.14)',
                   }}>{bookings.length}</span>
                 )}
               </div>
@@ -2294,7 +2294,7 @@ export default function PerfilPage() {
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '13px 16px', borderRadius: 13, gap: 12, cursor: 'pointer',
                           background: isHov ? 'linear-gradient(145deg,#1a1a1a,#141414)' : 'linear-gradient(145deg,#161616,#111111)',
-                          border: isHov ? '1px solid rgba(215,255,0,0.12)' : '1px solid rgba(255,255,255,0.07)',
+                          border: isHov ? '1px solid rgba(59, 130, 246,0.12)' : '1px solid rgba(255,255,255,0.07)',
                           boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
                         }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
@@ -2345,15 +2345,15 @@ export default function PerfilPage() {
                   <span className="section-label">Mis Retos</span>
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 99,
-                    background: 'rgba(215,255,0,0.07)', color: 'rgba(215,255,0,0.7)',
-                    border: '1px solid rgba(215,255,0,0.14)',
+                    background: 'rgba(59, 130, 246,0.07)', color: 'rgba(59, 130, 246,0.7)',
+                    border: '1px solid rgba(59, 130, 246,0.14)',
                   }}>{retos.length}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {retos.map(r => {
                     const st = r.status ?? 'open';
                     const stMeta =
-                      st === 'open'      ? { label: 'Abierto',   color: 'var(--accent)', bg: 'rgba(215,255,0,0.08)',  border: 'rgba(215,255,0,0.18)' } :
+                      st === 'open'      ? { label: 'Abierto',   color: 'var(--accent)', bg: 'rgba(59, 130, 246,0.08)',  border: 'rgba(59, 130, 246,0.18)' } :
                       st === 'accepted'  ? { label: 'Aceptado',  color: '#4ADE80',       bg: 'rgba(74,222,128,0.10)', border: 'rgba(74,222,128,0.22)' } :
                       st === 'cancelled' ? { label: 'Cancelado', color: '#FF6B6B',       bg: 'rgba(255,107,107,0.10)',border: 'rgba(255,107,107,0.22)' } :
                                            { label: 'Expirado',  color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)' };
@@ -2371,7 +2371,7 @@ export default function PerfilPage() {
                           <div style={{
                             width: 36, height: 36, borderRadius: 10, flexShrink: 0,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-                            background: 'rgba(215,255,0,0.06)', border: '1px solid rgba(215,255,0,0.12)',
+                            background: 'rgba(59, 130, 246,0.06)', border: '1px solid rgba(59, 130, 246,0.12)',
                           }}>{sportEmoji}</div>
                           <div style={{ minWidth: 0 }}>
                             <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 2, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -2421,14 +2421,14 @@ export default function PerfilPage() {
             <div className="card-fade" style={{ animationDelay: '0.13s' }}>
               <span className="section-label" style={{ display: 'block', marginBottom: 10 }}>Historial de Partidos</span>
               <div style={{ ...CARD, overflow: 'hidden' }}>
-                <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, rgba(215,255,0,0.28) 50%, transparent 100%)' }} />
+                <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246,0.28) 50%, transparent 100%)' }} />
                 <div style={{ padding: '26px 24px', textAlign: 'center' }}>
                   <div style={{
                     width: 52, height: 52, borderRadius: 16, margin: '0 auto 14px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-                    background: 'linear-gradient(145deg, rgba(215,255,0,0.09), rgba(215,255,0,0.02))',
-                    border: '1px solid rgba(215,255,0,0.13)',
-                    boxShadow: '0 0 28px rgba(215,255,0,0.05)',
+                    background: 'linear-gradient(145deg, rgba(59, 130, 246,0.09), rgba(59, 130, 246,0.02))',
+                    border: '1px solid rgba(59, 130, 246,0.13)',
+                    boxShadow: '0 0 28px rgba(59, 130, 246,0.05)',
                   }}>⚽</div>
                   <p style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 5 }}>Sin partidos aún</p>
                   <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.32)', marginBottom: 18, lineHeight: 1.6, maxWidth: 240, margin: '0 auto 18px' }}>

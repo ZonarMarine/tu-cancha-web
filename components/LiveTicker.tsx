@@ -137,9 +137,9 @@ export default function LiveTicker() {
     <>
       <style>{`
         @keyframes tickerPulse {
-          0%   { box-shadow: 0 0 0 0 rgba(215,255,0,0.00); }
-          30%  { box-shadow: 0 0 0 6px rgba(215,255,0,0.10); }
-          100% { box-shadow: 0 0 0 0 rgba(215,255,0,0.00); }
+          0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246,0.00); }
+          30%  { box-shadow: 0 0 0 6px rgba(59, 130, 246,0.10); }
+          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246,0.00); }
         }
         @keyframes dotPing {
           0%, 100% { transform: scale(1);   opacity: 1;   }
@@ -158,7 +158,7 @@ export default function LiveTicker() {
         boxShadow: "0 1px 0 rgba(255,255,255,0.03) inset",
         animation: pulse ? "tickerPulse 0.7s ease-out" : "none",
         transition: "border-color 0.3s ease",
-        borderColor: pulse ? "rgba(215,255,0,0.14)" : "rgba(255,255,255,0.07)",
+        borderColor: pulse ? "rgba(59, 130, 246,0.14)" : "rgba(255,255,255,0.07)",
       }}>
 
         {/* Live dot */}
@@ -166,7 +166,7 @@ export default function LiveTicker() {
           width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
           display: "inline-block",
           backgroundColor: e.hot ? "var(--accent)" : "rgba(74,222,128,0.85)",
-          boxShadow: e.hot ? "0 0 6px rgba(215,255,0,0.55)" : "0 0 5px rgba(74,222,128,0.45)",
+          boxShadow: e.hot ? "0 0 6px rgba(59, 130, 246,0.55)" : "0 0 5px rgba(74,222,128,0.45)",
           animation: "dotPing 2s ease-in-out infinite",
           transition: "background-color 0.4s ease, box-shadow 0.4s ease",
         }} />
@@ -192,7 +192,7 @@ export default function LiveTicker() {
 
         {/* Timestamp */}
         <span style={{
-          fontSize: 10.5, color: e.hot ? "rgba(215,255,0,0.55)" : "var(--text3)",
+          fontSize: 10.5, color: e.hot ? "rgba(59, 130, 246,0.55)" : "var(--text3)",
           flexShrink: 0, letterSpacing: "-0.01em", fontWeight: e.hot ? 600 : 400,
           opacity:   phase === "out" ? 0 : 1,
           transition: phase === "out" ? "opacity 0.18s ease" : "opacity 0.32s ease 0.10s",

@@ -17,7 +17,7 @@ type Booking = {
 };
 
 // Deterministic color from court name
-const COURT_COLORS = ["#D7FF00","#60A5FA","#4ADE80","#F97316","#A78BFA","#FACC15","#FF6B6B"];
+const COURT_COLORS = ["#3B82F6","#60A5FA","#4ADE80","#F97316","#A78BFA","#FACC15","#FF6B6B"];
 function courtColor(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
@@ -151,7 +151,7 @@ export default function CalendarioPage() {
           {[
             { label: "Reservas",   value: String(totalBookings),   color: "rgba(255,255,255,0.70)" },
             { label: "Confirmadas",value: String(confirmedCount),  color: "#34D399" },
-            { label: "Ingresos",   value: totalRevenue > 0 ? `₡${(totalRevenue/1000).toFixed(0)}k` : "₡0", color: "#D7FF00" },
+            { label: "Ingresos",   value: totalRevenue > 0 ? `₡${(totalRevenue/1000).toFixed(0)}k` : "₡0", color: "#3B82F6" },
           ].map(s => (
             <div key={s.label} style={{
               padding: "10px 16px", borderRadius: 10,
@@ -214,15 +214,15 @@ export default function CalendarioPage() {
                     onClick={() => setSelected(day)}
                     style={{
                       aspectRatio: "1", borderRadius: 10, padding: "6px",
-                      background: isSelected ? "rgba(215,255,0,0.1)" : isToday ? "rgba(255,255,255,0.04)" : "transparent",
-                      border: isSelected ? "1px solid rgba(215,255,0,0.35)" : isToday ? "1px solid rgba(255,255,255,0.1)" : "1px solid transparent",
+                      background: isSelected ? "rgba(59, 130, 246,0.1)" : isToday ? "rgba(255,255,255,0.04)" : "transparent",
+                      border: isSelected ? "1px solid rgba(59, 130, 246,0.35)" : isToday ? "1px solid rgba(255,255,255,0.1)" : "1px solid transparent",
                       transition: "all 0.15s",
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                     }}
                   >
                     <span style={{
                       fontSize: 11.5, fontWeight: isToday ? 800 : 500,
-                      color: isSelected ? "#D7FF00" : isToday ? "#fff" : "rgba(255,255,255,0.45)",
+                      color: isSelected ? "#3B82F6" : isToday ? "#fff" : "rgba(255,255,255,0.45)",
                     }}>{day}</span>
                     {/* Booking dots */}
                     <div style={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center" }}>
@@ -286,7 +286,7 @@ export default function CalendarioPage() {
                         {b.player_name ? ` · ${b.player_name}` : ""}
                       </div>
                       {b.total_price != null && b.total_price > 0 && (
-                        <div style={{ fontSize: 10.5, color: "#D7FF00", fontWeight: 700, marginTop: 2 }}>
+                        <div style={{ fontSize: 10.5, color: "#3B82F6", fontWeight: 700, marginTop: 2 }}>
                           ₡{b.total_price.toLocaleString("es-CR")}
                         </div>
                       )}

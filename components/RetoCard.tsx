@@ -27,7 +27,7 @@ function minsAgo(created_at: string): string {
 }
 
 // Deterministic accent color from team name
-const COLORS = ['#D7FF00','#4ADE80','#60A5FA','#F97316','#A78BFA','#FF6B6B','#FACC15'];
+const COLORS = ['#3B82F6','#4ADE80','#60A5FA','#F97316','#A78BFA','#FF6B6B','#FACC15'];
 function teamColor(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
@@ -244,8 +244,8 @@ function RetoModal({ reto, onClose }: { reto: RetoCardProps['reto']; onClose: ()
             <div style={{
               width: 40, height: 40, borderRadius: 11, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(215,255,0,0.06)',
-              border: '1px solid rgba(215,255,0,0.12)',
+              background: 'rgba(59, 130, 246,0.06)',
+              border: '1px solid rgba(59, 130, 246,0.12)',
             }}>
               <span style={{ fontWeight: 900, fontSize: 12, color: 'var(--accent)' }}>VS</span>
             </div>
@@ -289,8 +289,8 @@ function RetoModal({ reto, onClose }: { reto: RetoCardProps['reto']; onClose: ()
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '14px 18px', borderRadius: 13, marginBottom: 20,
-            background: 'rgba(215,255,0,0.04)',
-            border: '1px solid rgba(215,255,0,0.10)',
+            background: 'rgba(59, 130, 246,0.04)',
+            border: '1px solid rgba(59, 130, 246,0.10)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Trophy size={14} style={{ color: 'var(--accent)' }} />
@@ -350,11 +350,11 @@ function RetoModal({ reto, onClose }: { reto: RetoCardProps['reto']; onClose: ()
               disabled={saving}
               style={{
                 flex: 2, padding: '13px', borderRadius: 13,
-                background: saving ? 'rgba(215,255,0,0.60)' : 'var(--accent)', color: '#000',
+                background: saving ? 'rgba(59, 130, 246,0.60)' : 'var(--accent)', color: '#fff',
                 fontWeight: 800, fontSize: 14,
                 border: 'none', cursor: saving ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                boxShadow: '0 0 24px rgba(215,255,0,0.22)',
+                boxShadow: '0 0 24px rgba(59, 130, 246,0.22)',
               }}
             >
               {saving ? 'Confirmando…' : <><Zap size={14} fill="#000" /> Confirmar reto</>}
@@ -389,10 +389,10 @@ export default function RetoCard({ reto }: RetoCardProps) {
         className="flex flex-col h-full"
         style={{
           background:   'linear-gradient(145deg, #131313 0%, #0e0e0e 100%)',
-          border:       `1px solid ${hov ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.055)'}`,
+          border:       `1px solid ${hov ? 'rgba(59, 130, 246,0.12)' : 'rgba(255,255,255,0.055)'}`,
           borderRadius: 20,
           boxShadow:    hov
-            ? '0 0 0 1px rgba(215,255,0,0.06), 0 24px 56px rgba(0,0,0,0.55)'
+            ? '0 0 0 1px rgba(59, 130, 246,0.06), 0 24px 56px rgba(0,0,0,0.55)'
             : '0 2px 12px rgba(0,0,0,0.25)',
           transform:    hov ? 'translateY(-3px)' : 'translateY(0)',
           transition:   'all 0.22s ease',
@@ -410,7 +410,7 @@ export default function RetoCard({ reto }: RetoCardProps) {
             <div style={{ display: 'flex', gap: 6 }}>
               <span style={{
                 fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-                background: 'var(--accent)', color: '#000', letterSpacing: '0.02em',
+                background: 'var(--accent)', color: '#fff', letterSpacing: '0.02em',
               }}>{format}</span>
               <span style={{
                 fontSize: 11, padding: '4px 10px', borderRadius: 8,
@@ -447,8 +447,8 @@ export default function RetoCard({ reto }: RetoCardProps) {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 36, height: 36, borderRadius: 10,
-              background: 'rgba(215,255,0,0.06)',
-              border: '1px solid rgba(215,255,0,0.10)',
+              background: 'rgba(59, 130, 246,0.06)',
+              border: '1px solid rgba(59, 130, 246,0.10)',
               flexShrink: 0,
             }}>
               <span style={{ fontWeight: 900, fontSize: 12, color: 'var(--accent)', letterSpacing: '-0.02em' }}>VS</span>
@@ -506,9 +506,9 @@ export default function RetoCard({ reto }: RetoCardProps) {
               style={{
                 padding: '10px 20px', fontSize: 13, fontWeight: 800,
                 borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: 'var(--accent)', color: '#000',
+                background: 'var(--accent)', color: '#fff',
                 display: 'flex', alignItems: 'center', gap: 6,
-                boxShadow: '0 0 18px rgba(215,255,0,0.18)',
+                boxShadow: '0 0 18px rgba(59, 130, 246,0.18)',
               }}
             >
               <Zap size={12} fill="#000" /> Aceptar reto

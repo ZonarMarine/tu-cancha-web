@@ -34,7 +34,7 @@ export default function PrivacidadPage() {
       }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>
-            Tu<span style={{ color: '#D7FF00' }}>Cancha</span>
+            Tu<span style={{ color: '#3B82F6' }}>Cancha</span>
           </span>
         </Link>
         <Link href="/" style={{
@@ -52,13 +52,13 @@ export default function PrivacidadPage() {
         <div style={{ marginBottom: 48 }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(215,255,0,0.08)',
-            border: '1px solid rgba(215,255,0,0.18)',
+            background: 'rgba(59, 130, 246,0.08)',
+            border: '1px solid rgba(59, 130, 246,0.18)',
             borderRadius: 8,
             padding: '4px 12px',
             fontSize: 11,
             fontWeight: 700,
-            color: '#D7FF00',
+            color: '#3B82F6',
             letterSpacing: '0.1em',
             marginBottom: 16,
           }}>
@@ -78,7 +78,7 @@ export default function PrivacidadPage() {
             la aplicación móvil TuCancha CR. Somos una plataforma de reserva de canchas deportivas
             y organización de partidos amateurs en Costa Rica.
           </p>
-          <p>Para consultas sobre privacidad: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a></p>
+          <p>Para consultas sobre privacidad: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a></p>
         </LegalSection>
 
         <LegalSection title="2. Datos que recopilamos">
@@ -166,7 +166,7 @@ export default function PrivacidadPage() {
           </ul>
           <p>
             Para ejercer cualquiera de estos derechos, enviá un correo a{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a>{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a>{' '}
             con el asunto "Solicitud de privacidad".
           </p>
         </LegalSection>
@@ -175,7 +175,7 @@ export default function PrivacidadPage() {
           <p>
             Podés solicitar la eliminación de tu cuenta desde la sección de Perfil en la aplicación móvil
             (Perfil → Eliminar mi cuenta), o enviando un correo a{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a>.
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a>.
           </p>
           <p>
             Al eliminar tu cuenta se borran: perfil, historial de reservas, retos, y datos de equipo.
@@ -204,8 +204,8 @@ export default function PrivacidadPage() {
             Para cualquier consulta sobre privacidad o tratamiento de datos:
           </p>
           <ul>
-            <li>Correo: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a></li>
-            <li>Plataforma: <a href={SITE} style={{ color: '#D7FF00' }}>{SITE}</a></li>
+            <li>Correo: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a></li>
+            <li>Plataforma: <a href={SITE} style={{ color: '#3B82F6' }}>{SITE}</a></li>
             <li>País: Costa Rica</li>
           </ul>
         </LegalSection>

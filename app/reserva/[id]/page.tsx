@@ -81,16 +81,16 @@ const STATUS_CONFIG: Record<string, {
     title:  "¡Pago recibido!",
     desc:   "Procesando confirmación de la cancha.",
     color:  "var(--accent)",
-    bg:     "rgba(215,255,0,0.06)",
-    border: "rgba(215,255,0,0.18)",
+    bg:     "rgba(59, 130, 246,0.06)",
+    border: "rgba(59, 130, 246,0.18)",
   },
   confirmed: {
     icon:   <CheckCircle size={32} />,
     title:  "¡Reserva confirmada!",
     desc:   "Tu cancha está reservada. ¡A jugar!",
     color:  "var(--accent)",
-    bg:     "rgba(215,255,0,0.06)",
-    border: "rgba(215,255,0,0.18)",
+    bg:     "rgba(59, 130, 246,0.06)",
+    border: "rgba(59, 130, 246,0.18)",
   },
   failed: {
     icon:   <XCircle size={32} />,
@@ -184,7 +184,7 @@ export default function ReservaPage() {
     <div style={{ minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          width: 48, height: 48, borderRadius: 14, border: '2px solid rgba(215,255,0,0.3)',
+          width: 48, height: 48, borderRadius: 14, border: '2px solid rgba(59, 130, 246,0.3)',
           borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite',
           margin: '0 auto 16px',
         }} />
@@ -328,9 +328,9 @@ export default function ReservaPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '10px 14px', borderRadius: 12,
                     background: s.status === 'paid'
-                      ? 'rgba(215,255,0,0.04)'
+                      ? 'rgba(59, 130, 246,0.04)'
                       : 'rgba(255,255,255,0.025)',
-                    border: `1px solid ${s.status === 'paid' ? 'rgba(215,255,0,0.1)' : 'rgba(255,255,255,0.06)'}`,
+                    border: `1px solid ${s.status === 'paid' ? 'rgba(59, 130, 246,0.1)' : 'rgba(255,255,255,0.06)'}`,
                   }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{s.player_name}</div>

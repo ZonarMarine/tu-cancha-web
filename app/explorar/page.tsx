@@ -67,13 +67,13 @@ const SPORT_PILLS = [
 
 const SPORT_ACCENT: Record<string, { bg: string; border: string; color: string; glow: string }> = {
   Todo:   { bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.13)', color: 'rgba(255,255,255,0.72)', glow: 'rgba(255,255,255,0.04)' },
-  Fútbol: { bg: 'rgba(215,255,0,0.08)',   border: 'rgba(215,255,0,0.20)',   color: 'rgba(215,255,0,0.82)',   glow: 'rgba(215,255,0,0.06)'   },
+  Fútbol: { bg: 'rgba(59, 130, 246,0.08)',   border: 'rgba(59, 130, 246,0.20)',   color: 'rgba(59, 130, 246,0.82)',   glow: 'rgba(59, 130, 246,0.06)'   },
   Pádel:  { bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)',  color: 'rgba(96,165,250,0.82)',  glow: 'rgba(96,165,250,0.06)'  },
 };
 
 const SPORT_SOLID: Record<string, { bg: string; text: string; glow: string; icon: string }> = {
   Todo:   { bg: 'rgba(255,255,255,0.14)', text: '#fff',  glow: 'rgba(255,255,255,0.12)', icon: '🏟' },
-  Fútbol: { bg: '#D7FF00',               text: '#000',  glow: 'rgba(215,255,0,0.28)',   icon: '⚽' },
+  Fútbol: { bg: '#3B82F6',               text: '#000',  glow: 'rgba(59, 130, 246,0.28)',   icon: '⚽' },
   Pádel:  { bg: '#60A5FA',               text: '#000',  glow: 'rgba(96,165,250,0.28)',  icon: '🏓' },
 };
 
@@ -126,7 +126,7 @@ const FIELD_STYLE: Record<string, React.CSSProperties> = {
 };
 
 const SPORT_BADGE: Record<string, { bg: string; color: string; border: string }> = {
-  Fútbol:  { bg: 'rgba(215,255,0,0.05)',  color: 'rgba(215,255,0,0.45)',  border: 'rgba(215,255,0,0.09)'  },
+  Fútbol:  { bg: 'rgba(59, 130, 246,0.05)',  color: 'rgba(59, 130, 246,0.45)',  border: 'rgba(59, 130, 246,0.09)'  },
   Pádel:   { bg: 'rgba(96,165,250,0.05)', color: 'rgba(96,165,250,0.45)', border: 'rgba(96,165,250,0.09)' },
   Básquet: { bg: 'rgba(249,115,22,0.05)', color: 'rgba(249,115,22,0.45)', border: 'rgba(249,115,22,0.09)' },
   Tenis:   { bg: 'rgba(56,189,248,0.05)', color: 'rgba(56,189,248,0.45)', border: 'rgba(56,189,248,0.09)' },
@@ -232,7 +232,7 @@ function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
     const x = ((e.clientX - r.left) / r.width)  * 100;
     const y = ((e.clientY - r.top)  / r.height) * 100;
     glowRef.current.style.background =
-      `radial-gradient(ellipse 55% 45% at ${x}% ${y}%, rgba(215,255,0,0.08) 0%, transparent 68%)`;
+      `radial-gradient(ellipse 55% 45% at ${x}% ${y}%, rgba(59, 130, 246,0.08) 0%, transparent 68%)`;
   };
   const handleImgLeave = () => {
     if (glowRef.current) glowRef.current.style.background = 'none';
@@ -249,9 +249,9 @@ function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
         borderRadius: 22, overflow: 'hidden',
         backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
         background: 'linear-gradient(145deg, rgba(255,255,255,0.026) 0%, transparent 52%), linear-gradient(155deg, #161616 0%, #0d0d0d 58%, #0b0b0b 100%)',
-        border: `1px solid ${hov ? 'rgba(215,255,0,0.13)' : 'rgba(255,255,255,0.08)'}`,
+        border: `1px solid ${hov ? 'rgba(59, 130, 246,0.13)' : 'rgba(255,255,255,0.08)'}`,
         boxShadow: hov
-          ? '0 0 0 1px rgba(215,255,0,0.05), 0 24px 60px rgba(0,0,0,0.82), 0 1px 0 rgba(255,255,255,0.055) inset'
+          ? '0 0 0 1px rgba(59, 130, 246,0.05), 0 24px 60px rgba(0,0,0,0.82), 0 1px 0 rgba(255,255,255,0.055) inset'
           : '0 1px 0 rgba(255,255,255,0.048) inset, 0 2px 8px rgba(0,0,0,0.40), 0 12px 40px rgba(0,0,0,0.55)',
         transform: hov ? 'translate3d(0,-4px,0)' : 'translate3d(0,0,0)',
         transition: 'transform 0.30s cubic-bezier(0.22,0.61,0.36,1), border-color 0.22s, box-shadow 0.30s',
@@ -377,7 +377,7 @@ function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 13, borderTop: '1px solid rgba(255,255,255,0.045)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-            <span style={{ fontWeight: 800, fontSize: 16, color: 'rgba(215,255,0,0.58)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <span style={{ fontWeight: 800, fontSize: 16, color: 'rgba(59, 130, 246,0.58)', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {fmtColones(c.basePrice)}
             </span>
             <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.13)', letterSpacing: '-0.01em' }}>/ hr</span>
@@ -444,19 +444,19 @@ export default function ExplorarPage() {
   /* ── Sport-reactive design tokens ── */
   const isPadel         = sport === 'Pádel';
   const pageSolid       = SPORT_SOLID[sport] ?? SPORT_SOLID.Fútbol;
-  const heroGradientTop = isPadel ? 'rgba(96,165,250,0.038)' : 'rgba(215,255,0,0.034)';
-  const heroGradientMid = isPadel ? 'rgba(96,165,250,0.010)' : 'rgba(215,255,0,0.010)';
-  const orbA            = isPadel ? 'rgba(96,165,250,0.024)' : 'rgba(215,255,0,0.022)';
-  const orbB            = isPadel ? 'rgba(96,165,250,0.014)' : 'rgba(215,255,0,0.012)';
+  const heroGradientTop = isPadel ? 'rgba(96,165,250,0.038)' : 'rgba(59, 130, 246,0.034)';
+  const heroGradientMid = isPadel ? 'rgba(96,165,250,0.010)' : 'rgba(59, 130, 246,0.010)';
+  const orbA            = isPadel ? 'rgba(96,165,250,0.024)' : 'rgba(59, 130, 246,0.022)';
+  const orbB            = isPadel ? 'rgba(96,165,250,0.014)' : 'rgba(59, 130, 246,0.012)';
   const liveDotColor    = isPadel ? '#60A5FA' : '#4ADE80';
-  const focusBorder     = isPadel ? 'rgba(96,165,250,0.34)' : 'rgba(215,255,0,0.34)';
+  const focusBorder     = isPadel ? 'rgba(96,165,250,0.34)' : 'rgba(59, 130, 246,0.34)';
   const focusShadow     = isPadel
     ? '0 0 0 4px rgba(96,165,250,0.07), 0 0 40px rgba(96,165,250,0.06)'
-    : '0 0 0 4px rgba(215,255,0,0.07), 0 0 40px rgba(215,255,0,0.06)';
-  const focusIconColor  = isPadel ? 'rgba(96,165,250,0.65)' : 'rgba(215,255,0,0.65)';
+    : '0 0 0 4px rgba(59, 130, 246,0.07), 0 0 40px rgba(59, 130, 246,0.06)';
+  const focusIconColor  = isPadel ? 'rgba(96,165,250,0.65)' : 'rgba(59, 130, 246,0.65)';
   const filterActive    = showFilters || (zone !== 'Todas' || price !== 'Cualquiera');
-  const filterBg        = filterActive ? (isPadel ? 'rgba(96,165,250,0.09)' : 'rgba(215,255,0,0.09)') : 'rgba(255,255,255,0.042)';
-  const filterBorder    = filterActive ? (isPadel ? 'rgba(96,165,250,0.22)' : 'rgba(215,255,0,0.22)') : 'rgba(255,255,255,0.09)';
+  const filterBg        = filterActive ? (isPadel ? 'rgba(96,165,250,0.09)' : 'rgba(59, 130, 246,0.09)') : 'rgba(255,255,255,0.042)';
+  const filterBorder    = filterActive ? (isPadel ? 'rgba(96,165,250,0.22)' : 'rgba(59, 130, 246,0.22)') : 'rgba(255,255,255,0.09)';
 
   /* ── Sport-filtered live signals (derived from real data) ── */
   const liveSignals = useMemo(() => {
@@ -951,7 +951,7 @@ export default function ExplorarPage() {
                 cancha{filtered.length !== 1 ? 's' : ''} disponible{filtered.length !== 1 ? 's' : ''}
               </p>
               {activeFilters.map(f => (
-                <span key={f as string} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: isPadel ? 'rgba(96,165,250,0.07)' : 'rgba(215,255,0,0.07)', color: pageSolid.bg, border: `1px solid ${isPadel ? 'rgba(96,165,250,0.14)' : 'rgba(215,255,0,0.14)'}` }}>
+                <span key={f as string} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: isPadel ? 'rgba(96,165,250,0.07)' : 'rgba(59, 130, 246,0.07)', color: pageSolid.bg, border: `1px solid ${isPadel ? 'rgba(96,165,250,0.14)' : 'rgba(59, 130, 246,0.14)'}` }}>
                   {f}
                   <button onClick={() => { if (f === zone) setZone('Todas'); else setPrice('Cualquiera'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}>
                     <X size={9} />
@@ -1005,7 +1005,7 @@ export default function ExplorarPage() {
                   {sport !== 'Fútbol' && (
                     <button
                       onClick={() => handleSportChange('Fútbol')}
-                      style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(215,255,0,0.10)', color: '#D7FF00', boxShadow: '0 0 0 1px rgba(215,255,0,0.18)', letterSpacing: '-0.01em' }}
+                      style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(59, 130, 246,0.10)', color: '#3B82F6', boxShadow: '0 0 0 1px rgba(59, 130, 246,0.18)', letterSpacing: '-0.01em' }}
                     >
                       Ver fútbol
                     </button>
@@ -1055,7 +1055,7 @@ export default function ExplorarPage() {
                   {sport !== 'Fútbol' && (
                     <button
                       onClick={() => handleSportChange('Fútbol')}
-                      style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(215,255,0,0.10)', color: '#D7FF00', boxShadow: '0 0 0 1px rgba(215,255,0,0.18)', letterSpacing: '-0.01em' }}
+                      style={{ padding: '11px 24px', fontSize: 13, borderRadius: 11, cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(59, 130, 246,0.10)', color: '#3B82F6', boxShadow: '0 0 0 1px rgba(59, 130, 246,0.18)', letterSpacing: '-0.01em' }}
                     >
                       Ver fútbol
                     </button>

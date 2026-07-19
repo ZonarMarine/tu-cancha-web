@@ -20,8 +20,8 @@ function StepLabel({ n, active, done }: { n: number; active: boolean; done: bool
       width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 11, fontWeight: 800,
-      background: done  ? 'var(--accent)'               : active ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.05)',
-      border:     done  ? 'none'                         : active ? '1.5px solid rgba(215,255,0,0.35)' : '1.5px solid rgba(255,255,255,0.08)',
+      background: done  ? 'var(--accent)'               : active ? 'rgba(59, 130, 246,0.12)' : 'rgba(255,255,255,0.05)',
+      border:     done  ? 'none'                         : active ? '1.5px solid rgba(59, 130, 246,0.35)' : '1.5px solid rgba(255,255,255,0.08)',
       color:      done  ? '#000'                         : active ? 'var(--accent)' : 'rgba(255,255,255,0.22)',
       transition: 'all 0.22s ease',
     }}>
@@ -51,7 +51,7 @@ function PillGroup<T extends string>({
               background: active ? 'var(--accent)' : 'rgba(255,255,255,0.055)',
               color:      active ? '#000'           : 'rgba(255,255,255,0.42)',
               outline:    active ? 'none'           : '1px solid rgba(255,255,255,0.08)',
-              boxShadow:  active ? '0 0 16px rgba(215,255,0,0.16)' : 'none',
+              boxShadow:  active ? '0 0 16px rgba(59, 130, 246,0.16)' : 'none',
               transition: 'all 0.14s ease',
             }}>
             {o}
@@ -196,7 +196,7 @@ function VenueAutocomplete({
                 display: 'flex', alignItems: 'center', gap: 10,
                 transition: 'background 0.12s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(215,255,0,0.04)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59, 130, 246,0.04)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
               {/* Sport icon */}
@@ -400,9 +400,9 @@ function CreatePartidoInner() {
         <div style={{ textAlign: 'center', padding: '0 24px', maxWidth: 420 }}>
           <div style={{
             width: 72, height: 72, borderRadius: 22, margin: '0 auto 24px',
-            background: 'rgba(215,255,0,0.10)', border: '1.5px solid rgba(215,255,0,0.22)',
+            background: 'rgba(59, 130, 246,0.10)', border: '1.5px solid rgba(59, 130, 246,0.22)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 36px rgba(215,255,0,0.12)',
+            boxShadow: '0 0 36px rgba(59, 130, 246,0.12)',
           }}>
             <Check size={30} color="var(--accent)" strokeWidth={2.5} />
           </div>
@@ -432,7 +432,7 @@ function CreatePartidoInner() {
       <style>{`
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.22); }
         input:focus, textarea:focus, select:focus {
-          border-color: rgba(215,255,0,0.28) !important;
+          border-color: rgba(59, 130, 246,0.28) !important;
           background: rgba(255,255,255,0.058) !important;
           outline: none;
         }
@@ -447,7 +447,7 @@ function CreatePartidoInner() {
 
       {/* Ambient */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-        <div className="orb-a" style={{ position: 'absolute', top: '-15%', right: '-8%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(215,255,0,0.018) 0%, transparent 60%)', filter: 'blur(2px)' }} />
+        <div className="orb-a" style={{ position: 'absolute', top: '-15%', right: '-8%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(59, 130, 246,0.018) 0%, transparent 60%)', filter: 'blur(2px)' }} />
       </div>
 
       <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 48, paddingBottom: 96 }}>
@@ -468,8 +468,8 @@ function CreatePartidoInner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <div style={{
               width: 30, height: 30, borderRadius: 9,
-              background: 'linear-gradient(135deg, rgba(215,255,0,0.14) 0%, rgba(215,255,0,0.05) 100%)',
-              border: '1px solid rgba(215,255,0,0.20)',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246,0.14) 0%, rgba(59, 130, 246,0.05) 100%)',
+              border: '1px solid rgba(59, 130, 246,0.20)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Zap size={14} fill="var(--accent)" color="var(--accent)" />
@@ -490,14 +490,14 @@ function CreatePartidoInner() {
                   <StepLabel n={s.n} active={step === s.n} done={step > s.n} />
                   <span style={{
                     fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em',
-                    color: step === s.n ? 'rgba(255,255,255,0.80)' : step > s.n ? 'rgba(215,255,0,0.60)' : 'rgba(255,255,255,0.20)',
+                    color: step === s.n ? 'rgba(255,255,255,0.80)' : step > s.n ? 'rgba(59, 130, 246,0.60)' : 'rgba(255,255,255,0.20)',
                     transition: 'color 0.22s',
                   }}>
                     {s.label}
                   </span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div style={{ flex: 1, height: 1, background: step > s.n ? 'rgba(215,255,0,0.22)' : 'rgba(255,255,255,0.07)', margin: '0 14px', transition: 'background 0.3s' }} />
+                  <div style={{ flex: 1, height: 1, background: step > s.n ? 'rgba(59, 130, 246,0.22)' : 'rgba(255,255,255,0.07)', margin: '0 14px', transition: 'background 0.3s' }} />
                 )}
               </div>
             ))}
@@ -513,14 +513,14 @@ function CreatePartidoInner() {
               overflow: 'hidden',
             }}>
               {/* Top accent */}
-              <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(215,255,0,0.60) 0%, rgba(215,255,0,0.10) 50%, transparent 100%)' }} />
+              <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(59, 130, 246,0.60) 0%, rgba(59, 130, 246,0.10) 50%, transparent 100%)' }} />
 
               <div className="step-panel" key={step} style={{ padding: '32px 32px 28px' }}>
 
                 {/* ════════════════ STEP 1 ════════════════ */}
                 {step === 1 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-                    <FieldInput label="Nombre de tu equipo" icon={<Users size={9} color="rgba(215,255,0,0.55)" />}>
+                    <FieldInput label="Nombre de tu equipo" icon={<Users size={9} color="rgba(59, 130, 246,0.55)" />}>
                       {profileLoad ? (
                         /* Skeleton while fetching profile */
                         <div style={{
@@ -541,8 +541,8 @@ function CreatePartidoInner() {
                             style={{
                               ...inputStyle,
                               ...(teamName.trim().length >= 2 ? {
-                                borderColor: 'rgba(215,255,0,0.22)',
-                                background: 'rgba(215,255,0,0.03)',
+                                borderColor: 'rgba(59, 130, 246,0.22)',
+                                background: 'rgba(59, 130, 246,0.03)',
                                 paddingRight: 36,
                               } : {}),
                             }}
@@ -572,14 +572,14 @@ function CreatePartidoInner() {
                 {/* ════════════════ STEP 2 ════════════════ */}
                 {step === 2 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                    <FieldInput label="Zona" icon={<MapPin size={9} color="rgba(215,255,0,0.55)" />}>
+                    <FieldInput label="Zona" icon={<MapPin size={9} color="rgba(59, 130, 246,0.55)" />}>
                       <select value={zone} onChange={e => setZone(e.target.value)} style={selectStyle}>
                         <option value="" disabled>Seleccioná la zona</option>
                         {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
                       </select>
                     </FieldInput>
 
-                    <FieldInput label="Cancha o complejo" icon={<MapPin size={9} color="rgba(215,255,0,0.35)" />}>
+                    <FieldInput label="Cancha o complejo" icon={<MapPin size={9} color="rgba(59, 130, 246,0.35)" />}>
                       <VenueAutocomplete
                         value={venue}
                         onChange={setVenue}
@@ -595,7 +595,7 @@ function CreatePartidoInner() {
                     </FieldInput>
 
                     {/* ── Date picker — next 7 days as pills ── */}
-                    <FieldInput label="Fecha" icon={<Clock size={9} color="rgba(215,255,0,0.55)" />}>
+                    <FieldInput label="Fecha" icon={<Clock size={9} color="rgba(59, 130, 246,0.55)" />}>
                       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
                         {Array.from({ length: 7 }, (_, i) => {
                           const d = new Date(); d.setDate(d.getDate() + i);
@@ -615,10 +615,10 @@ function CreatePartidoInner() {
                                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                                 padding: '10px 14px', borderRadius: 13, cursor: 'pointer',
                                 minWidth: 58,
-                                background: active ? 'rgba(215,255,0,0.10)' : 'rgba(255,255,255,0.04)',
-                                border: active ? '1.5px solid rgba(215,255,0,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                                background: active ? 'rgba(59, 130, 246,0.10)' : 'rgba(255,255,255,0.04)',
+                                border: active ? '1.5px solid rgba(59, 130, 246,0.35)' : '1px solid rgba(255,255,255,0.08)',
                                 color: active ? 'var(--accent)' : 'rgba(255,255,255,0.40)',
-                                boxShadow: active ? '0 0 14px rgba(215,255,0,0.08)' : 'none',
+                                boxShadow: active ? '0 0 14px rgba(59, 130, 246,0.08)' : 'none',
                                 transition: 'all 0.14s ease',
                               }}
                             >
@@ -635,7 +635,7 @@ function CreatePartidoInner() {
                     </FieldInput>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                      <FieldInput label="Hora" icon={<Clock size={9} color="rgba(215,255,0,0.55)" />}>
+                      <FieldInput label="Hora" icon={<Clock size={9} color="rgba(59, 130, 246,0.55)" />}>
                         <select value={time} onChange={e => setTime(e.target.value)} style={selectStyle}>
                           <option value="" disabled>Hora</option>
                           {TIMES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -649,23 +649,23 @@ function CreatePartidoInner() {
                             <div style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                               padding: '14px 18px', borderRadius: 13,
-                              background: 'rgba(215,255,0,0.04)',
-                              border: '1px solid rgba(215,255,0,0.18)',
+                              background: 'rgba(59, 130, 246,0.04)',
+                              border: '1px solid rgba(59, 130, 246,0.18)',
                             }}>
                               <div>
                                 <p style={{ fontWeight: 900, fontSize: 22, color: 'var(--accent)', letterSpacing: '-0.03em', lineHeight: 1 }}>
                                   ₡{parseInt(price || '0').toLocaleString('es-CR')}
                                 </p>
-                                <p style={{ fontSize: 10, color: 'rgba(215,255,0,0.50)', marginTop: 4 }}>
+                                <p style={{ fontSize: 10, color: 'rgba(59, 130, 246,0.50)', marginTop: 4 }}>
                                   ₡{pricePerHour.toLocaleString('es-CR')}/h · cambia con la duración
                                 </p>
                               </div>
                               <span style={{
                                 fontSize: 9, fontWeight: 800, letterSpacing: '0.06em',
                                 padding: '4px 9px', borderRadius: 6,
-                                background: 'rgba(215,255,0,0.08)',
-                                color: 'rgba(215,255,0,0.55)',
-                                border: '1px solid rgba(215,255,0,0.13)',
+                                background: 'rgba(59, 130, 246,0.08)',
+                                color: 'rgba(59, 130, 246,0.55)',
+                                border: '1px solid rgba(59, 130, 246,0.13)',
                               }}>AUTO</span>
                             </div>
                           ) : (
@@ -704,8 +704,8 @@ function CreatePartidoInner() {
                               style={{
                                 ...inputStyle,
                                 ...(pricePerHour !== null ? {
-                                  borderColor: 'rgba(215,255,0,0.18)',
-                                  background: 'rgba(215,255,0,0.02)',
+                                  borderColor: 'rgba(59, 130, 246,0.18)',
+                                  background: 'rgba(59, 130, 246,0.02)',
                                 } : {}),
                               }}
                             />
@@ -714,7 +714,7 @@ function CreatePartidoInner() {
                                 position: 'absolute', right: 10, top: '50%',
                                 transform: 'translateY(-50%)',
                                 fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
-                                color: 'rgba(215,255,0,0.45)', pointerEvents: 'none',
+                                color: 'rgba(59, 130, 246,0.45)', pointerEvents: 'none',
                               }}>₡{pricePerHour.toLocaleString('es-CR')}/h</span>
                             )}
                           </div>
@@ -727,7 +727,7 @@ function CreatePartidoInner() {
                       </FieldInput>
                     </div>
 
-                    <FieldInput label="Duración" icon={<Clock size={9} color="rgba(215,255,0,0.55)" />}>
+                    <FieldInput label="Duración" icon={<Clock size={9} color="rgba(59, 130, 246,0.55)" />}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {DURATIONS.map(d => {
                           const active = duration === d;
@@ -739,16 +739,16 @@ function CreatePartidoInner() {
                               style={{
                                 flex: 1, padding: '10px 0', borderRadius: 11, cursor: 'pointer',
                                 fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em',
-                                background: active ? 'rgba(215,255,0,0.10)' : 'rgba(255,255,255,0.042)',
-                                border: active ? '1.5px solid rgba(215,255,0,0.32)' : '1px solid rgba(255,255,255,0.08)',
+                                background: active ? 'rgba(59, 130, 246,0.10)' : 'rgba(255,255,255,0.042)',
+                                border: active ? '1.5px solid rgba(59, 130, 246,0.32)' : '1px solid rgba(255,255,255,0.08)',
                                 color: active ? 'var(--accent)' : 'rgba(255,255,255,0.40)',
-                                boxShadow: active ? '0 0 14px rgba(215,255,0,0.08)' : 'none',
+                                boxShadow: active ? '0 0 14px rgba(59, 130, 246,0.08)' : 'none',
                                 transition: 'all 0.14s ease',
                               }}
                             >
                               {d}
                               {d === '1h' && (
-                                <span style={{ display: 'block', fontSize: 9, fontWeight: 600, letterSpacing: '0.04em', color: active ? 'rgba(215,255,0,0.55)' : 'rgba(255,255,255,0.18)', marginTop: 2 }}>
+                                <span style={{ display: 'block', fontSize: 9, fontWeight: 600, letterSpacing: '0.04em', color: active ? 'rgba(59, 130, 246,0.55)' : 'rgba(255,255,255,0.18)', marginTop: 2 }}>
                                   ESTÁNDAR
                                 </span>
                               )}
@@ -811,10 +811,10 @@ function CreatePartidoInner() {
                     </div>
 
                     {/* Visibility note */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 12, background: 'rgba(215,255,0,0.045)', border: '1px solid rgba(215,255,0,0.12)', marginBottom: 4 }}>
-                      <Zap size={13} color="rgba(215,255,0,0.70)" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', borderRadius: 12, background: 'rgba(59, 130, 246,0.045)', border: '1px solid rgba(59, 130, 246,0.12)', marginBottom: 4 }}>
+                      <Zap size={13} color="rgba(59, 130, 246,0.70)" style={{ flexShrink: 0, marginTop: 1 }} />
                       <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.44)', lineHeight: 1.55, letterSpacing: '-0.01em' }}>
-                        Tu reto estará <span style={{ color: 'rgba(215,255,0,0.72)', fontWeight: 700 }}>visible para todos los equipos</span> de la zona inmediatamente.
+                        Tu reto estará <span style={{ color: 'rgba(59, 130, 246,0.72)', fontWeight: 700 }}>visible para todos los equipos</span> de la zona inmediatamente.
                       </p>
                     </div>
                   </div>

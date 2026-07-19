@@ -26,10 +26,10 @@ export default function MatchCard({ g, filled = 6, total = 10 }: MatchCardProps)
       className="flex flex-col h-full"
       style={{
         background:   'linear-gradient(145deg, #131313 0%, #0e0e0e 100%)',
-        border:       `1px solid ${hov ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.055)'}`,
+        border:       `1px solid ${hov ? 'rgba(59, 130, 246,0.12)' : 'rgba(255,255,255,0.055)'}`,
         borderRadius: 20,
         boxShadow:    hov
-          ? '0 0 0 1px rgba(215,255,0,0.06), 0 24px 56px rgba(0,0,0,0.55)'
+          ? '0 0 0 1px rgba(59, 130, 246,0.06), 0 24px 56px rgba(0,0,0,0.55)'
           : '0 2px 12px rgba(0,0,0,0.25)',
         transform:    hov ? 'translateY(-3px)' : 'translateY(0)',
         transition:   'all 0.22s ease',
@@ -49,7 +49,7 @@ export default function MatchCard({ g, filled = 6, total = 10 }: MatchCardProps)
           <div style={{ display: 'flex', gap: 6 }}>
             <span style={{
               fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-              background: 'var(--accent)', color: '#000', letterSpacing: '0.02em',
+              background: 'var(--accent)', color: '#fff', letterSpacing: '0.02em',
             }}>{g.format}</span>
             <span style={{
               fontSize: 11, padding: '4px 10px', borderRadius: 8,
@@ -84,8 +84,8 @@ export default function MatchCard({ g, filled = 6, total = 10 }: MatchCardProps)
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 36, height: 36, borderRadius: 10,
-            background: 'rgba(215,255,0,0.06)',
-            border: '1px solid rgba(215,255,0,0.1)',
+            background: 'rgba(59, 130, 246,0.06)',
+            border: '1px solid rgba(59, 130, 246,0.1)',
             flexShrink: 0,
           }}>
             <span style={{ fontWeight: 900, fontSize: 12, color: 'var(--accent)', letterSpacing: '-0.02em' }}>VS</span>

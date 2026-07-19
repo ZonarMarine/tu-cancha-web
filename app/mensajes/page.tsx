@@ -310,7 +310,7 @@ const S: Record<string, React.CSSProperties> = {
   rowName: { fontSize: 14.5, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   rowSub: { fontSize: 12, color: "var(--text3)", marginTop: 1 },
   pill: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 800, padding: "6px 11px", borderRadius: 9, border: "none", cursor: "pointer" },
-  pillGo: { background: "var(--accent)", color: "#0c0d06" },
+  pillGo: { background: "var(--accent)", color: "#fff" },
   pillAdd: { background: "var(--accent-dark)", color: "var(--accent)", border: "1px solid var(--accent-glow)" },
   pillMuted: { background: "var(--surface2)", color: "var(--text3)", border: "1px solid var(--border)" },
 };

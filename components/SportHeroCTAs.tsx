@@ -48,7 +48,7 @@ export default function SportHeroCTAs({ variant = "primary" }: Props) {
         style={{
           padding: "16px 44px", fontSize: 14.5, borderRadius: 15,
           fontWeight: 800, letterSpacing: "-0.01em",
-          boxShadow: "0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(215,255,0,0.10)",
+          boxShadow: "0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(59, 130, 246,0.10)",
         }}
       >
         {retosLabel}

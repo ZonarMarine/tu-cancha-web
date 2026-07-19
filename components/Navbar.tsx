@@ -113,7 +113,7 @@ export default function Navbar() {
           height: 2px;
           border-radius: 99px;
           background: var(--accent);
-          box-shadow: 0 0 6px rgba(215,255,0,0.32);
+          box-shadow: 0 0 6px rgba(59, 130, 246,0.32);
         }
 
         /* ── Auth buttons ── */
@@ -137,10 +137,10 @@ export default function Navbar() {
         }}>
           <div style={{
             width: 26, height: 26, borderRadius: 7,
-            background: 'linear-gradient(135deg, rgba(215,255,0,0.15) 0%, rgba(215,255,0,0.06) 100%)',
-            border: '1px solid rgba(215,255,0,0.2)',
+            background: 'linear-gradient(135deg, rgba(59, 130, 246,0.15) 0%, rgba(59, 130, 246,0.06) 100%)',
+            border: '1px solid rgba(59, 130, 246,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 8px rgba(215,255,0,0.08)',
+            boxShadow: '0 0 8px rgba(59, 130, 246,0.08)',
           }}>
             <Zap size={13} fill="var(--accent)" color="var(--accent)" />
           </div>
@@ -203,11 +203,11 @@ export default function Navbar() {
               }}>
                 <div style={{
                   width: 26, height: 26, borderRadius: 7,
-                  background: 'linear-gradient(135deg, rgba(215,255,0,0.9), rgba(215,255,0,0.7))',
-                  color: '#000',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246,0.9), rgba(59, 130, 246,0.7))',
+                  color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, fontWeight: 900, letterSpacing: '0.02em',
-                  boxShadow: '0 0 8px rgba(215,255,0,0.12)',
+                  boxShadow: '0 0 8px rgba(59, 130, 246,0.12)',
                 }}>
                   {initials}
                 </div>
@@ -267,8 +267,8 @@ export default function Navbar() {
                 fontSize: 15, fontWeight: 500,
                 color: path === l.href ? 'var(--accent)' : 'rgba(255,255,255,0.55)',
                 textDecoration: 'none',
-                backgroundColor: path === l.href ? 'rgba(215,255,0,0.06)' : 'transparent',
-                borderLeft: path === l.href ? '2px solid rgba(215,255,0,0.4)' : '2px solid transparent',
+                backgroundColor: path === l.href ? 'rgba(59, 130, 246,0.06)' : 'transparent',
+                borderLeft: path === l.href ? '2px solid rgba(59, 130, 246,0.4)' : '2px solid transparent',
               }}>
                 {l.label}
               </Link>

@@ -34,7 +34,7 @@ export default function TerminosPage() {
       }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>
-            Tu<span style={{ color: '#D7FF00' }}>Cancha</span>
+            Tu<span style={{ color: '#3B82F6' }}>Cancha</span>
           </span>
         </Link>
         <Link href="/" style={{
@@ -52,13 +52,13 @@ export default function TerminosPage() {
         <div style={{ marginBottom: 48 }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(215,255,0,0.08)',
-            border: '1px solid rgba(215,255,0,0.18)',
+            background: 'rgba(59, 130, 246,0.08)',
+            border: '1px solid rgba(59, 130, 246,0.18)',
             borderRadius: 8,
             padding: '4px 12px',
             fontSize: 11,
             fontWeight: 700,
-            color: '#D7FF00',
+            color: '#3B82F6',
             letterSpacing: '0.1em',
             marginBottom: 16,
           }}>
@@ -146,7 +146,7 @@ export default function TerminosPage() {
             <li>Cada cancha establece su propia política de cancelación y reembolso.</li>
             <li>La política de cada cancha es visible antes de confirmar la reserva.</li>
             <li>TuCancha CR no puede garantizar reembolsos en cancelaciones fuera del plazo establecido por el propietario.</li>
-            <li>Para solicitar un reembolso por circunstancias excepcionales, contactá a <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a>.</li>
+            <li>Para solicitar un reembolso por circunstancias excepcionales, contactá a <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a>.</li>
           </ul>
 
           <SubTitle>Cancelaciones por el propietario:</SubTitle>
@@ -219,8 +219,8 @@ export default function TerminosPage() {
 
         <LegalSection title="13. Contacto">
           <ul>
-            <li>Correo: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#D7FF00' }}>{CONTACT_EMAIL}</a></li>
-            <li>Plataforma: <a href={SITE} style={{ color: '#D7FF00' }}>{SITE}</a></li>
+            <li>Correo: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3B82F6' }}>{CONTACT_EMAIL}</a></li>
+            <li>Plataforma: <a href={SITE} style={{ color: '#3B82F6' }}>{SITE}</a></li>
             <li>País: Costa Rica</li>
           </ul>
         </LegalSection>

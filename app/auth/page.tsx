@@ -131,7 +131,7 @@ function AuthForm() {
           .auth-grid { grid-template-columns: 1fr !important; }
           .auth-left  { display: none !important; }
         }
-        input:focus { border-color: rgba(215,255,0,0.35) !important; }
+        input:focus { border-color: rgba(59, 130, 246,0.35) !important; }
       `}</style>
 
       {/* ── Left panel: brand ── */}
@@ -146,7 +146,7 @@ function AuthForm() {
         <div style={{
           position: 'absolute', top: '30%', left: '40%',
           width: 500, height: 500, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(215,255,0,0.07) 0%, transparent 65%)',
+          background: 'radial-gradient(circle, rgba(59, 130, 246,0.07) 0%, transparent 65%)',
           transform: 'translate(-50%,-50%)',
           pointerEvents: 'none',
         }} />
@@ -186,7 +186,7 @@ function AuthForm() {
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{
                   width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  background: 'rgba(215,255,0,0.1)', border: '1px solid rgba(215,255,0,0.25)',
+                  background: 'rgba(59, 130, 246,0.1)', border: '1px solid rgba(59, 130, 246,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'var(--accent)',
                 }}><Check size={14} /></span>
@@ -268,8 +268,8 @@ function AuthForm() {
                         style={{
                           padding: '14px 12px',
                           borderRadius: 14,
-                          border: `1.5px solid ${active ? 'rgba(215,255,0,0.45)' : 'rgba(255,255,255,0.08)'}`,
-                          background: active ? 'rgba(215,255,0,0.06)' : 'rgba(255,255,255,0.02)',
+                          border: `1.5px solid ${active ? 'rgba(59, 130, 246,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                          background: active ? 'rgba(59, 130, 246,0.06)' : 'rgba(255,255,255,0.02)',
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'all 0.16s',
@@ -282,14 +282,14 @@ function AuthForm() {
                           <div style={{
                             position: 'absolute', top: 10, right: 10,
                             width: 8, height: 8, borderRadius: '50%',
-                            background: '#D7FF00',
-                            boxShadow: '0 0 6px rgba(215,255,0,0.7)',
+                            background: '#3B82F6',
+                            boxShadow: '0 0 6px rgba(59, 130, 246,0.7)',
                           }} />
                         )}
                         <div style={{ fontSize: 22, marginBottom: 6 }}>{r.icon}</div>
                         <div style={{
                           fontSize: 13, fontWeight: 800,
-                          color: active ? '#D7FF00' : 'rgba(255,255,255,0.75)',
+                          color: active ? '#3B82F6' : 'rgba(255,255,255,0.75)',
                           letterSpacing: '-0.01em', marginBottom: 3,
                           transition: 'color 0.16s',
                         }}>
@@ -356,8 +356,8 @@ function AuthForm() {
             {success && (
               <div style={{
                 padding: '10px 14px', borderRadius: 10, fontSize: 13,
-                background: 'rgba(215,255,0,0.06)', color: 'var(--accent)',
-                border: '1px solid rgba(215,255,0,0.14)',
+                background: 'rgba(59, 130, 246,0.06)', color: 'var(--accent)',
+                border: '1px solid rgba(59, 130, 246,0.14)',
               }}>{success}</div>
             )}
 
