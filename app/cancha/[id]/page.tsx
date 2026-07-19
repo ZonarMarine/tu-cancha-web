@@ -45,6 +45,7 @@ function normalise(row: Record<string, any>): Court {
                   ?? (Array.isArray(row.photos) ? row.photos[0] : row.photos)
                   ?? (Array.isArray(row.images) ? row.images[0] : row.images)
                   ?? null,
+    imagePosition:   row.image_position ?? "center",
   };
 }
 
@@ -820,7 +821,7 @@ export default function CanchaPage() {
                 <img
                   src={court.imageUrl} alt={court.title}
                   className="hero-img"
-                  style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', borderRadius:16 }}
+                  style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition: court.imagePosition || 'center', display:'block', borderRadius:16 }}
                 />
               ) : (
                 <>

@@ -18,6 +18,7 @@ type Court = {
   tag:       string | null;
   slots:     string[];
   imageUrl:  string | null;
+  imagePosition?: string | null;
 };
 
 type CourtLive = Court & {
@@ -140,6 +141,7 @@ export default function MasReservadas() {
         tag:          r.tag ?? null,
         slots,
         imageUrl:     r.image_url ?? null,
+        imagePosition: (r as any).image_position ?? 'center',
         bookingsToday,
         slotsLeft,
       };
@@ -218,7 +220,7 @@ export default function MasReservadas() {
                     {/* Image / field preview */}
                     <div style={{ height: 178, position: 'relative', overflow: 'hidden' }}>
                       {c.imageUrl
-                        ? <img src={c.imageUrl} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.72) contrast(1.18)' }} />
+                        ? <img src={c.imageUrl} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: c.imagePosition || 'center', filter: 'brightness(0.72) contrast(1.18)' }} />
                         : <FieldPreview sport={c.sport} tag={c.tag} />
                       }
 

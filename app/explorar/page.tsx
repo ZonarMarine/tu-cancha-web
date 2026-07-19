@@ -19,6 +19,7 @@ export type Court = {
   tag:             string | null;
   slotsAvailable:  number;
   imageUrl?:       string | null;
+  imagePosition?:  string | null;
   slots:           string[];
 };
 
@@ -47,6 +48,7 @@ function normalise(row: Record<string, any>): Court {
                  ?? (Array.isArray(row.photos) ? row.photos[0] : row.photos)
                  ?? (Array.isArray(row.images) ? row.images[0] : row.images)
                  ?? null,
+    imagePosition:   row.image_position ?? "center",
   };
 }
 
@@ -271,6 +273,7 @@ function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
             className="court-img"
             style={{
               width: '100%', height: '100%', objectFit: 'cover',
+              objectPosition: c.imagePosition || 'center',
               filter: 'contrast(1.22) brightness(0.68) saturate(1.05)',
             }}
           />

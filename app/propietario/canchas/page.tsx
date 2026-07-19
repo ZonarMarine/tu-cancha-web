@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Edit3, Eye, EyeOff, Plus, Trash2, X, Check,
   AlertTriangle, MapPin, DollarSign, Users, Clock,
-  Image as ImageIcon, Zap,
+  Image as ImageIcon, Zap, Move,
 } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -18,6 +18,7 @@ type Court = {
   base_price: number | null;
   location: string | null;
   image_url: string | null;
+  image_position: string | null;
   active: boolean;
   deleted_at: string | null;
   created_at: string;
@@ -33,6 +34,7 @@ type FormState = {
   base_price: string;
   location: string;
   image_url: string;
+  image_position: string;
   max_players: string;
   active: boolean;
   slots: string[];
@@ -53,11 +55,79 @@ const ALL_SLOTS = [
 
 const BLANK_FORM: FormState = {
   name: "", sport: "Fútbol", format: "5v5", surface: "Césped sintético",
-  base_price: "", location: "", image_url: "", max_players: "",
+  base_price: "", location: "", image_url: "", image_position: "50% 50%", max_players: "",
   active: true, slots: [],
 };
 
 /* ─── Helpers ────────────────────────────────────────────── */
+
+// Court image focal point stored as a CSS object-position ("50% 30%").
+export function parsePos(s?: string | null) {
+  const m = (s || "").match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+  return m ? { x: +m[1], y: +m[2] } : { x: 50, y: 50 };
+}
+function fmtPos(x: number, y: number) { return `${Math.round(x)}% ${Math.round(y)}%`; }
+const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+// Drag the photo to choose which part stays in frame after the cover-crop.
+function ImageReposition({ url, position, onChange, onRemove }: {
+  url: string; position: string; onChange: (v: string) => void; onRemove: () => void;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const { x, y } = parsePos(position);
+
+  const down = (e: React.PointerEvent) => {
+    const p = parsePos(position);
+    drag.current = { sx: e.clientX, sy: e.clientY, px: p.x, py: p.y };
+    setDragging(true);
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  };
+  const move = (e: React.PointerEvent) => {
+    if (!drag.current || !boxRef.current) return;
+    const r = boxRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - drag.current.sx) / r.width) * 100;
+    const dy = ((e.clientY - drag.current.sy) / r.height) * 100;
+    // Dragging the photo down reveals its upper part → focal Y decreases.
+    onChange(fmtPos(clamp(drag.current.px - dx), clamp(drag.current.py - dy)));
+  };
+  const up = () => { drag.current = null; setDragging(false); };
+
+  return (
+    <div
+      ref={boxRef}
+      onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+      style={{
+        position: "relative", marginBottom: 8, height: 150, borderRadius: 10, overflow: "hidden",
+        background: "rgba(255,255,255,0.04)", cursor: dragging ? "grabbing" : "grab",
+        touchAction: "none", userSelect: "none",
+      }}
+    >
+      <img
+        src={url} alt="preview" draggable={false}
+        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${x}% ${y}%`, pointerEvents: "none" }}
+        onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+      />
+      <div style={{
+        position: "absolute", bottom: 8, left: 8, display: "flex", alignItems: "center", gap: 5,
+        padding: "4px 9px", borderRadius: 7, fontSize: 11, fontWeight: 600, color: "#fff",
+        background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.14)", pointerEvents: "none",
+      }}>
+        <Move size={12} /> Arrastrá para reposicionar
+      </div>
+      <button
+        type="button" onClick={onRemove}
+        style={{
+          position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 8,
+          background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.15)",
+          color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+        aria-label="Quitar imagen"
+      ><X size={15} /></button>
+    </div>
+  );
+}
 
 function sportEmoji(sport: string) {
   if (sport === "Pádel" || sport === "Tenis") return "🎾";
@@ -319,24 +389,12 @@ function CourtModal({
             <Label><ImageIcon size={8} style={{ display: "inline", marginRight: 3 }} />Foto de la cancha</Label>
 
             {f.image_url ? (
-              <div style={{ position: "relative", marginBottom: 8, borderRadius: 10, overflow: "hidden", height: 120, background: "rgba(255,255,255,0.04)" }}>
-                <img
-                  src={f.image_url}
-                  alt="preview"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-                <button
-                  type="button"
-                  onClick={() => set("image_url", "")}
-                  style={{
-                    position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 8,
-                    background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.15)",
-                    color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                  aria-label="Quitar imagen"
-                ><X size={15} /></button>
-              </div>
+              <ImageReposition
+                url={f.image_url}
+                position={f.image_position}
+                onChange={v => set("image_position", v)}
+                onRemove={() => { set("image_url", ""); set("image_position", "50% 50%"); }}
+              />
             ) : (
               <label
                 style={{
@@ -606,7 +664,7 @@ export default function CanchasPage() {
     if (!user) return;
     const { data, error } = await supabase
       .from("owner_courts")
-      .select("id, name, sport, format, surface, base_price, location, image_url, active, deleted_at, created_at, slots, max_players")
+      .select("id, name, sport, format, surface, base_price, location, image_url, image_position, active, deleted_at, created_at, slots, max_players")
       .eq("owner_id", user.id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -654,6 +712,7 @@ export default function CanchasPage() {
       base_price:  f.base_price ? parseInt(f.base_price) : null,
       location:    f.location.trim() || null,
       image_url:   f.image_url.trim() || null,
+      image_position: f.image_position || null,
       max_players: f.max_players ? parseInt(f.max_players) : null,
       slots:       f.slots,
       active:      f.active,
@@ -681,6 +740,7 @@ export default function CanchasPage() {
       base_price:  f.base_price ? parseInt(f.base_price) : null,
       location:    f.location.trim() || null,
       image_url:   f.image_url.trim() || null,
+      image_position: f.image_position || null,
       max_players: f.max_players ? parseInt(f.max_players) : null,
       slots:       f.slots,
       active:      f.active,
@@ -750,6 +810,7 @@ export default function CanchasPage() {
       base_price:  c.base_price ? String(c.base_price) : "",
       location:    c.location || "",
       image_url:   c.image_url || "",
+      image_position: c.image_position || "50% 50%",
       max_players: c.max_players ? String(c.max_players) : "",
       active:      c.active,
       slots:       c.slots || [],
@@ -902,7 +963,7 @@ export default function CanchasPage() {
                   display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
                 }}>
                   {c.image_url
-                    ? <img src={c.image_url} alt={c.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }} />
+                    ? <img src={c.image_url} alt={c.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: c.image_position || "center", borderRadius: 12 }} />
                     : sportEmoji(c.sport || "")}
                 </div>
 
