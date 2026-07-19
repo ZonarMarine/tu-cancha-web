@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { fmtColones } from "@/lib/data";
 import {
-  MapPin, Star, Clock, Users, ArrowLeft, Phone, Zap, X,
+  MapPin, Star, Clock, Users, ArrowLeft, Phone, Zap, X, Navigation, ExternalLink,
   Check, Loader2, Calendar, ChevronLeft, ChevronRight, Shield,
 } from "lucide-react";
 import Link from "next/link";
@@ -873,9 +873,18 @@ export default function CanchaPage() {
               <h1 style={{ fontWeight:900, fontSize:27, letterSpacing:'-0.046em', lineHeight:1.04, marginBottom:6, color:'rgba(255,255,255,0.95)' }}>
                 {court.title}
               </h1>
-              <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'rgba(255,255,255,0.28)', marginBottom:16, letterSpacing:'0.005em', lineHeight:1.5 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'rgba(255,255,255,0.28)', marginBottom:10, letterSpacing:'0.005em', lineHeight:1.5 }}>
                 <MapPin size={11} style={{ flexShrink:0 }}/>{court.location}
               </div>
+              {court.location && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([court.title, court.location, 'Costa Rica'].filter(Boolean).join(', '))}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:12.5, fontWeight:700, color:'var(--accent)', textDecoration:'none', marginBottom:16, padding:'7px 12px', borderRadius:10, background:'var(--accent-dark)', border:'1px solid var(--accent-glow)' }}
+                >
+                  <Navigation size={13}/> Cómo llegar <ExternalLink size={11} style={{ opacity:0.6 }}/>
+                </a>
+              )}
               <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                 {[
                   {icon:<Users size={11}/>,    text:`${court.includedPlayers} jugadores`},
