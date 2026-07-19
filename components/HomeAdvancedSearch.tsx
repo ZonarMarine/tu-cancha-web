@@ -471,11 +471,6 @@ export default function HomeAdvancedSearch() {
         <div className="hads-inner">
           <div style={{ position: "relative" }}>
 
-            {/* ⚽ left deco */}
-            <div aria-hidden className="hads-deco hads-deco-left">⚽</div>
-            {/* 🏓 right deco */}
-            <div aria-hidden className="hads-deco hads-deco-right">🏓</div>
-
             {/* ── Card ── */}
             <div className="hads-card">
 
