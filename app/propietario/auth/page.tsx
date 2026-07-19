@@ -78,7 +78,7 @@ export default function OwnerAuthPage() {
           transition: border-color 0.18s, background 0.18s;
           font-family: inherit;
         }
-        .owner-input:focus { border-color: rgba(59, 130, 246,0.4); background: rgba(255,255,255,0.055); }
+        .owner-input:focus { border-color: rgba(215,255,0,0.4); background: rgba(255,255,255,0.055); }
         .owner-input::placeholder { color: rgba(255,255,255,0.22); }
         .submit-btn { transition: opacity 0.18s, transform 0.18s; }
         .submit-btn:hover:not(:disabled) { opacity: 0.88; }
@@ -88,7 +88,7 @@ export default function OwnerAuthPage() {
       {/* Subtle radial glow */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(ellipse 55% 45% at 50% 0%, rgba(59, 130, 246,0.055), transparent)",
+        background: "radial-gradient(ellipse 55% 45% at 50% 0%, rgba(215,255,0,0.055), transparent)",
       }} />
 
       <div style={{ width: "100%", maxWidth: 400, animation: "fadeUp 0.38s ease both", position: "relative" }}>
@@ -98,23 +98,23 @@ export default function OwnerAuthPage() {
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
             <div style={{
               width: 30, height: 30, borderRadius: 9,
-              background: "linear-gradient(135deg, rgba(59, 130, 246,0.15), rgba(59, 130, 246,0.06))",
-              border: "1px solid rgba(59, 130, 246,0.22)",
+              background: "linear-gradient(135deg, rgba(215,255,0,0.15), rgba(215,255,0,0.06))",
+              border: "1px solid rgba(215,255,0,0.22)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Zap size={14} fill="#3B82F6" color="#3B82F6" />
+              <Zap size={14} fill="#D7FF00" color="#D7FF00" />
             </div>
             <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: "-0.045em", color: "#fff" }}>
-              Tu<span style={{ color: "#3B82F6" }}>Cancha</span>
+              Tu<span style={{ color: "#D7FF00" }}>Cancha</span>
             </span>
           </Link>
           <div style={{
             marginTop: 9, display: "inline-flex", alignItems: "center", gap: 5,
             padding: "3px 11px", borderRadius: 99,
-            background: "rgba(59, 130, 246,0.06)", border: "1px solid rgba(59, 130, 246,0.14)",
+            background: "rgba(215,255,0,0.06)", border: "1px solid rgba(215,255,0,0.14)",
           }}>
-            <Building2 size={9} color="rgba(59, 130, 246,0.6)" />
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(59, 130, 246,0.65)", letterSpacing: "0.1em" }}>
+            <Building2 size={9} color="rgba(215,255,0,0.6)" />
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(215,255,0,0.65)", letterSpacing: "0.1em" }}>
               PORTAL DE PROPIETARIOS
             </span>
           </div>
@@ -125,11 +125,11 @@ export default function OwnerAuthPage() {
           background: "linear-gradient(160deg, rgba(14,14,14,0.99), rgba(9,9,9,0.99))",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 20,
-          boxShadow: "0 0 0 1px rgba(59, 130, 246,0.03), 0 24px 80px rgba(0,0,0,0.65)",
+          boxShadow: "0 0 0 1px rgba(215,255,0,0.03), 0 24px 80px rgba(0,0,0,0.65)",
           overflow: "hidden",
         }}>
           {/* Accent bar */}
-          <div style={{ height: 2, background: "linear-gradient(90deg, #3B82F6cc, #3B82F633, transparent)" }} />
+          <div style={{ height: 2, background: "linear-gradient(90deg, #D7FF00cc, #D7FF0033, transparent)" }} />
 
           <div style={{ padding: "26px 26px 22px" }}>
             <h2 style={{
@@ -212,11 +212,11 @@ export default function OwnerAuthPage() {
                 className="submit-btn"
                 style={{
                   width: "100%", padding: "13px", borderRadius: 12, border: "none",
-                  background: loading ? "rgba(59, 130, 246,0.45)" : "#3B82F6",
-                  color: "#fff", fontSize: 14, fontWeight: 900,
+                  background: loading ? "rgba(215,255,0,0.45)" : "#D7FF00",
+                  color: "#000", fontSize: 14, fontWeight: 900,
                   letterSpacing: "-0.02em",
                   cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: loading ? "none" : "0 0 24px rgba(59, 130, 246,0.22)",
+                  boxShadow: loading ? "none" : "0 0 24px rgba(215,255,0,0.22)",
                 }}
               >
                 {loading ? "Verificando…" : "Entrar al portal →"}
@@ -234,7 +234,7 @@ export default function OwnerAuthPage() {
               lineHeight: 1.5, margin: 0, textAlign: "center",
             }}>
               ¿Problemas para entrar? Escribinos a{" "}
-              <span style={{ color: "rgba(59, 130, 246,0.45)" }}>soporte@tucanchacr.com</span>
+              <span style={{ color: "rgba(215,255,0,0.45)" }}>soporte@tucanchacr.com</span>
             </p>
           </div>
         </div>

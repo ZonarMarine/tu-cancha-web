@@ -71,9 +71,9 @@ function FieldPreview({ sport, tag }: { sport: string; tag: string | null }) {
         <div style={{ position: 'absolute', top: '28%', right: 0, width: 38, height: '44%', border: `1.5px solid ${lineColor}`, borderRight: 'none' }} />
         <div style={{ position: 'absolute', top: '38%', right: 0, width: 16, height: '24%', border: `1.5px solid ${lineColor}`, borderRight: 'none' }} />
       </div>
-      <div style={{ position: 'absolute', top: '-30%', left: '50%', transform: 'translateX(-50%)', width: '120%', height: '80%', background: 'radial-gradient(ellipse, rgba(59, 130, 246,0.04) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-30%', left: '50%', transform: 'translateX(-50%)', width: '120%', height: '80%', background: 'radial-gradient(ellipse, rgba(215,255,0,0.04) 0%, transparent 65%)', pointerEvents: 'none' }} />
       {tag && (
-        <div style={{ position: 'absolute', bottom: 14, left: 14, zIndex: 2, fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 5, background: 'rgba(59, 130, 246,0.10)', color: 'rgba(59, 130, 246,0.70)', border: '1px solid rgba(59, 130, 246,0.18)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{tag}</div>
+        <div style={{ position: 'absolute', bottom: 14, left: 14, zIndex: 2, fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 5, background: 'rgba(215,255,0,0.10)', color: 'rgba(215,255,0,0.70)', border: '1px solid rgba(215,255,0,0.18)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{tag}</div>
       )}
     </div>
   );
@@ -263,7 +263,7 @@ export default function MasReservadas() {
                             background: isHot
                               ? 'linear-gradient(to right, #FF6B6B, #FF8C42)'
                               : isFilling
-                              ? 'linear-gradient(to right, rgba(59, 130, 246,0.6), rgba(59, 130, 246,0.9))'
+                              ? 'linear-gradient(to right, rgba(215,255,0,0.6), rgba(215,255,0,0.9))'
                               : 'rgba(74,222,128,0.7)',
                             transition: 'width 0.6s ease',
                             animation: isHot ? 'slotPulse 2.4s ease-in-out infinite' : undefined,

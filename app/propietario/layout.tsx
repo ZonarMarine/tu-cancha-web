@@ -146,7 +146,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       overflow: "hidden",
     }}>
       <style>{`
-        :root { --owner-accent: #3B82F6; --owner-dim: rgba(59, 130, 246,0.55); }
+        :root { --owner-accent: #D7FF00; --owner-dim: rgba(215,255,0,0.55); }
         .owner-nav-item {
           display: flex; align-items: center; gap: 10px;
           padding: 9px 12px; border-radius: 10px;
@@ -157,12 +157,12 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         }
         .owner-nav-item:hover { background: rgba(255,255,255,0.04); }
         .owner-nav-active {
-          background: rgba(59, 130, 246,0.07) !important;
-          border-left: 2px solid rgba(59, 130, 246,0.55);
+          background: rgba(215,255,0,0.07) !important;
+          border-left: 2px solid rgba(215,255,0,0.55);
         }
         .owner-nav-active .nav-label { color: var(--owner-accent) !important; }
         .pending-badge {
-          background: #3B82F6; color: #000;
+          background: #D7FF00; color: #000;
           font-size: 9px; font-weight: 900;
           padding: 1px 5px; border-radius: 99px;
           letter-spacing: -0.01em; flex-shrink: 0;
@@ -170,8 +170,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         .sidebar-toggle { transition: all 0.18s; }
         .sidebar-toggle:hover { background: rgba(255,255,255,0.06) !important; }
         @keyframes pendingPulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(59, 130, 246,0.4); }
-          50%      { box-shadow: 0 0 0 4px rgba(59, 130, 246,0); }
+          0%,100% { box-shadow: 0 0 0 0 rgba(215,255,0,0.4); }
+          50%      { box-shadow: 0 0 0 4px rgba(215,255,0,0); }
         }
         .pending-pulse { animation: pendingPulse 2.2s ease-in-out infinite; }
         @media (max-width: 768px) {
@@ -204,15 +204,15 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
               <div style={{
                 width: 24, height: 24, borderRadius: 7,
-                background: "linear-gradient(135deg, rgba(59, 130, 246,0.15), rgba(59, 130, 246,0.06))",
-                border: "1px solid rgba(59, 130, 246,0.2)",
+                background: "linear-gradient(135deg, rgba(215,255,0,0.15), rgba(215,255,0,0.06))",
+                border: "1px solid rgba(215,255,0,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <Zap size={12} fill="#3B82F6" color="#3B82F6" />
+                <Zap size={12} fill="#D7FF00" color="#D7FF00" />
               </div>
               <div>
                 <div style={{ fontSize: 12.5, fontWeight: 900, letterSpacing: "-0.04em", color: "#fff", lineHeight: 1.1 }}>
-                  Tu<span style={{ color: "#3B82F6" }}>Cancha</span>
+                  Tu<span style={{ color: "#D7FF00" }}>Cancha</span>
                 </div>
                 <div style={{ fontSize: 8.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>
                   PORTAL PROPIETARIO
@@ -223,11 +223,11 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           {collapsed && (
             <div style={{
               width: 24, height: 24, borderRadius: 7,
-              background: "linear-gradient(135deg, rgba(59, 130, 246,0.15), rgba(59, 130, 246,0.06))",
-              border: "1px solid rgba(59, 130, 246,0.2)",
+              background: "linear-gradient(135deg, rgba(215,255,0,0.15), rgba(215,255,0,0.06))",
+              border: "1px solid rgba(215,255,0,0.2)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Zap size={12} fill="#3B82F6" color="#3B82F6" />
+              <Zap size={12} fill="#D7FF00" color="#D7FF00" />
             </div>
           )}
           <button
@@ -259,7 +259,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
               >
                 <Icon
                   size={16}
-                  color={isActive ? "#3B82F6" : "rgba(255,255,255,0.28)"}
+                  color={isActive ? "#D7FF00" : "rgba(255,255,255,0.28)"}
                   style={{ flexShrink: 0, transition: "color 0.15s" }}
                 />
                 {!collapsed && (
@@ -267,7 +267,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="nav-label" style={{
                         fontSize: 12.5, fontWeight: isActive ? 700 : 500,
-                        color: isActive ? "#3B82F6" : "rgba(255,255,255,0.55)",
+                        color: isActive ? "#D7FF00" : "rgba(255,255,255,0.55)",
                         letterSpacing: "-0.015em", lineHeight: 1.2,
                         transition: "color 0.15s",
                       }}>
@@ -286,7 +286,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                   <span style={{
                     position: "absolute", top: 6, right: 6,
                     width: 7, height: 7, borderRadius: "50%",
-                    background: "#3B82F6", boxShadow: "0 0 6px rgba(59, 130, 246,0.8)",
+                    background: "#D7FF00", boxShadow: "0 0 6px rgba(215,255,0,0.8)",
                   }} />
                 )}
               </Link>
@@ -304,8 +304,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: "linear-gradient(135deg, rgba(59, 130, 246,0.85), rgba(59, 130, 246,0.6))",
-                color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                background: "linear-gradient(135deg, rgba(215,255,0,0.85), rgba(215,255,0,0.6))",
+                color: "#000", display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 11, fontWeight: 900,
               }}>
                 {initials}
@@ -314,7 +314,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", letterSpacing: "-0.015em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {name}
                 </div>
-                <div style={{ fontSize: 9, fontWeight: 600, color: "rgba(59, 130, 246,0.5)", letterSpacing: "0.06em" }}>PROPIETARIO</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "rgba(215,255,0,0.5)", letterSpacing: "0.06em" }}>PROPIETARIO</div>
               </div>
             </div>
           )}
@@ -367,7 +367,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
         <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
-          Tu<span style={{ color: "#3B82F6" }}>Cancha</span>
+          Tu<span style={{ color: "#D7FF00" }}>Cancha</span>
           <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.28)", marginLeft: 6, letterSpacing: "0.06em" }}>PROPIETARIO</span>
         </div>
         {pending > 0 && (
@@ -390,11 +390,11 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                 onClick={() => setMobileOpen(false)}
                 className={`owner-nav-item ${isActive ? "owner-nav-active" : ""}`}
               >
-                <Icon size={16} color={isActive ? "#3B82F6" : "rgba(255,255,255,0.35)"} style={{ flexShrink: 0 }} />
+                <Icon size={16} color={isActive ? "#D7FF00" : "rgba(255,255,255,0.35)"} style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div className="nav-label" style={{
                     fontSize: 14, fontWeight: isActive ? 700 : 500,
-                    color: isActive ? "#3B82F6" : "rgba(255,255,255,0.6)",
+                    color: isActive ? "#D7FF00" : "rgba(255,255,255,0.6)",
                   }}>{item.label}</div>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.22)" }}>{item.sub}</div>
                 </div>

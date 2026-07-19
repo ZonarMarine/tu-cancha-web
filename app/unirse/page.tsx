@@ -85,12 +85,12 @@ function UnirseInner() {
       }}>
         <div style={{
           background: "linear-gradient(160deg,#161616,#111)",
-          border: "1px solid rgba(59, 130, 246,0.18)",
+          border: "1px solid rgba(215,255,0,0.18)",
           borderRadius: 24, padding: "48px 32px", textAlign: "center",
           maxWidth: 420, width: "100%",
-          boxShadow: "0 0 40px rgba(59, 130, 246,0.08), 0 24px 60px rgba(0,0,0,0.5)",
+          boxShadow: "0 0 40px rgba(215,255,0,0.08), 0 24px 60px rgba(0,0,0,0.5)",
         }}>
-          <CheckCircle size={56} color="#3B82F6" style={{ marginBottom: 20, filter: "drop-shadow(0 0 14px rgba(59, 130, 246,0.45))" }} />
+          <CheckCircle size={56} color="#D7FF00" style={{ marginBottom: 20, filter: "drop-shadow(0 0 14px rgba(215,255,0,0.45))" }} />
           <h2 style={{ color: "#fff", fontSize: 26, fontWeight: 800, margin: "0 0 10px", letterSpacing: "-0.03em" }}>
             ¡Ya estás dentro!
           </h2>
@@ -99,10 +99,10 @@ function UnirseInner() {
           </p>
           <Link href="/juegos" style={{
             display: "inline-block", padding: "14px 32px",
-            background: "#3B82F6", color: "#fff",
+            background: "#D7FF00", color: "#000",
             borderRadius: 14, fontWeight: 800, fontSize: 15,
             textDecoration: "none", letterSpacing: "-0.02em",
-            boxShadow: "0 0 24px rgba(59, 130, 246,0.30)",
+            boxShadow: "0 0 24px rgba(215,255,0,0.30)",
           }}>
             Ver mis partidos →
           </Link>
@@ -126,12 +126,12 @@ function UnirseInner() {
       <div style={{ textAlign: "center", marginBottom: 36, maxWidth: 480 }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 8,
-          background: "rgba(59, 130, 246,0.08)", border: "1px solid rgba(59, 130, 246,0.18)",
+          background: "rgba(215,255,0,0.08)", border: "1px solid rgba(215,255,0,0.18)",
           borderRadius: 100, padding: "6px 16px", marginBottom: 20,
         }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#3B82F6", display: "inline-block",
-            boxShadow: "0 0 8px rgba(59, 130, 246,0.8)", animation: "ping 1.5s ease-in-out infinite" }} />
-          <span style={{ color: "#3B82F6", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em" }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#D7FF00", display: "inline-block",
+            boxShadow: "0 0 8px rgba(215,255,0,0.8)", animation: "ping 1.5s ease-in-out infinite" }} />
+          <span style={{ color: "#D7FF00", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em" }}>
             INVITACIÓN ACTIVA
           </span>
         </div>
@@ -159,7 +159,7 @@ function UnirseInner() {
           {/* Detail rows */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {venue && (
-              <DetailRow icon={<MapPin size={16} color="#3B82F6" />} label="Cancha" value={venue} />
+              <DetailRow icon={<MapPin size={16} color="#D7FF00" />} label="Cancha" value={venue} />
             )}
             {dateLabel && (
               <DetailRow icon={<Calendar size={16} color="#60A5FA" />} label="Fecha" value={dateLabel} />
@@ -183,8 +183,8 @@ function UnirseInner() {
                 Tu parte
               </span>
               <span style={{
-                color: "#3B82F6", fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em",
-                filter: "drop-shadow(0 0 8px rgba(59, 130, 246,0.35))",
+                color: "#D7FF00", fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em",
+                filter: "drop-shadow(0 0 8px rgba(215,255,0,0.35))",
               }}>
                 {fmtPrice(price)}
               </span>
@@ -201,14 +201,14 @@ function UnirseInner() {
           style={{
             width: "100%", padding: "18px 0",
             background: step === "loading"
-              ? "rgba(59, 130, 246,0.6)"
-              : "linear-gradient(135deg,#5AB8FF 0%,#3B82F6 60%,#35C7F5 100%)",
-            color: "#fff", fontWeight: 900, fontSize: 17,
+              ? "rgba(215,255,0,0.6)"
+              : "linear-gradient(135deg,#e8ff3a 0%,#D7FF00 60%,#c8ef00 100%)",
+            color: "#000", fontWeight: 900, fontSize: 17,
             border: "none", borderRadius: 16, cursor: step === "loading" ? "default" : "pointer",
             letterSpacing: "-0.02em",
             boxShadow: step === "loading"
               ? "none"
-              : "0 0 32px rgba(59, 130, 246,0.35), 0 4px 16px rgba(0,0,0,0.4)",
+              : "0 0 32px rgba(215,255,0,0.35), 0 4px 16px rgba(0,0,0,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             transition: "all 0.18s ease",
           }}

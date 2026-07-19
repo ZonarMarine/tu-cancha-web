@@ -59,8 +59,8 @@ export default function DescubriDeporte() {
           {/* ── Football card ── */}
           <div style={{
             borderRadius: 24, overflow: "hidden",
-            background: "linear-gradient(145deg, rgba(59, 130, 246,0.045) 0%, rgba(59, 130, 246,0.008) 40%, #0e0e0e 100%)",
-            border: "1px solid rgba(59, 130, 246,0.10)",
+            background: "linear-gradient(145deg, rgba(215,255,0,0.045) 0%, rgba(215,255,0,0.008) 40%, #0e0e0e 100%)",
+            border: "1px solid rgba(215,255,0,0.10)",
             padding: "36px 32px",
             position: "relative",
           }}>
@@ -73,7 +73,7 @@ export default function DescubriDeporte() {
             {/* Corner floodlight bloom */}
             <div style={{
               position: "absolute", top: -40, right: -40, width: 200, height: 200,
-              background: "radial-gradient(circle, rgba(59, 130, 246,0.08) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(215,255,0,0.08) 0%, transparent 65%)",
               pointerEvents: "none",
             }} />
 
@@ -81,7 +81,7 @@ export default function DescubriDeporte() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                 <span style={{ fontSize: 32 }}>⚽</span>
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "rgba(59, 130, 246,0.50)", textTransform: "uppercase", marginBottom: 2 }}>FÚTBOL</p>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "rgba(215,255,0,0.50)", textTransform: "uppercase", marginBottom: 2 }}>FÚTBOL</p>
                   <h3 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#fff", lineHeight: 1 }}>
                     Competitivo.<br />
                     <span style={{ color: tf.accent }}>Comunidad.</span>
@@ -100,7 +100,7 @@ export default function DescubriDeporte() {
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "11px 24px", borderRadius: 12, border: "none", cursor: "pointer",
-                  background: tf.accent, color: "#fff",
+                  background: tf.accent, color: "#000",
                   fontSize: 13, fontWeight: 800, letterSpacing: "-0.01em",
                   boxShadow: `0 4px 20px ${tf.accentGlow}`,
                   transition: "transform 0.16s, box-shadow 0.16s",

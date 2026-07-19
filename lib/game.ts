@@ -16,7 +16,7 @@ export const RANKS: Rank[] = [
   { key: 'oro',      name: 'Oro',      min: 10, grad: ['#C9971F', '#FFD75E'], solid: '#FFD75E', text: '#3A2C00' },
   { key: 'platino',  name: 'Platino',  min: 20, grad: ['#1F8A8A', '#5EEBD6'], solid: '#5EEBD6', text: '#043330' },
   { key: 'diamante', name: 'Diamante', min: 35, grad: ['#3B82F6', '#93C5FD'], solid: '#93C5FD', text: '#082044' },
-  { key: 'leyenda',  name: 'Leyenda',  min: 50, grad: ['#2E6FE0', '#7FD8FF'], solid: '#3B82F6', text: '#1A2000' },
+  { key: 'leyenda',  name: 'Leyenda',  min: 50, grad: ['#A8CC00', '#EAFF6B'], solid: '#D7FF00', text: '#1A2000' },
 ];
 
 export const XP = { BOOKING: 100, RETO: 150 };

@@ -39,11 +39,11 @@ export const useSport = () => useContext(SportContext);
 /* Design tokens per sport — used by all sport-aware components */
 export const SPORT_THEME = {
   futbol: {
-    accent:      "#3B82F6",
-    accentMuted: "rgba(59, 130, 246,0.65)",
-    accentGlow:  "rgba(59, 130, 246,0.18)",
-    bg:          "rgba(59, 130, 246,0.06)",
-    border:      "rgba(59, 130, 246,0.20)",
+    accent:      "#D7FF00",
+    accentMuted: "rgba(215,255,0,0.65)",
+    accentGlow:  "rgba(215,255,0,0.18)",
+    bg:          "rgba(215,255,0,0.06)",
+    border:      "rgba(215,255,0,0.20)",
     radius:      14,          // sharper — football is aggressive
     label:       "Fútbol",
     icon:        "⚽",   // football — renders fine everywhere

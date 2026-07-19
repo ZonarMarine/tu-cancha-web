@@ -103,7 +103,7 @@ function buildHtml(p: BookingConfirmationParams): string {
   const stepRows = steps.map((s, i) => `
     <tr>
       <td style="width:28px;vertical-align:top;padding-bottom:12px;">
-        <div style="width:22px;height:22px;background:rgba(59, 130, 246,0.1);border:1px solid rgba(59, 130, 246,0.2);border-radius:50%;display:inline-block;text-align:center;line-height:22px;font-size:10px;font-weight:900;color:#3B82F6;">${i + 1}</div>
+        <div style="width:22px;height:22px;background:rgba(215,255,0,0.1);border:1px solid rgba(215,255,0,0.2);border-radius:50%;display:inline-block;text-align:center;line-height:22px;font-size:10px;font-weight:900;color:#D7FF00;">${i + 1}</div>
       </td>
       <td style="font-size:13px;color:rgba(255,255,255,0.55);padding-bottom:12px;padding-left:10px;line-height:1.5;">${s}</td>
     </tr>
@@ -147,7 +147,7 @@ function buildHtml(p: BookingConfirmationParams): string {
 
           <!-- ── Lime header bar ── -->
           <tr>
-            <td bgcolor="#3B82F6" style="background:#3B82F6;padding:13px 28px;">
+            <td bgcolor="#D7FF00" style="background:#D7FF00;padding:13px 28px;">
               <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
@@ -194,7 +194,7 @@ function buildHtml(p: BookingConfirmationParams): string {
                       <tr>
                         <td style="padding:13px 0 6px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.03em;text-transform:uppercase;width:42%;vertical-align:middle;">Código</td>
                         <td style="padding:13px 0 6px 16px;vertical-align:middle;">
-                          <span style="display:inline-block;background:rgba(59, 130, 246,0.07);border:1px solid rgba(59, 130, 246,0.18);border-radius:8px;padding:5px 12px;font-size:14px;font-weight:900;color:#3B82F6;letter-spacing:0.1em;font-family:'Courier New',monospace;">${code}</span>
+                          <span style="display:inline-block;background:rgba(215,255,0,0.07);border:1px solid rgba(215,255,0,0.18);border-radius:8px;padding:5px 12px;font-size:14px;font-weight:900;color:#D7FF00;letter-spacing:0.1em;font-family:'Courier New',monospace;">${code}</span>
                         </td>
                       </tr>
                     </table>
@@ -211,7 +211,7 @@ function buildHtml(p: BookingConfirmationParams): string {
               <!-- ── CTA button ── -->
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
                 <tr>
-                  <td style="border-radius:11px;background:#3B82F6;">
+                  <td style="border-radius:11px;background:#D7FF00;">
                     <a href="${viewUrl}"
                       style="display:inline-block;padding:13px 28px;font-size:13.5px;font-weight:800;color:#000;text-decoration:none;letter-spacing:-0.02em;border-radius:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
                       Ver mi reserva →
@@ -236,7 +236,7 @@ function buildHtml(p: BookingConfirmationParams): string {
               <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <span style="font-size:13px;font-weight:900;color:rgba(255,255,255,0.6);letter-spacing:-0.03em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Tu<span style="color:#3B82F6;">Cancha</span></span>
+                    <span style="font-size:13px;font-weight:900;color:rgba(255,255,255,0.6);letter-spacing:-0.03em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Tu<span style="color:#D7FF00;">Cancha</span></span>
                     <p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.22);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Jugá hoy. Sin organizar nada.</p>
                   </td>
                   <td align="right" style="vertical-align:bottom;">
@@ -246,7 +246,7 @@ function buildHtml(p: BookingConfirmationParams): string {
               </table>
               <p style="margin:14px 0 0;font-size:10.5px;color:rgba(255,255,255,0.15);line-height:1.6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
                 Recibiste este correo porque realizaste una reserva en TuCancha.
-                Si no realizaste esta reserva, contactanos a <a href="mailto:hola@tucanchacr.com" style="color:rgba(59, 130, 246,0.4);text-decoration:none;">hola@tucanchacr.com</a>
+                Si no realizaste esta reserva, contactanos a <a href="mailto:hola@tucanchacr.com" style="color:rgba(215,255,0,0.4);text-decoration:none;">hola@tucanchacr.com</a>
               </p>
             </td>
           </tr>

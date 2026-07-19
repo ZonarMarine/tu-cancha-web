@@ -47,7 +47,7 @@ const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }>
   pending_payment: { label: "Pendiente",     color: "#F59E0B", bg: "rgba(245,158,11,0.1)"  },
   partially_paid:  { label: "Parcial",       color: "#6366F1", bg: "rgba(99,102,241,0.1)"  },
   paid:            { label: "Pagado",        color: "#34D399", bg: "rgba(52,211,153,0.1)"  },
-  confirmed:       { label: "Confirmado",    color: "#3B82F6", bg: "rgba(59, 130, 246,0.08)"  },
+  confirmed:       { label: "Confirmado",    color: "#D7FF00", bg: "rgba(215,255,0,0.08)"  },
   failed:          { label: "Fallido",       color: "#EF4444", bg: "rgba(239,68,68,0.1)"   },
   expired:         { label: "Expirado",      color: "#9CA3AF", bg: "rgba(156,163,175,0.1)" },
   cancelled:       { label: "Cancelado",     color: "#9CA3AF", bg: "rgba(156,163,175,0.1)" },
@@ -167,7 +167,7 @@ export default function PagosPage() {
         marginBottom: 24, animation: "fadeUp 0.38s 0.05s ease both",
       }}>
         {[
-          { label: "Total neto",    value: fmt(stats.totalNet),  sub: "todos los tiempos",  icon: TrendingUp,  color: "#3B82F6", bg: "rgba(59, 130, 246,0.06)",   border: "rgba(59, 130, 246,0.12)"   },
+          { label: "Total neto",    value: fmt(stats.totalNet),  sub: "todos los tiempos",  icon: TrendingUp,  color: "#D7FF00", bg: "rgba(215,255,0,0.06)",   border: "rgba(215,255,0,0.12)"   },
           { label: "Este mes",      value: fmt(stats.thisMonth), sub: "neto recibido",       icon: CreditCard,  color: "#34D399", bg: "rgba(52,211,153,0.06)",  border: "rgba(52,211,153,0.12)"  },
           { label: "Pendientes",    value: stats.pending.toString(), sub: "por confirmar",   icon: Clock,       color: "#F59E0B", bg: "rgba(245,158,11,0.06)",  border: "rgba(245,158,11,0.14)"  },
           { label: "Reembolsado",   value: fmt(stats.refunded),  sub: "devuelto",            icon: RefreshCw,   color: "#818CF8", bg: "rgba(129,140,248,0.06)", border: "rgba(129,140,248,0.12)" },
@@ -322,7 +322,7 @@ export default function PagosPage() {
                 {/* Net */}
                 <div style={{
                   fontSize: 13, fontWeight: 800,
-                  color: ["paid","confirmed"].includes(p.status) ? "#3B82F6" : "rgba(255,255,255,0.5)",
+                  color: ["paid","confirmed"].includes(p.status) ? "#D7FF00" : "rgba(255,255,255,0.5)",
                 }}>
                   {fmt(p.owner_net_amount)}
                 </div>

@@ -15,13 +15,13 @@ type Notif = {
 /* No seed data — panel shows only real notifications from DB */
 
 const TYPE_META: Record<string, { icon: string; color: string }> = {
-  invite_accepted: { icon: '👤', color: '#3B82F6' },
+  invite_accepted: { icon: '👤', color: '#D7FF00' },
   rival_search:    { icon: '⚔️',  color: '#F97316' },
   club_promoted:   { icon: '🏆', color: '#FFD700' },
   reservation:     { icon: '📅', color: '#60A5FA' },
   tournament:      { icon: '🎯', color: '#A78BFA' },
   chat:            { icon: '💬', color: '#34D399' },
-  general:         { icon: '⚡', color: '#3B82F6' },
+  general:         { icon: '⚡', color: '#D7FF00' },
 };
 
 function timeAgo(iso: string) {
@@ -140,18 +140,18 @@ export default function NotificationBell() {
         aria-label="Notificaciones"
         style={{
           position: 'relative', width: 34, height: 34, borderRadius: 9,
-          background: open ? 'rgba(59, 130, 246,0.08)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${open ? 'rgba(59, 130, 246,0.22)' : 'rgba(255,255,255,0.07)'}`,
+          background: open ? 'rgba(215,255,0,0.08)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${open ? 'rgba(215,255,0,0.22)' : 'rgba(255,255,255,0.07)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', transition: 'all 0.18s ease',
-          boxShadow: open ? '0 0 16px rgba(59, 130, 246,0.10)' : 'none',
+          boxShadow: open ? '0 0 16px rgba(215,255,0,0.10)' : 'none',
         }}
       >
         <Bell
           size={15}
-          color={open || unread > 0 ? '#3B82F6' : 'rgba(255,255,255,0.38)'}
+          color={open || unread > 0 ? '#D7FF00' : 'rgba(255,255,255,0.38)'}
           style={{
-            filter: open || unread > 0 ? 'drop-shadow(0 0 5px rgba(59, 130, 246,0.55))' : 'none',
+            filter: open || unread > 0 ? 'drop-shadow(0 0 5px rgba(215,255,0,0.55))' : 'none',
             transition: 'all 0.18s',
           }}
         />
@@ -159,8 +159,8 @@ export default function NotificationBell() {
           <span style={{
             position: 'absolute', top: 5, right: 5,
             width: 7, height: 7, borderRadius: '50%',
-            background: '#3B82F6',
-            boxShadow: '0 0 8px rgba(59, 130, 246,0.9)',
+            background: '#D7FF00',
+            boxShadow: '0 0 8px rgba(215,255,0,0.9)',
             animation: 'bellPulse 2s ease-in-out infinite',
             border: '1.5px solid rgba(8,8,8,0.95)',
           }} />
@@ -176,13 +176,13 @@ export default function NotificationBell() {
           background: 'linear-gradient(165deg, rgba(14,14,14,0.98), rgba(9,9,9,0.98))',
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 18,
-          boxShadow: '0 0 0 1px rgba(59, 130, 246,0.03), 0 8px 16px rgba(0,0,0,0.2), 0 24px 80px rgba(0,0,0,0.65)',
+          boxShadow: '0 0 0 1px rgba(215,255,0,0.03), 0 8px 16px rgba(0,0,0,0.2), 0 24px 80px rgba(0,0,0,0.65)',
           overflow: 'hidden',
           backdropFilter: 'blur(48px)',
           WebkitBackdropFilter: 'blur(48px)',
         }}>
           {/* Lime accent line */}
-          <div style={{ height: 2, background: 'linear-gradient(90deg, #3B82F6cc, #3B82F633, transparent)' }} />
+          <div style={{ height: 2, background: 'linear-gradient(90deg, #D7FF00cc, #D7FF0033, transparent)' }} />
 
           {/* Header */}
           <div style={{
@@ -195,8 +195,8 @@ export default function NotificationBell() {
               </span>
               {unread > 0 && (
                 <span style={{
-                  fontSize: 10, fontWeight: 800, color: '#fff',
-                  background: '#3B82F6', borderRadius: 99, padding: '2px 7px',
+                  fontSize: 10, fontWeight: 800, color: '#000',
+                  background: '#D7FF00', borderRadius: 99, padding: '2px 7px',
                   letterSpacing: '-0.01em',
                 }}>
                   {unread} nueva{unread !== 1 ? 's' : ''}
@@ -211,7 +211,7 @@ export default function NotificationBell() {
                 letterSpacing: '-0.01em', padding: 0,
                 transition: 'color 0.16s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(59, 130, 246,0.65)')}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(215,255,0,0.65)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}>
                 Marcar leídas
               </button>
@@ -247,8 +247,8 @@ export default function NotificationBell() {
                 <div key={n.id} className="notif-row" style={{
                   display: 'flex', alignItems: 'flex-start', gap: 12,
                   padding: '11px 18px',
-                  background: n.read ? 'transparent' : 'rgba(59, 130, 246,0.025)',
-                  borderLeft: n.read ? '2px solid transparent' : '2px solid rgba(59, 130, 246,0.38)',
+                  background: n.read ? 'transparent' : 'rgba(215,255,0,0.025)',
+                  borderLeft: n.read ? '2px solid transparent' : '2px solid rgba(215,255,0,0.38)',
                   borderBottom: i < notifs.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                   cursor: 'default', transition: 'background 0.16s',
                   animation: `notifIn 0.25s ${i * 0.04}s ease both`,
@@ -274,7 +274,7 @@ export default function NotificationBell() {
                       </span>
                       <span style={{
                         fontSize: 10, flexShrink: 0, fontWeight: 600,
-                        color: n.read ? 'rgba(255,255,255,0.18)' : 'rgba(59, 130, 246,0.65)',
+                        color: n.read ? 'rgba(255,255,255,0.18)' : 'rgba(215,255,0,0.65)',
                       }}>
                         {timeAgo(n.created_at)}
                       </span>

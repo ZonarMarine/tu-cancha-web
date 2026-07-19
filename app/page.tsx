@@ -185,7 +185,7 @@ function FieldPreview({ sport, tag }: { sport: string; tag: string | null }) {
       <div style={{
         position: 'absolute', top: '-30%', left: '50%', transform: 'translateX(-50%)',
         width: '120%', height: '80%',
-        background: 'radial-gradient(ellipse, rgba(59, 130, 246,0.04) 0%, transparent 65%)',
+        background: 'radial-gradient(ellipse, rgba(215,255,0,0.04) 0%, transparent 65%)',
         pointerEvents: 'none',
       }} />
       {/* Tag badge */}
@@ -193,8 +193,8 @@ function FieldPreview({ sport, tag }: { sport: string; tag: string | null }) {
         <div style={{
           position: 'absolute', bottom: 14, left: 14, zIndex: 2,
           fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
-          background: 'rgba(59, 130, 246,0.10)', color: 'rgba(59, 130, 246,0.70)',
-          border: '1px solid rgba(59, 130, 246,0.18)', letterSpacing: '0.05em',
+          background: 'rgba(215,255,0,0.10)', color: 'rgba(215,255,0,0.70)',
+          border: '1px solid rgba(215,255,0,0.18)', letterSpacing: '0.05em',
           textTransform: 'uppercase',
         }}>{tag}</div>
       )}
@@ -237,9 +237,9 @@ export default async function HomePage() {
       // FC-style depth: cool navy pools in the corners + a faint lime top glow,
       // layered over near-black. Gives the lower sections dimension instead of flat black.
       background: `
-        radial-gradient(1100px 620px at 88% 2%, rgba(53,199,245,0.10) 0%, transparent 55%),
-        radial-gradient(1000px 700px at 6% 22%, rgba(59,130,246,0.10) 0%, transparent 55%),
-        radial-gradient(900px 520px at 50% 100%, rgba(59,130,246,0.08) 0%, transparent 60%),
+        radial-gradient(1100px 620px at 88% 2%, rgba(56,86,110,0.10) 0%, transparent 55%),
+        radial-gradient(1000px 700px at 6% 22%, rgba(34,46,64,0.10) 0%, transparent 55%),
+        radial-gradient(900px 500px at 50% 100%, rgba(40,54,40,0.08) 0%, transparent 60%),
         var(--bg)
       `,
     }}>
@@ -268,7 +268,7 @@ export default async function HomePage() {
             position: 'absolute', top: '36%', left: '50%',
             transform: 'translate(-50%,-50%)',
             width: 1040, height: 1040,
-            background: 'radial-gradient(circle, rgba(59, 130, 246,0.042) 0%, rgba(59, 130, 246,0.008) 38%, transparent 62%)',
+            background: 'radial-gradient(circle, rgba(215,255,0,0.042) 0%, rgba(215,255,0,0.008) 38%, transparent 62%)',
             animation: 'heroGlow 10s ease-in-out infinite',
           }} />
 
@@ -276,7 +276,7 @@ export default async function HomePage() {
           <div style={{
             position: 'absolute', top: '-8%', left: '8%',
             width: 480, height: 680,
-            background: 'radial-gradient(ellipse 60% 80% at 30% 0%, rgba(59, 130, 246,0.026) 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse 60% 80% at 30% 0%, rgba(215,255,0,0.026) 0%, transparent 65%)',
             filter: 'blur(36px)',
             animation: 'floodDrift 13s ease-in-out infinite',
           }} />
@@ -285,7 +285,7 @@ export default async function HomePage() {
           <div style={{
             position: 'absolute', top: '-8%', right: '8%',
             width: 480, height: 680,
-            background: 'radial-gradient(ellipse 60% 80% at 70% 0%, rgba(59, 130, 246,0.020) 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse 60% 80% at 70% 0%, rgba(215,255,0,0.020) 0%, transparent 65%)',
             filter: 'blur(36px)',
             animation: 'floodDriftR 16s ease-in-out infinite',
           }} />
@@ -356,8 +356,8 @@ export default async function HomePage() {
             50%      { opacity:0.45; }
           }
           @keyframes barGlow {
-            0%,100% { box-shadow: 0 0 8px rgba(59, 130, 246,0.25); }
-            50%      { box-shadow: 0 0 18px rgba(59, 130, 246,0.45); }
+            0%,100% { box-shadow: 0 0 8px rgba(215,255,0,0.25); }
+            50%      { box-shadow: 0 0 18px rgba(215,255,0,0.45); }
           }
           @keyframes liveDot {
             0%,100% { opacity:1; transform:scale(1); }
@@ -375,11 +375,11 @@ export default async function HomePage() {
           .scroll-row::-webkit-scrollbar { display: none; }
           .court-card-link .court-card { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
           .court-card-link:hover .court-card {
-            border-color: rgba(59, 130, 246,0.28) !important;
+            border-color: rgba(215,255,0,0.28) !important;
             box-shadow:
               inset 0 1px 0 rgba(255,255,255,0.07),
-              0 0 0 1px rgba(59, 130, 246,0.10),
-              0 0 34px rgba(59, 130, 246,0.07),
+              0 0 0 1px rgba(215,255,0,0.10),
+              0 0 34px rgba(215,255,0,0.07),
               0 24px 48px rgba(0,0,0,0.5) !important;
             transform: translateY(-3px);
           }
@@ -401,7 +401,7 @@ export default async function HomePage() {
             Tu Cancha.<br />
             <span style={{
               color: 'var(--accent)',
-              textShadow: '0 0 100px rgba(59, 130, 246,0.18)',
+              textShadow: '0 0 100px rgba(215,255,0,0.18)',
             }}>Tu Partido.</span>
           </h1>
 
@@ -535,9 +535,9 @@ export default async function HomePage() {
                           {sportLabel && (
                             <span style={{
                               fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 6,
-                              background: isPadel ? 'rgba(96,165,250,0.08)' : 'rgba(59, 130, 246,0.07)',
-                              color: isPadel ? 'rgba(96,165,250,0.75)' : 'rgba(59, 130, 246,0.65)',
-                              border: `1px solid ${isPadel ? 'rgba(96,165,250,0.14)' : 'rgba(59, 130, 246,0.12)'}`,
+                              background: isPadel ? 'rgba(96,165,250,0.08)' : 'rgba(215,255,0,0.07)',
+                              color: isPadel ? 'rgba(96,165,250,0.75)' : 'rgba(215,255,0,0.65)',
+                              border: `1px solid ${isPadel ? 'rgba(96,165,250,0.14)' : 'rgba(215,255,0,0.12)'}`,
                               flexShrink: 0,
                               textTransform: 'capitalize',
                             }}>
@@ -616,9 +616,9 @@ export default async function HomePage() {
                   gap: 16, alignItems: 'center',
                   padding: '13px 20px', borderRadius: 14,
                   background: i === 0
-                    ? 'linear-gradient(to right, rgba(59, 130, 246,0.04), rgba(59, 130, 246,0.02) 60%, transparent)'
+                    ? 'linear-gradient(to right, rgba(215,255,0,0.04), rgba(215,255,0,0.02) 60%, transparent)'
                     : 'var(--surface)',
-                  border: `1px solid ${i === 0 ? 'rgba(59, 130, 246,0.09)' : 'rgba(255,255,255,0.05)'}`,
+                  border: `1px solid ${i === 0 ? 'rgba(215,255,0,0.09)' : 'rgba(255,255,255,0.05)'}`,
                   animation: `rankRise 0.35s ease ${i * 0.06}s both`,
                 }}>
                   {/* Rank */}
@@ -631,14 +631,14 @@ export default async function HomePage() {
                       <img src={p.avatarUrl} alt={p.name} style={{
                         width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                         objectFit: 'cover',
-                        border: i === 0 ? '1.5px solid rgba(59, 130, 246,0.20)' : '1.5px solid rgba(255,255,255,0.06)',
+                        border: i === 0 ? '1.5px solid rgba(215,255,0,0.20)' : '1.5px solid rgba(255,255,255,0.06)',
                       }} />
                     ) : (
                       <div style={{
                         width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 10.5, fontWeight: 800,
-                        background: i === 0 ? 'rgba(59, 130, 246,0.12)' : 'var(--surface2)',
+                        background: i === 0 ? 'rgba(215,255,0,0.12)' : 'var(--surface2)',
                         color: i === 0 ? 'var(--accent)' : 'var(--text2)',
                       }}>
                         {initials}
@@ -657,9 +657,9 @@ export default async function HomePage() {
                   {/* Level badge */}
                   <span style={{
                     fontSize: 12, fontWeight: 900, padding: '4px 9px', borderRadius: 8, textAlign: 'center',
-                    background: i === 0 ? 'rgba(59, 130, 246,0.10)' : 'rgba(255,255,255,0.05)',
+                    background: i === 0 ? 'rgba(215,255,0,0.10)' : 'rgba(255,255,255,0.05)',
                     color: i === 0 ? 'var(--accent)' : 'var(--text)',
-                    border: `1px solid ${i === 0 ? 'rgba(59, 130, 246,0.16)' : 'rgba(255,255,255,0.06)'}`,
+                    border: `1px solid ${i === 0 ? 'rgba(215,255,0,0.16)' : 'rgba(255,255,255,0.06)'}`,
                   }}>Nv {p.level}</span>
                 </div>
               );
@@ -678,7 +678,7 @@ export default async function HomePage() {
         <div style={{
           position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
           width: 900, height: 400, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(59, 130, 246,0.024) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(215,255,0,0.024) 0%, transparent 70%)',
         }} />
         <div className="container">
           <MasReservadas />
@@ -735,7 +735,7 @@ export default async function HomePage() {
               borderRadius: 20, overflow: 'hidden',
               background: '#0a0a0a',
               border: '1px solid rgba(255,255,255,0.07)',
-              boxShadow: '0 0 0 1px rgba(59, 130, 246,0.03) inset, 0 40px 100px rgba(0,0,0,0.65)',
+              boxShadow: '0 0 0 1px rgba(215,255,0,0.03) inset, 0 40px 100px rgba(0,0,0,0.65)',
             }}>
               {/* Titlebar */}
               <div style={{
@@ -780,9 +780,9 @@ export default async function HomePage() {
                       background: i === 5
                         ? 'var(--accent)'
                         : i === 6
-                        ? 'rgba(59, 130, 246,0.30)'
+                        ? 'rgba(215,255,0,0.30)'
                         : 'rgba(255,255,255,0.06)',
-                      boxShadow: i === 5 ? '0 0 12px rgba(59, 130, 246,0.35), 0 0 4px rgba(59, 130, 246,0.6)' : 'none',
+                      boxShadow: i === 5 ? '0 0 12px rgba(215,255,0,0.35), 0 0 4px rgba(215,255,0,0.6)' : 'none',
                       animation: i === 5 ? 'barGlow 3s ease-in-out infinite' : 'none',
                     }} />
                   ))}
@@ -860,7 +860,7 @@ export default async function HomePage() {
       <section style={{ position: 'relative', padding: '80px 40px', textAlign: 'center', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 55% 65% at 50% 50%, rgba(59, 130, 246,0.04) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 55% 65% at 50% 50%, rgba(215,255,0,0.04) 0%, transparent 70%)',
         }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 560, margin: '0 auto' }}>
           <p className="eyebrow" style={{ marginBottom: 28 }}>EMPEZÁ HOY · GRATIS</p>
@@ -870,7 +870,7 @@ export default async function HomePage() {
           }}>
             ¿Cuándo fue<br />
             la última vez<br />
-            que <span style={{ color: 'var(--accent)', textShadow: '0 0 40px rgba(59, 130, 246,0.18)' }}>jugaste?</span>
+            que <span style={{ color: 'var(--accent)', textShadow: '0 0 40px rgba(215,255,0,0.18)' }}>jugaste?</span>
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text3)', marginBottom: 44 }}>
             Tu próximo partido está a un tap de distancia.
@@ -880,7 +880,7 @@ export default async function HomePage() {
               style={{
                 padding: '16px 44px', fontSize: 14.5, borderRadius: 15,
                 fontWeight: 800, letterSpacing: '-0.01em',
-                boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(59, 130, 246,0.10)',
+                boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(215,255,0,0.10)',
               }}>
               Registrate ahora →
             </Link>

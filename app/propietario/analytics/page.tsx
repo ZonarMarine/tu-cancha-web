@@ -308,9 +308,9 @@ export default function AnalyticsPage() {
             </p>
           </div>
           {lastUpdate && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 99, background: "rgba(59, 130, 246,0.06)", border: "1px solid rgba(59, 130, 246,0.12)" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", animation: "liveBlip 2s ease-in-out infinite" }} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(59, 130, 246,0.65)", letterSpacing: "0.06em" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 99, background: "rgba(215,255,0,0.06)", border: "1px solid rgba(215,255,0,0.12)" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#D7FF00", animation: "liveBlip 2s ease-in-out infinite" }} />
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(215,255,0,0.65)", letterSpacing: "0.06em" }}>
                 EN VIVO · {lastUpdate}
               </span>
             </div>
@@ -345,8 +345,8 @@ export default function AnalyticsPage() {
             ))}
           </div>
           <div style={{ padding: "48px 24px", textAlign: "center", background: "rgba(10,10,10,0.8)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(59, 130, 246,0.07)", border: "1px solid rgba(59, 130, 246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <BarChart3 size={20} color="rgba(59, 130, 246,0.5)" />
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(215,255,0,0.07)", border: "1px solid rgba(215,255,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <BarChart3 size={20} color="rgba(215,255,0,0.5)" />
             </div>
             <p style={{ fontSize: 15, fontWeight: 800, color: "rgba(255,255,255,0.50)", marginBottom: 6 }}>
               Todavía no hay suficientes datos
@@ -392,9 +392,9 @@ export default function AnalyticsPage() {
                 full: fmtFull(kpis.ingresosMes),
                 change: pct(kpis.ingresosMes, kpis.ingresosAnt),
                 icon: TrendingUp,
-                color: "#3B82F6",
-                bg: "rgba(59, 130, 246,0.06)",
-                border: "rgba(59, 130, 246,0.12)",
+                color: "#D7FF00",
+                bg: "rgba(215,255,0,0.06)",
+                border: "rgba(215,255,0,0.12)",
               },
               {
                 label: "Ocupación media",
@@ -461,7 +461,7 @@ export default function AnalyticsPage() {
                   INGRESOS MENSUALES
                 </div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.04em", color: "#3B82F6" }}>
+                  <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.04em", color: "#D7FF00" }}>
                     {fmt(currMon?.revenue ?? 0)}
                   </span>
                   {(() => {
@@ -488,7 +488,7 @@ export default function AnalyticsPage() {
                       style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 0, cursor: "default" }}
                     >
                       {isLast && m.revenue > 0 && (
-                        <div style={{ fontSize: 9, color: "#3B82F6", fontWeight: 700, marginBottom: 4, whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 9, color: "#D7FF00", fontWeight: 700, marginBottom: 4, whiteSpace: "nowrap" }}>
                           {fmt(m.revenue)}
                         </div>
                       )}
@@ -496,11 +496,11 @@ export default function AnalyticsPage() {
                         width: "100%", height: h,
                         borderRadius: "5px 5px 2px 2px",
                         background: isLast
-                          ? "linear-gradient(180deg, #3B82F6 0%, rgba(59, 130, 246,0.50) 100%)"
+                          ? "linear-gradient(180deg, #D7FF00 0%, rgba(215,255,0,0.50) 100%)"
                           : m.revenue > 0
                             ? "rgba(255,255,255,0.10)"
                             : "rgba(255,255,255,0.04)",
-                        boxShadow: isLast ? "0 0 18px rgba(59, 130, 246,0.22)" : "none",
+                        boxShadow: isLast ? "0 0 18px rgba(215,255,0,0.22)" : "none",
                         transition: "height 0.5s cubic-bezier(0.34,1.1,0.64,1)",
                       }} />
                     </div>
@@ -515,7 +515,7 @@ export default function AnalyticsPage() {
                     flex: 1, textAlign: "center",
                     fontSize: 9.5,
                     fontWeight: i === monthlyData.length - 1 ? 800 : 500,
-                    color: i === monthlyData.length - 1 ? "#3B82F6" : "rgba(255,255,255,0.22)",
+                    color: i === monthlyData.length - 1 ? "#D7FF00" : "rgba(255,255,255,0.22)",
                   }}>
                     {m.label}
                   </div>
@@ -534,11 +534,11 @@ export default function AnalyticsPage() {
                       <div style={{
                         height: "100%", borderRadius: 99,
                         width: `${m.occ}%`,
-                        background: m.occ >= 70 ? "#3B82F6" : m.occ >= 40 ? "#60A5FA" : "rgba(255,255,255,0.18)",
+                        background: m.occ >= 70 ? "#D7FF00" : m.occ >= 40 ? "#60A5FA" : "rgba(255,255,255,0.18)",
                         transition: "width 0.6s cubic-bezier(0.34,1.1,0.64,1)",
                       }} />
                     </div>
-                    <div style={{ fontSize: 9, color: m.occ >= 70 ? "rgba(59, 130, 246,0.55)" : "rgba(255,255,255,0.25)", width: 26, textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 9, color: m.occ >= 70 ? "rgba(215,255,0,0.55)" : "rgba(255,255,255,0.25)", width: 26, textAlign: "right", flexShrink: 0 }}>
                       {m.occ}%
                     </div>
                   </div>
@@ -568,14 +568,14 @@ export default function AnalyticsPage() {
                         <span style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(255,255,255,0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
                           {sportEmoji(c.sport)} {c.name}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 900, color: "#3B82F6", flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 900, color: "#D7FF00", flexShrink: 0, marginLeft: 8 }}>
                           {fmt(c.revenue)}
                         </span>
                       </div>
                       <div style={{ height: 5, borderRadius: 99, background: "rgba(255,255,255,0.05)", marginBottom: 3 }}>
                         <div style={{
                           height: "100%", borderRadius: 99, width: `${c.pct}%`,
-                          background: i === 0 ? "rgba(59, 130, 246,0.70)" : i === 1 ? "rgba(96,165,250,0.65)" : "rgba(52,211,153,0.55)",
+                          background: i === 0 ? "rgba(215,255,0,0.70)" : i === 1 ? "rgba(96,165,250,0.65)" : "rgba(52,211,153,0.55)",
                           transition: "width 0.6s cubic-bezier(0.34,1.1,0.64,1)",
                         }} />
                       </div>
@@ -607,7 +607,7 @@ export default function AnalyticsPage() {
                       <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.05)" }}>
                         <div style={{
                           height: "100%", borderRadius: 99, width: `${h.pct}%`,
-                          background: h.pct >= 85 ? "#3B82F6"
+                          background: h.pct >= 85 ? "#D7FF00"
                             : h.pct >= 60 ? "#60A5FA"
                             : "rgba(255,255,255,0.18)",
                           transition: "width 0.6s cubic-bezier(0.34,1.1,0.64,1)",
@@ -630,7 +630,7 @@ export default function AnalyticsPage() {
           }}>
             {[
               {
-                icon: "📅", color: "#3B82F6",
+                icon: "📅", color: "#D7FF00",
                 label: "Total últimos 7 meses",
                 value: fmt(totalRev),
                 sub: `${monthlyData.reduce((s, m) => s + m.bookings, 0)} reservas confirmadas`,

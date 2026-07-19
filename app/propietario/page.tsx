@@ -241,10 +241,10 @@ export default function OwnerDashboard() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <div style={{
                 width: 7, height: 7, borderRadius: "50%",
-                background: "#3B82F6", boxShadow: "0 0 8px rgba(59, 130, 246,0.8)",
+                background: "#D7FF00", boxShadow: "0 0 8px rgba(215,255,0,0.8)",
                 animation: "liveBlip 2.2s ease-in-out infinite",
               }} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(59, 130, 246,0.65)", letterSpacing: "0.12em" }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(215,255,0,0.65)", letterSpacing: "0.12em" }}>
                 EN VIVO · {time}
               </span>
             </div>
@@ -258,10 +258,10 @@ export default function OwnerDashboard() {
           <Link href="/propietario/reservas" style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "9px 16px", borderRadius: 10,
-            background: "#3B82F6", color: "#fff",
+            background: "#D7FF00", color: "#000",
             textDecoration: "none", fontSize: 12.5, fontWeight: 800,
             letterSpacing: "-0.015em",
-            boxShadow: "0 0 20px rgba(59, 130, 246,0.25)",
+            boxShadow: "0 0 20px rgba(215,255,0,0.25)",
           }}>
             <BarChart3 size={13} />
             Ver todas las reservas
@@ -277,8 +277,8 @@ export default function OwnerDashboard() {
         {[
           {
             label: "Ingresos hoy", value: todayNet > 0 ? fmt(todayNet) : "₡0",
-            sub: "neto recibido", icon: TrendingUp, color: "#3B82F6",
-            bg: "rgba(59, 130, 246,0.06)", border: "rgba(59, 130, 246,0.12)",
+            sub: "neto recibido", icon: TrendingUp, color: "#D7FF00",
+            bg: "rgba(215,255,0,0.06)", border: "rgba(215,255,0,0.12)",
           },
           {
             label: "Pendientes", value: pending.length.toString(),
@@ -349,7 +349,7 @@ export default function OwnerDashboard() {
               </span>
               {pending.length > 0 && (
                 <span style={{
-                  background: "#FACC15", color: "#fff",
+                  background: "#FACC15", color: "#000",
                   fontSize: 9.5, fontWeight: 900, padding: "2px 7px",
                   borderRadius: 99, letterSpacing: "-0.01em",
                 }}>
@@ -358,7 +358,7 @@ export default function OwnerDashboard() {
               )}
             </div>
             <Link href="/propietario/reservas" style={{
-              fontSize: 10.5, fontWeight: 600, color: "rgba(59, 130, 246,0.5)",
+              fontSize: 10.5, fontWeight: 600, color: "rgba(215,255,0,0.5)",
               textDecoration: "none", display: "flex", alignItems: "center", gap: 3,
             }}>
               Ver todas <ChevronRight size={10} />
@@ -406,7 +406,7 @@ export default function OwnerDashboard() {
                       <span style={{ fontSize: 10, color: "rgba(255,255,255,0.22)" }}>
                         <Users size={9} style={{ display: "inline", marginRight: 3 }} />{r.players ?? "–"} jugadores
                       </span>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(59, 130, 246,0.7)" }}>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(215,255,0,0.7)" }}>
                         {fmt(r.total_price)}
                       </span>
                     </div>
@@ -453,7 +453,7 @@ export default function OwnerDashboard() {
             <div style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", marginBottom: 4 }}>
               INGRESOS SEMANALES
             </div>
-            <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em", color: "#3B82F6" }}>
+            <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em", color: "#D7FF00" }}>
               {fmt(weekTotal)}
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
@@ -475,9 +475,9 @@ export default function OwnerDashboard() {
                       width: "100%", height: Math.max(h, 4),
                       borderRadius: "4px 4px 2px 2px",
                       background: isToday
-                        ? "linear-gradient(180deg, #3B82F6, #3B82F688)"
+                        ? "linear-gradient(180deg, #D7FF00, #D7FF0088)"
                         : "rgba(255,255,255,0.08)",
-                      boxShadow: isToday ? "0 0 12px rgba(59, 130, 246,0.3)" : "none",
+                      boxShadow: isToday ? "0 0 12px rgba(215,255,0,0.3)" : "none",
                       transition: "height 0.4s ease",
                       cursor: "default",
                     }}
@@ -494,7 +494,7 @@ export default function OwnerDashboard() {
                 <div key={i} style={{
                   flex: 1, textAlign: "center",
                   fontSize: 9, fontWeight: i === todayDow ? 800 : 500,
-                  color: i === todayDow ? "#3B82F6" : "rgba(255,255,255,0.22)",
+                  color: i === todayDow ? "#D7FF00" : "rgba(255,255,255,0.22)",
                 }}>
                   {d}
                 </div>
@@ -508,13 +508,13 @@ export default function OwnerDashboard() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
               textDecoration: "none",
               padding: "10px 12px", borderRadius: 10,
-              background: "rgba(59, 130, 246,0.04)", border: "1px solid rgba(59, 130, 246,0.10)",
+              background: "rgba(215,255,0,0.04)", border: "1px solid rgba(215,255,0,0.10)",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <CreditCard size={12} color="#3B82F6" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(59, 130, 246,0.7)" }}>Ver pagos ONVO</span>
+                <CreditCard size={12} color="#D7FF00" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(215,255,0,0.7)" }}>Ver pagos ONVO</span>
               </div>
-              <ChevronRight size={11} color="rgba(59, 130, 246,0.5)" />
+              <ChevronRight size={11} color="rgba(215,255,0,0.5)" />
             </Link>
           </div>
         </div>
@@ -539,7 +539,7 @@ export default function OwnerDashboard() {
           </div>
           <Link href="/propietario/calendario" style={{
             display: "flex", alignItems: "center", gap: 4,
-            fontSize: 10.5, color: "rgba(59, 130, 246,0.5)",
+            fontSize: 10.5, color: "rgba(215,255,0,0.5)",
             textDecoration: "none", fontWeight: 600,
           }}>
             <CalendarDays size={10} /> Calendario

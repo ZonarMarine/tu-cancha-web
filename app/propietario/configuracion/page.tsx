@@ -121,7 +121,7 @@ export default function ConfiguracionPage() {
           font-size: 13px; outline: none; width: 100%; box-sizing: border-box;
           transition: border-color 0.15s;
         }
-        .config-input:focus { border-color: rgba(59, 130, 246,0.3); }
+        .config-input:focus { border-color: rgba(215,255,0,0.3); }
         .config-input::placeholder { color: rgba(255,255,255,0.22); }
         .section-tab { cursor: pointer; transition: all 0.15s; }
         .section-tab:hover { background: rgba(255,255,255,0.04) !important; }
@@ -151,9 +151,9 @@ export default function ConfiguracionPage() {
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "9px 12px", borderRadius: 9, border: "none",
-                  background: active ? "rgba(59, 130, 246,0.07)" : "transparent",
-                  borderLeft: active ? "2px solid rgba(59, 130, 246,0.4)" : "2px solid transparent",
-                  color: active ? "#3B82F6" : "rgba(255,255,255,0.45)",
+                  background: active ? "rgba(215,255,0,0.07)" : "transparent",
+                  borderLeft: active ? "2px solid rgba(215,255,0,0.4)" : "2px solid transparent",
+                  color: active ? "#D7FF00" : "rgba(255,255,255,0.45)",
                   textAlign: "left", cursor: "pointer", fontSize: 12.5, fontWeight: active ? 700 : 500,
                   letterSpacing: "-0.015em",
                 }}
@@ -237,7 +237,7 @@ export default function ConfiguracionPage() {
                     onClick={() => toggleNotif(n.key)}
                     style={{
                       width: 38, height: 20, borderRadius: 99, flexShrink: 0,
-                      background: notifPrefs[n.key] ? "#3B82F6" : "rgba(255,255,255,0.08)",
+                      background: notifPrefs[n.key] ? "#D7FF00" : "rgba(255,255,255,0.08)",
                       position: "relative",
                     }}
                   >
@@ -261,7 +261,7 @@ export default function ConfiguracionPage() {
               {/* ONVO — active payment processor */}
               <div style={{
                 padding: "16px 18px", borderRadius: 12, marginBottom: 12,
-                background: "rgba(59, 130, 246,0.04)", border: "1px solid rgba(59, 130, 246,0.14)",
+                background: "rgba(215,255,0,0.04)", border: "1px solid rgba(215,255,0,0.14)",
                 display: "flex", alignItems: "center", justifyContent: "space-between",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -327,10 +327,10 @@ export default function ConfiguracionPage() {
                   background: saved
                     ? "rgba(52,211,153,0.15)"
                     : saving
-                    ? "rgba(59, 130, 246,0.50)"
+                    ? "rgba(215,255,0,0.50)"
                     : activeSection === "pagos"
-                    ? "rgba(59, 130, 246,0.15)"
-                    : "#3B82F6",
+                    ? "rgba(215,255,0,0.15)"
+                    : "#D7FF00",
                   color: saved ? "#34D399" : "#000",
                   fontSize: 13, fontWeight: 800,
                   cursor: saving || activeSection === "pagos" ? "default" : "pointer",

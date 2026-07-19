@@ -107,10 +107,10 @@ const STATUS_META_FALLBACK = STATUS_META.pending;
 /* ─── Sport colours ──────────────────────────────────────── */
 
 const SPORT_TAG: Record<string, { bg: string; color: string; border: string; icon: string }> = {
-  "Fútbol":   { bg: "rgba(59, 130, 246,0.07)",  color: "rgba(59, 130, 246,0.75)",  border: "rgba(59, 130, 246,0.14)",  icon: "⚽" },
-  "Fútbol 5": { bg: "rgba(59, 130, 246,0.07)",  color: "rgba(59, 130, 246,0.75)",  border: "rgba(59, 130, 246,0.14)",  icon: "⚽" },
-  "Fútbol 8": { bg: "rgba(59, 130, 246,0.07)",  color: "rgba(59, 130, 246,0.75)",  border: "rgba(59, 130, 246,0.14)",  icon: "⚽" },
-  "Fútsal":   { bg: "rgba(59, 130, 246,0.07)",  color: "rgba(59, 130, 246,0.75)",  border: "rgba(59, 130, 246,0.14)",  icon: "⚽" },
+  "Fútbol":   { bg: "rgba(215,255,0,0.07)",  color: "rgba(215,255,0,0.75)",  border: "rgba(215,255,0,0.14)",  icon: "⚽" },
+  "Fútbol 5": { bg: "rgba(215,255,0,0.07)",  color: "rgba(215,255,0,0.75)",  border: "rgba(215,255,0,0.14)",  icon: "⚽" },
+  "Fútbol 8": { bg: "rgba(215,255,0,0.07)",  color: "rgba(215,255,0,0.75)",  border: "rgba(215,255,0,0.14)",  icon: "⚽" },
+  "Fútsal":   { bg: "rgba(215,255,0,0.07)",  color: "rgba(215,255,0,0.75)",  border: "rgba(215,255,0,0.14)",  icon: "⚽" },
   "Pádel":    { bg: "rgba(96,165,250,0.08)", color: "rgba(96,165,250,0.80)", border: "rgba(96,165,250,0.16)", icon: "🏓" },
   "Tenis":    { bg: "rgba(96,165,250,0.08)", color: "rgba(96,165,250,0.80)", border: "rgba(96,165,250,0.16)", icon: "🎾" },
   "Básquet":  { bg: "rgba(249,115,22,0.08)", color: "rgba(249,115,22,0.80)", border: "rgba(249,115,22,0.16)", icon: "🏀" },
@@ -291,7 +291,7 @@ export default function ReservasPage() {
         @keyframes rowSlide { to { opacity:0; transform:translateX(52px); } }
         @keyframes modalIn { from{opacity:0;transform:scale(0.97) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);} }
         @keyframes liveBlip { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.6);} }
-        @keyframes newRow { 0%{background:rgba(59, 130, 246,0.06);} 100%{background:transparent;} }
+        @keyframes newRow { 0%{background:rgba(215,255,0,0.06);} 100%{background:transparent;} }
 
         .res-row { transition: background 0.16s; cursor: pointer; }
         .res-row:hover { background: rgba(255,255,255,0.028) !important; }
@@ -343,7 +343,7 @@ export default function ReservasPage() {
           </span>
           <button
             onClick={() => setFilter("pending")}
-            style={{ background: "#FACC15", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800 }}
+            style={{ background: "#FACC15", color: "#000", border: "none", padding: "6px 12px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 800 }}
           >
             Ver pendientes
           </button>
@@ -461,9 +461,9 @@ export default function ReservasPage() {
               href="/propietario/canchas"
               style={{
                 display: "inline-block", padding: "10px 22px", borderRadius: 10,
-                background: "#3B82F6", color: "#fff", fontWeight: 800, fontSize: 12.5,
+                background: "#D7FF00", color: "#000", fontWeight: 800, fontSize: 12.5,
                 textDecoration: "none", letterSpacing: "-0.01em",
-                boxShadow: "0 0 20px rgba(59, 130, 246,0.22)",
+                boxShadow: "0 0 20px rgba(215,255,0,0.22)",
               }}
             >
               Gestionar mis canchas →
@@ -523,7 +523,7 @@ export default function ReservasPage() {
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
                     {r.players > 0 ? `${r.players} jugadores · ` : ""}{timeAgo(r.createdAt)}
                     {isNew && (
-                      <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 800, color: "#3B82F6", letterSpacing: "0.04em" }}>
+                      <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 800, color: "#D7FF00", letterSpacing: "0.04em" }}>
                         NUEVO
                       </span>
                     )}
@@ -558,7 +558,7 @@ export default function ReservasPage() {
               </div>
 
               {/* Amount */}
-              <div style={{ fontSize: 13, fontWeight: 800, color: "rgba(59, 130, 246,0.72)", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "rgba(215,255,0,0.72)", letterSpacing: "-0.02em" }}>
                 {r.amount > 0 ? fmt(r.amount) : "—"}
               </div>
 
@@ -637,14 +637,14 @@ export default function ReservasPage() {
               background: "linear-gradient(160deg, rgba(14,14,14,0.99), rgba(9,9,9,0.99))",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 20,
-              boxShadow: "0 0 0 1px rgba(59, 130, 246,0.04), 0 32px 80px rgba(0,0,0,0.7)",
+              boxShadow: "0 0 0 1px rgba(215,255,0,0.04), 0 32px 80px rgba(0,0,0,0.7)",
               animation: "modalIn 0.25s cubic-bezier(0.34,1.1,0.64,1) both",
               overflow: "hidden",
             }}
             onClick={e => e.stopPropagation()}
           >
             {/* Accent line */}
-            <div style={{ height: 2, background: "linear-gradient(90deg, #3B82F6cc, #3B82F633, transparent)" }} />
+            <div style={{ height: 2, background: "linear-gradient(90deg, #D7FF00cc, #D7FF0033, transparent)" }} />
 
             {/* Modal header */}
             <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -721,10 +721,10 @@ export default function ReservasPage() {
               {/* Notes */}
               {selected.notes && (
                 <div style={{
-                  background: "rgba(59, 130, 246,0.03)", border: "1px solid rgba(59, 130, 246,0.10)",
+                  background: "rgba(215,255,0,0.03)", border: "1px solid rgba(215,255,0,0.10)",
                   borderRadius: 10, padding: "10px 12px", marginBottom: 14,
                 }}>
-                  <div style={{ fontSize: 9.5, color: "rgba(59, 130, 246,0.4)", letterSpacing: "0.04em", marginBottom: 4 }}>💬 NOTAS DEL JUGADOR</div>
+                  <div style={{ fontSize: 9.5, color: "rgba(215,255,0,0.4)", letterSpacing: "0.04em", marginBottom: 4 }}>💬 NOTAS DEL JUGADOR</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{selected.notes}</div>
                 </div>
               )}
@@ -737,9 +737,9 @@ export default function ReservasPage() {
                     onClick={() => { act(selected.id, "confirmed"); setSelected(null); }}
                     style={{
                       flex: 1, padding: "13px", borderRadius: 12, border: "none",
-                      background: "#3B82F6", color: "#fff", cursor: "pointer",
+                      background: "#D7FF00", color: "#000", cursor: "pointer",
                       fontSize: 13, fontWeight: 900, letterSpacing: "-0.02em",
-                      boxShadow: "0 0 20px rgba(59, 130, 246,0.2)",
+                      boxShadow: "0 0 20px rgba(215,255,0,0.2)",
                       opacity: saving[selected.id] ? 0.6 : 1,
                       transition: "opacity 0.16s",
                     }}

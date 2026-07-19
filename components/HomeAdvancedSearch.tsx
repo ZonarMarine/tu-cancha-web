@@ -285,7 +285,7 @@ export default function HomeAdvancedSearch() {
           gap: 8px;
           padding: 11px 22px;
           border-radius: 12px;
-          background: #3B82F6;
+          background: #D7FF00;
           color: #0a0a0a;
           font-weight: 800;
           font-size: 13.5px;
@@ -293,12 +293,12 @@ export default function HomeAdvancedSearch() {
           border: none;
           cursor: pointer;
           white-space: nowrap;
-          box-shadow: 0 0 20px rgba(59, 130, 246,0.20), 0 2px 8px rgba(0,0,0,0.35);
+          box-shadow: 0 0 20px rgba(215,255,0,0.20), 0 2px 8px rgba(0,0,0,0.35);
           transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
         }
         .hads-search-btn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 0 30px rgba(59, 130, 246,0.32), 0 4px 16px rgba(0,0,0,0.5);
+          box-shadow: 0 0 30px rgba(215,255,0,0.32), 0 4px 16px rgba(0,0,0,0.5);
           background: #e4ff26;
         }
         .hads-search-btn:active { transform: translateY(0); }
@@ -329,10 +329,10 @@ export default function HomeAdvancedSearch() {
           border-color: rgba(255,255,255,0.12);
         }
         .hads-chip.active {
-          background: rgba(59, 130, 246,0.1);
-          border-color: rgba(59, 130, 246,0.3);
-          color: #3B82F6;
-          box-shadow: 0 0 12px rgba(59, 130, 246,0.15), 0 0 0 1px rgba(59, 130, 246,0.12) inset;
+          background: rgba(215,255,0,0.1);
+          border-color: rgba(215,255,0,0.3);
+          color: #D7FF00;
+          box-shadow: 0 0 12px rgba(215,255,0,0.15), 0 0 0 1px rgba(215,255,0,0.12) inset;
           transform: scale(1.04);
         }
         .hads-chip:disabled { opacity: 0.45; cursor: default; }
@@ -369,7 +369,7 @@ export default function HomeAdvancedSearch() {
           gap: 8px;
         }
         .hads-dropdown-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
-        .hads-dropdown-item.selected { background: rgba(59, 130, 246,0.08); color: #3B82F6; }
+        .hads-dropdown-item.selected { background: rgba(215,255,0,0.08); color: #D7FF00; }
         .hads-dropdown-hint {
           font-size: 10.5px;
           color: rgba(255,255,255,0.28);
@@ -395,7 +395,7 @@ export default function HomeAdvancedSearch() {
         .hads-deco-left {
           left: -56px;
           opacity: 0.38;
-          filter: blur(1.5px) drop-shadow(0 0 28px rgba(59, 130, 246,0.55));
+          filter: blur(1.5px) drop-shadow(0 0 28px rgba(215,255,0,0.55));
           animation: floatL 7s ease-in-out infinite;
         }
         .hads-deco-right {
@@ -465,7 +465,7 @@ export default function HomeAdvancedSearch() {
           position: "absolute", top: 0, left: "50%",
           transform: "translateX(-50%)",
           width: 800, height: 300, pointerEvents: "none",
-          background: "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(59, 130, 246,0.018) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(215,255,0,0.018) 0%, transparent 70%)",
         }} />
 
         <div className="hads-inner">
@@ -482,13 +482,13 @@ export default function HomeAdvancedSearch() {
               {/* Eyebrow */}
               <p style={{
                 fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em",
-                color: "rgba(59, 130, 246,0.45)", marginBottom: 18,
+                color: "rgba(215,255,0,0.45)", marginBottom: 18,
                 textTransform: "uppercase", display: "flex", alignItems: "center", gap: 7,
               }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: "50%",
-                  background: "#3B82F6", display: "inline-block",
-                  boxShadow: "0 0 6px #3B82F6", animation: "pulse 2s infinite",
+                  background: "#D7FF00", display: "inline-block",
+                  boxShadow: "0 0 6px #D7FF00", animation: "pulse 2s infinite",
                 }} />
                 Encontrá tu cancha
               </p>

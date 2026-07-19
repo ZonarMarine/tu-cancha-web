@@ -195,7 +195,7 @@ function BookingModal({ court, user, onClose }: {
               <div style={{
                 width:68,height:68,borderRadius:22,margin:'0 auto 22px',
                 display:'flex',alignItems:'center',justifyContent:'center',
-                background:'rgba(59, 130, 246,0.08)',border:'1px solid rgba(59, 130, 246,0.20)',
+                background:'rgba(215,255,0,0.08)',border:'1px solid rgba(215,255,0,0.20)',
               }}>
                 <Loader2 size={28} color="var(--accent)" style={{animation:'spin 0.9s linear infinite'}}/>
               </div>
@@ -235,16 +235,16 @@ function BookingModal({ court, user, onClose }: {
                           width:22,height:22,borderRadius:'50%',flexShrink:0,
                           display:'flex',alignItems:'center',justifyContent:'center',
                           fontSize:10,fontWeight:800,
-                          background: done?'var(--accent)':active?'rgba(59, 130, 246,0.12)':'rgba(255,255,255,0.05)',
-                          border: done?'none':active?'1.5px solid rgba(59, 130, 246,0.35)':'1.5px solid rgba(255,255,255,0.08)',
+                          background: done?'var(--accent)':active?'rgba(215,255,0,0.12)':'rgba(255,255,255,0.05)',
+                          border: done?'none':active?'1.5px solid rgba(215,255,0,0.35)':'1.5px solid rgba(255,255,255,0.08)',
                           color: done?'#000':active?'var(--accent)':'rgba(255,255,255,0.20)',
                           transition:'all 0.22s',
-                          boxShadow: active?'0 0 10px rgba(59, 130, 246,0.18)':'none',
+                          boxShadow: active?'0 0 10px rgba(215,255,0,0.18)':'none',
                         }}>
                           {done?<Check size={11} strokeWidth={3}/>:i+1}
                         </div>
                         <span style={{fontSize:10.5,fontWeight:700,letterSpacing:'0.02em',
-                          color:active?'rgba(255,255,255,0.80)':done?'rgba(59, 130, 246,0.50)':'rgba(255,255,255,0.20)',
+                          color:active?'rgba(255,255,255,0.80)':done?'rgba(215,255,0,0.50)':'rgba(255,255,255,0.20)',
                           transition:'color 0.22s',
                         }}>
                           {s==='date'?'Fecha':s==='time'?'Hora':'Confirmar'}
@@ -252,7 +252,7 @@ function BookingModal({ court, user, onClose }: {
                       </button>
                       {i<2&&(
                         <div style={{flex:1,height:1.5,margin:'0 10px',borderRadius:1,background:'rgba(255,255,255,0.06)',overflow:'hidden',position:'relative'}}>
-                          {done&&<div style={{position:'absolute',inset:0,background:'rgba(59, 130, 246,0.30)',animation:'conn-fill 0.35s ease forwards'}}/>}
+                          {done&&<div style={{position:'absolute',inset:0,background:'rgba(215,255,0,0.30)',animation:'conn-fill 0.35s ease forwards'}}/>}
                         </div>
                       )}
                     </div>
@@ -305,16 +305,16 @@ function BookingModal({ court, user, onClose }: {
                               background: isSel
                                 ? 'var(--accent)'
                                 : isToday
-                                ? 'rgba(59, 130, 246,0.08)'
+                                ? 'rgba(215,255,0,0.08)'
                                 : 'rgba(255,255,255,0.025)',
                               color: isSel?'#000'
                                 : disabled?'rgba(255,255,255,0.10)'
                                 : isToday?'var(--accent)'
                                 : 'rgba(255,255,255,0.52)',
                               outline: isSel?'none'
-                                : isToday?'1px solid rgba(59, 130, 246,0.18)'
+                                : isToday?'1px solid rgba(215,255,0,0.18)'
                                 : 'none',
-                              boxShadow: isSel?'0 0 14px rgba(59, 130, 246,0.22)':'none',
+                              boxShadow: isSel?'0 0 14px rgba(215,255,0,0.22)':'none',
                             }}>
                             {i+1}
                           </button>
@@ -324,11 +324,11 @@ function BookingModal({ court, user, onClose }: {
 
                     {/* Selected date confirmation strip */}
                     {selectedDay&&(
-                      <div style={{marginTop:12,padding:'10px 14px',borderRadius:10,background:'rgba(59, 130, 246,0.05)',border:'1px solid rgba(59, 130, 246,0.12)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                      <div style={{marginTop:12,padding:'10px 14px',borderRadius:10,background:'rgba(215,255,0,0.05)',border:'1px solid rgba(215,255,0,0.12)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                         <span style={{fontSize:12.5,color:'var(--accent)',fontWeight:600}}>
                           {selectedDay.toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'})}
                         </span>
-                        <button onClick={()=>goStep('time')} style={{fontSize:12,fontWeight:700,color:'#fff',background:'var(--accent)',border:'none',borderRadius:8,padding:'5px 12px',cursor:'pointer'}}>
+                        <button onClick={()=>goStep('time')} style={{fontSize:12,fontWeight:700,color:'#000',background:'var(--accent)',border:'none',borderRadius:8,padding:'5px 12px',cursor:'pointer'}}>
                           Elegir hora →
                         </button>
                       </div>
@@ -390,7 +390,7 @@ function BookingModal({ court, user, onClose }: {
                                     ? '1px solid rgba(255,255,255,0.04)'
                                     : '1px solid rgba(255,255,255,0.07)',
                                   boxShadow: active
-                                    ? '0 0 18px rgba(59, 130, 246,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
+                                    ? '0 0 18px rgba(215,255,0,0.28),0 2px 0 rgba(255,255,255,0.15) inset'
                                     : 'none',
                                   textDecoration: booked ? 'line-through' : 'none',
                                   animation: active ? 'slot-select 0.24s ease' : 'none',
@@ -432,7 +432,7 @@ function BookingModal({ court, user, onClose }: {
                       </div>
                     </div>
 
-                    <button disabled={!selectedTime} onClick={()=>goStep('confirm')} style={{width:'100%',padding:'13px',borderRadius:12,fontWeight:800,fontSize:14,cursor:selectedTime?'pointer':'default',background:selectedTime?'var(--accent)':'rgba(255,255,255,0.05)',color:selectedTime?'#000':'rgba(255,255,255,0.18)',border:'none',letterSpacing:'-0.01em',transition:'all 0.16s',boxShadow:selectedTime?'0 0 22px rgba(59, 130, 246,0.22)':'none'}}>
+                    <button disabled={!selectedTime} onClick={()=>goStep('confirm')} style={{width:'100%',padding:'13px',borderRadius:12,fontWeight:800,fontSize:14,cursor:selectedTime?'pointer':'default',background:selectedTime?'var(--accent)':'rgba(255,255,255,0.05)',color:selectedTime?'#000':'rgba(255,255,255,0.18)',border:'none',letterSpacing:'-0.01em',transition:'all 0.16s',boxShadow:selectedTime?'0 0 22px rgba(215,255,0,0.22)':'none'}}>
                       Continuar →
                     </button>
                   </div>
@@ -458,19 +458,19 @@ function BookingModal({ court, user, onClose }: {
                     </div>
 
                     {/* Total — emotional weight */}
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,padding:'14px 16px',borderRadius:13,background:'rgba(59, 130, 246,0.04)',border:'1px solid rgba(59, 130, 246,0.10)'}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,padding:'14px 16px',borderRadius:13,background:'rgba(215,255,0,0.04)',border:'1px solid rgba(215,255,0,0.10)'}}>
                       <div>
                         <p style={{fontSize:10,color:'rgba(255,255,255,0.30)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:3}}>Total</p>
                         <p style={{fontSize:10.5,color:'rgba(255,255,255,0.28)'}}>{court.title}</p>
                       </div>
-                      <p style={{fontWeight:900,fontSize:24,color:'var(--accent)',letterSpacing:'-0.03em',textShadow:'0 0 24px rgba(59, 130, 246,0.20)'}}>{fmtColones(totalPrice)}</p>
+                      <p style={{fontWeight:900,fontSize:24,color:'var(--accent)',letterSpacing:'-0.03em',textShadow:'0 0 24px rgba(215,255,0,0.20)'}}>{fmtColones(totalPrice)}</p>
                     </div>
 
                     {error&&<div style={{padding:'10px 14px',borderRadius:10,marginBottom:12,fontSize:12,background:'rgba(255,59,59,0.07)',color:'#FF6B6B',border:'1px solid rgba(255,59,59,0.13)'}}>{error}</div>}
 
                     <div style={{display:'flex',gap:9}}>
                       <button onClick={()=>goStep('time')} style={{flex:1,padding:'12px',borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.40)',border:'1px solid rgba(255,255,255,0.07)'}}>← Atrás</button>
-                      <button onClick={handleConfirm} disabled={saving} style={{flex:2,padding:'13px',borderRadius:12,fontSize:14,fontWeight:800,cursor:saving?'default':'pointer',background:saving?'rgba(59, 130, 246,0.60)':'var(--accent)',color:'#fff',border:'none',display:'flex',alignItems:'center',justifyContent:'center',gap:7,letterSpacing:'-0.01em',boxShadow:'0 0 24px rgba(59, 130, 246,0.22)'}}>
+                      <button onClick={handleConfirm} disabled={saving} style={{flex:2,padding:'13px',borderRadius:12,fontSize:14,fontWeight:800,cursor:saving?'default':'pointer',background:saving?'rgba(215,255,0,0.60)':'var(--accent)',color:'#000',border:'none',display:'flex',alignItems:'center',justifyContent:'center',gap:7,letterSpacing:'-0.01em',boxShadow:'0 0 24px rgba(215,255,0,0.22)'}}>
                         {saving?<><Loader2 size={14} style={{animation:'spin 0.7s linear infinite'}}/>Preparando pago…</>:<><Zap size={14} fill="#000"/>Ir a pagar</>}
                       </button>
                     </div>
@@ -613,21 +613,21 @@ export default function CanchaPage() {
         <div style={{
           position:'absolute', top:'-18%', right:'-6%',
           width:800, height:800, borderRadius:'50%',
-          background:'radial-gradient(circle at center, rgba(59, 130, 246,0.048) 0%, transparent 62%)',
+          background:'radial-gradient(circle at center, rgba(215,255,0,0.048) 0%, transparent 62%)',
           filter:'blur(1px)',
         }}/>
         {/* Fill light: lower-left, field surface bounce */}
         <div style={{
           position:'absolute', bottom:'-22%', left:'-10%',
           width:700, height:700, borderRadius:'50%',
-          background:'radial-gradient(circle at center, rgba(59, 130, 246,0.024) 0%, transparent 62%)',
+          background:'radial-gradient(circle at center, rgba(215,255,0,0.024) 0%, transparent 62%)',
         }}/>
         {/* Ambient: center, ultra-subtle green-lime haze */}
         <div style={{
           position:'absolute', top:'25%', left:'48%',
           transform:'translateX(-50%)',
           width:1100, height:500,
-          background:'radial-gradient(ellipse at center, rgba(59, 130, 246,0.014) 0%, transparent 68%)',
+          background:'radial-gradient(ellipse at center, rgba(215,255,0,0.014) 0%, transparent 68%)',
         }}/>
       </div>
 
@@ -704,7 +704,7 @@ export default function CanchaPage() {
         .cta-main:hover {
           animation: none;
           opacity: 0.92;
-          box-shadow: 0 0 52px rgba(59, 130, 246,0.5), 0 2px 0 rgba(255,255,255,0.32) inset !important;
+          box-shadow: 0 0 52px rgba(215,255,0,0.5), 0 2px 0 rgba(255,255,255,0.32) inset !important;
         }
         .cta-main:active { transform: scale(0.975); animation: none; }
 
@@ -763,16 +763,16 @@ export default function CanchaPage() {
 
         /* Amenity tile hover */
         .amenity-tile:hover {
-          border-color: rgba(59, 130, 246,0.22) !important;
-          background: rgba(59, 130, 246,0.025) !important;
+          border-color: rgba(215,255,0,0.22) !important;
+          background: rgba(215,255,0,0.025) !important;
         }
 
         /* Reto CTA button */
         .reto-btn { transition: background 0.18s, border-color 0.18s, color 0.18s; }
         .reto-btn:hover {
-          background: rgba(59, 130, 246,0.08) !important;
-          border-color: rgba(59, 130, 246,0.35) !important;
-          color: rgba(59, 130, 246,0.90) !important;
+          background: rgba(215,255,0,0.08) !important;
+          border-color: rgba(215,255,0,0.35) !important;
+          color: rgba(215,255,0,0.90) !important;
         }
 
         @media (max-width: 880px) { .cancha-grid { grid-template-columns: 1fr !important; } }
@@ -838,7 +838,7 @@ export default function CanchaPage() {
               {/* Edge vignette */}
               <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 130% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.48) 100%)', borderRadius:16, pointerEvents:'none' }}/>
               {/* Stadium floodlight from upper-right — signature TuCancha glow */}
-              <div style={{ position:'absolute', top:-20, right:-20, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(59, 130, 246,0.07) 0%, transparent 65%)', pointerEvents:'none' }}/>
+              <div style={{ position:'absolute', top:-20, right:-20, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.07) 0%, transparent 65%)', pointerEvents:'none' }}/>
               {/* Cool blue-green field bounce from lower-left */}
               <div style={{ position:'absolute', bottom:-10, left:-10, width:160, height:120, borderRadius:'50%', background:'radial-gradient(circle, rgba(74,200,120,0.06) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
@@ -905,10 +905,10 @@ export default function CanchaPage() {
               </p>
               <button onClick={handleReservar} style={{
                 width:'100%', padding:'12px', borderRadius:11,
-                background:'var(--accent)', color:'#fff',
+                background:'var(--accent)', color:'#000',
                 fontWeight:800, fontSize:13.5, border:'none', cursor:'pointer',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:7,
-                boxShadow:'0 0 20px rgba(59, 130, 246,0.20)',
+                boxShadow:'0 0 20px rgba(215,255,0,0.20)',
               }}>
                 Elegir fecha y hora →
               </button>
@@ -937,8 +937,8 @@ export default function CanchaPage() {
                     icon:<Clock size={14}/>,
                     label:`${fmtColones(court.basePrice)} por hora`,
                     sub:'Mínimo 1h · hasta 6h seguidas',
-                    accent: 'rgba(59, 130, 246,0.35)',
-                    bg: 'rgba(59, 130, 246,0.06)',
+                    accent: 'rgba(215,255,0,0.35)',
+                    bg: 'rgba(215,255,0,0.06)',
                   },
                   {
                     icon:<MapPin size={14}/>,
@@ -989,9 +989,9 @@ export default function CanchaPage() {
                 </div>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {liveRetos.map(r => (
-                    <div key={r.id} style={{ padding:'12px 14px', borderRadius:12, background:'rgba(59, 130, 246,0.025)', border:'1px solid rgba(59, 130, 246,0.08)' }}>
+                    <div key={r.id} style={{ padding:'12px 14px', borderRadius:12, background:'rgba(215,255,0,0.025)', border:'1px solid rgba(215,255,0,0.08)' }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-                        <span style={{ fontSize:9, fontWeight:800, color:'rgba(59, 130, 246,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Buscando rival</span>
+                        <span style={{ fontSize:9, fontWeight:800, color:'rgba(215,255,0,0.55)', letterSpacing:'0.10em', textTransform:'uppercase' }}>Buscando rival</span>
                         <span style={{ fontSize:10, color:'rgba(255,255,255,0.22)' }}>⚽</span>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1001,7 +1001,7 @@ export default function CanchaPage() {
                             {[r.time, r.format].filter(Boolean).join(' · ')}
                           </p>
                         </div>
-                        <Link href="/juegos" style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'var(--accent)', color:'#fff', border:'none', whiteSpace:'nowrap', letterSpacing:'-0.01em', textDecoration:'none' }}>
+                        <Link href="/juegos" style={{ padding:'6px 12px', borderRadius:9, fontSize:10.5, fontWeight:700, cursor:'pointer', background:'var(--accent)', color:'#000', border:'none', whiteSpace:'nowrap', letterSpacing:'-0.01em', textDecoration:'none' }}>
                           Ver reto
                         </Link>
                       </div>
@@ -1029,7 +1029,7 @@ export default function CanchaPage() {
           <div style={{ position:'sticky', top:80 }}>
 
             {/* Ambient glow behind card — fills dead right space */}
-            <div aria-hidden style={{ position:'absolute', top:'-30%', left:'-40%', width:400, height:500, background:'radial-gradient(ellipse at center, rgba(59, 130, 246,0.04) 0%, transparent 65%)', pointerEvents:'none', zIndex:0, filter:'blur(10px)' }}/>
+            <div aria-hidden style={{ position:'absolute', top:'-30%', left:'-40%', width:400, height:500, background:'radial-gradient(ellipse at center, rgba(215,255,0,0.04) 0%, transparent 65%)', pointerEvents:'none', zIndex:0, filter:'blur(10px)' }}/>
 
             <div style={{
               position:'relative', zIndex:1,
@@ -1045,20 +1045,20 @@ export default function CanchaPage() {
               {/* Price hero */}
               <div style={{ padding:'22px 22px 18px', borderBottom:'1px solid rgba(255,255,255,0.065)', position:'relative', overflow:'hidden' }}>
                 {/* Lime atmosphere behind price */}
-                <div style={{ position:'absolute', top:'-50%', right:'-25%', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(59, 130, 246,0.08) 0%, transparent 65%)', pointerEvents:'none' }}/>
+                <div style={{ position:'absolute', top:'-50%', right:'-25%', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(215,255,0,0.08) 0%, transparent 65%)', pointerEvents:'none' }}/>
                 <p className="sec-label" style={{ marginBottom:10, position:'relative' }}>Precio por hora</p>
                 <div style={{ display:'flex', alignItems:'baseline', gap:7, position:'relative' }}>
                   <span style={{
                     fontWeight:900, fontSize:38,
                     color:'var(--accent)', letterSpacing:'-0.05em', lineHeight:1,
-                    textShadow:'0 0 36px rgba(59, 130, 246,0.26)',
+                    textShadow:'0 0 36px rgba(215,255,0,0.26)',
                   }}>
                     {fmtColones(court.basePrice)}
                   </span>
                   <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.18)', fontWeight:500 }}>/hr</span>
                 </div>
                 {/* Signature lime accent line */}
-                <div style={{ width:36, height:1.5, background:'linear-gradient(90deg, rgba(59, 130, 246,0.45), transparent)', borderRadius:99, margin:'10px 0 7px' }}/>
+                <div style={{ width:36, height:1.5, background:'linear-gradient(90deg, rgba(215,255,0,0.45), transparent)', borderRadius:99, margin:'10px 0 7px' }}/>
                 <p style={{ fontSize:11, color:'rgba(255,255,255,0.22)', letterSpacing:'-0.01em', lineHeight:1.5 }}>
                   Incluye {court.includedPlayers} jugadores · Por equipo
                 </p>
@@ -1092,10 +1092,10 @@ export default function CanchaPage() {
                 <button onClick={handleReservar} className="cta-main" style={{
                   display:'flex', alignItems:'center', justifyContent:'center', gap:7,
                   width:'100%', padding:'15px', borderRadius:13,
-                  background:'var(--accent)', color:'#fff',
+                  background:'var(--accent)', color:'#000',
                   fontWeight:900, fontSize:14, letterSpacing:'-0.03em',
                   border:'none', cursor:'pointer',
-                  boxShadow:'0 0 28px rgba(59, 130, 246,0.26), 0 2px 0 rgba(255,255,255,0.28) inset',
+                  boxShadow:'0 0 28px rgba(215,255,0,0.26), 0 2px 0 rgba(255,255,255,0.28) inset',
                 }}>
                   <Zap size={14} fill="#000"/>
                   {user ? 'Reservar ahora' : 'Iniciá sesión para reservar'}
@@ -1116,10 +1116,10 @@ export default function CanchaPage() {
                 <Link href="/juegos" className="reto-btn" style={{
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                   width:'100%', padding:'11px', borderRadius:12,
-                  background:'rgba(59, 130, 246,0.03)',
-                  color:'rgba(59, 130, 246,0.60)',
+                  background:'rgba(215,255,0,0.03)',
+                  color:'rgba(215,255,0,0.60)',
                   fontWeight:700, fontSize:12, cursor:'pointer',
-                  border:'1px solid rgba(59, 130, 246,0.16)',
+                  border:'1px solid rgba(215,255,0,0.16)',
                   textDecoration:'none',
                   letterSpacing:'-0.01em',
                 }}>
@@ -1138,7 +1138,7 @@ export default function CanchaPage() {
             {/* Tagline — football culture */}
             <p style={{ marginTop:16, textAlign:'center', fontSize:11, color:'rgba(255,255,255,0.14)', fontWeight:500, letterSpacing:'0.01em', lineHeight:1.6 }}>
               Armá el equipo.<br/>
-              <span style={{ color:'rgba(59, 130, 246,0.32)' }}>Tu cancha los espera.</span>
+              <span style={{ color:'rgba(215,255,0,0.32)' }}>Tu cancha los espera.</span>
             </p>
 
             {/* Tactical field — cinematic atmosphere, not decoration */}

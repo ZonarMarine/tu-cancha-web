@@ -83,14 +83,14 @@ function ToastItem({ toast, onDone }: { toast: Toast; onDone: (id: number) => vo
     <div style={{
       display: "flex", alignItems: "center", gap: 10,
       padding: "11px 18px", borderRadius: 12, marginBottom: 8,
-      background: toast.ok ? "rgba(59, 130, 246,0.10)" : "rgba(239,68,68,0.10)",
-      border: `1px solid ${toast.ok ? "rgba(59, 130, 246,0.22)" : "rgba(239,68,68,0.22)"}`,
+      background: toast.ok ? "rgba(215,255,0,0.10)" : "rgba(239,68,68,0.10)",
+      border: `1px solid ${toast.ok ? "rgba(215,255,0,0.22)" : "rgba(239,68,68,0.22)"}`,
       backdropFilter: "blur(16px)",
       boxShadow: "0 6px 28px rgba(0,0,0,0.45)",
       animation: "toastIn 0.3s cubic-bezier(0.34,1.1,0.64,1) both",
     }}>
       {toast.ok
-        ? <Check size={13} color="#3B82F6" strokeWidth={3} />
+        ? <Check size={13} color="#D7FF00" strokeWidth={3} />
         : <AlertTriangle size={13} color="#ef4444" strokeWidth={2.5} />}
       <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
         {toast.text}
@@ -215,12 +215,12 @@ function CourtModal({
         }}
       >
         {/* Accent top line */}
-        <div style={{ height: 2, background: "linear-gradient(90deg, rgba(59, 130, 246,0.7) 0%, rgba(59, 130, 246,0.1) 60%, transparent 100%)", borderRadius: "20px 20px 0 0" }} />
+        <div style={{ height: 2, background: "linear-gradient(90deg, rgba(215,255,0,0.7) 0%, rgba(215,255,0,0.1) 60%, transparent 100%)", borderRadius: "20px 20px 0 0" }} />
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(59, 130, 246,0.10)", border: "1px solid rgba(59, 130, 246,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(215,255,0,0.10)", border: "1px solid rgba(215,255,0,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Zap size={13} fill="var(--accent)" color="var(--accent)" />
             </div>
             <h2 style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.04em", color: "#fff" }}>
@@ -394,8 +394,8 @@ function CourtModal({
                     style={{
                       padding: "5px 11px", borderRadius: 8, cursor: "pointer",
                       fontSize: 11, fontWeight: 700,
-                      background: on ? "rgba(59, 130, 246,0.12)" : "rgba(255,255,255,0.04)",
-                      border: on ? "1px solid rgba(59, 130, 246,0.30)" : "1px solid rgba(255,255,255,0.07)",
+                      background: on ? "rgba(215,255,0,0.12)" : "rgba(255,255,255,0.04)",
+                      border: on ? "1px solid rgba(215,255,0,0.30)" : "1px solid rgba(255,255,255,0.07)",
                       color: on ? "var(--accent)" : "rgba(255,255,255,0.35)",
                       transition: "all 0.12s ease",
                     }}
@@ -459,8 +459,8 @@ function CourtModal({
               onClick={() => onSave(f)}
               style={{
                 flex: 2, padding: "11px 0", borderRadius: 11, border: "none",
-                background: valid && !saving ? "var(--accent)" : "rgba(59, 130, 246,0.30)",
-                color: "#fff",
+                background: valid && !saving ? "var(--accent)" : "rgba(215,255,0,0.30)",
+                color: "#000",
                 fontSize: 13, fontWeight: 900, cursor: valid && !saving ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                 transition: "background 0.15s",
@@ -772,7 +772,7 @@ export default function CanchasPage() {
         @keyframes spin      { to{transform:rotate(360deg);} }
         @keyframes pulse     { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.22); }
-        input:focus, textarea:focus { border-color: rgba(59, 130, 246,0.30) !important; background: rgba(255,255,255,0.06) !important; }
+        input:focus, textarea:focus { border-color: rgba(215,255,0,0.30) !important; background: rgba(255,255,255,0.06) !important; }
       `}</style>
 
       {/* ── Toast stack ── */}
@@ -796,9 +796,9 @@ export default function CanchasPage() {
           style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "10px 18px", borderRadius: 10, border: "none",
-            background: "#3B82F6", color: "#fff",
+            background: "#D7FF00", color: "#000",
             fontSize: 12.5, fontWeight: 800, cursor: "pointer",
-            boxShadow: "0 0 20px rgba(59, 130, 246,0.24)",
+            boxShadow: "0 0 20px rgba(215,255,0,0.24)",
             transition: "box-shadow 0.15s, transform 0.12s",
             flexShrink: 0,
           }}
@@ -860,7 +860,7 @@ export default function CanchasPage() {
             onClick={() => setCreateOpen(true)}
             style={{
               padding: "10px 22px", borderRadius: 10, border: "none",
-              background: "#3B82F6", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer",
+              background: "#D7FF00", color: "#000", fontSize: 13, fontWeight: 800, cursor: "pointer",
             }}
           >
             <Plus size={13} style={{ display: "inline", marginRight: 6 }} />
@@ -897,8 +897,8 @@ export default function CanchasPage() {
                 {/* Sport icon */}
                 <div style={{
                   width: 54, height: 54, borderRadius: 13, flexShrink: 0,
-                  background: c.active ? "rgba(59, 130, 246,0.06)" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${c.active ? "rgba(59, 130, 246,0.12)" : "rgba(255,255,255,0.06)"}`,
+                  background: c.active ? "rgba(215,255,0,0.06)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${c.active ? "rgba(215,255,0,0.12)" : "rgba(255,255,255,0.06)"}`,
                   display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
                 }}>
                   {c.image_url
@@ -941,7 +941,7 @@ export default function CanchasPage() {
                         {c.location}
                       </span>
                     )}
-                    <span style={{ fontSize: 11, color: "rgba(59, 130, 246,0.60)", fontWeight: 700 }}>
+                    <span style={{ fontSize: 11, color: "rgba(215,255,0,0.60)", fontWeight: 700 }}>
                       {fmtPrice(c.base_price)}
                     </span>
                   </div>
@@ -994,7 +994,7 @@ export default function CanchasPage() {
                       cursor: "pointer", display: "flex", alignItems: "center",
                       transition: "all 0.16s",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(59, 130, 246,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(215,255,0,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.50)"; }}
                   >
                     <Edit3 size={14} />
