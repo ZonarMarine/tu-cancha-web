@@ -46,6 +46,7 @@ function normalise(row: Record<string, any>): Court {
                   ?? (Array.isArray(row.images) ? row.images[0] : row.images)
                   ?? null,
     imagePosition:   row.image_position ?? "center",
+    mapsUrl:         row.maps_url ?? null,
   };
 }
 
@@ -877,9 +878,9 @@ export default function CanchaPage() {
               <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'rgba(255,255,255,0.28)', marginBottom:10, letterSpacing:'0.005em', lineHeight:1.5 }}>
                 <MapPin size={11} style={{ flexShrink:0 }}/>{court.location}
               </div>
-              {court.location && (
+              {(court.mapsUrl || court.location) && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([court.title, court.location, 'Costa Rica'].filter(Boolean).join(', '))}`}
+                  href={court.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([court.title, court.location, 'Costa Rica'].filter(Boolean).join(', '))}`}
                   target="_blank" rel="noopener noreferrer"
                   style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:12.5, fontWeight:700, color:'var(--accent)', textDecoration:'none', marginBottom:16, padding:'7px 12px', borderRadius:10, background:'var(--accent-dark)', border:'1px solid var(--accent-glow)' }}
                 >

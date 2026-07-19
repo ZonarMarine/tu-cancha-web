@@ -20,6 +20,7 @@ export type Court = {
   slotsAvailable:  number;
   imageUrl?:       string | null;
   imagePosition?:  string | null;
+  mapsUrl?:        string | null;
   slots:           string[];
 };
 

@@ -40,6 +40,9 @@ export default function ConfiguracionPage() {
   // Notifs
   const [notifPrefs, setNotifPrefs] = useState<Record<NotifKey, boolean>>(NOTIF_DEFAULTS);
 
+  // Ubicación — a Waze/Google Maps link per court
+  const [courts, setCourts] = useState<{ id: string; name: string; location: string | null; maps_url: string }[]>([]);
+
   // Load existing data on mount
   const loadProfile = useCallback(async () => {
     try {
@@ -55,6 +58,10 @@ export default function ConfiguracionPage() {
       if (meta.notif_prefs) {
         setNotifPrefs({ ...NOTIF_DEFAULTS, ...meta.notif_prefs });
       }
+      const { data: cs } = await supabase.from("owner_courts")
+        .select("id, name, location, maps_url")
+        .eq("owner_id", user.id).is("deleted_at", null).order("name");
+      setCourts((cs ?? []).map((c: any) => ({ id: c.id, name: c.name, location: c.location, maps_url: c.maps_url ?? "" })));
     } finally {
       setLoading(false);
     }
@@ -96,6 +103,16 @@ export default function ConfiguracionPage() {
           data: { notif_prefs: notifPrefs },
         });
         if (updateErr) throw updateErr;
+      } else if (activeSection === "ubicacion") {
+        for (const c of courts) {
+          const url = c.maps_url.trim();
+          if (url && !/^https?:\/\/.+/i.test(url)) {
+            throw new Error(`El enlace de "${c.name}" debe empezar con https://`);
+          }
+          const { error: e } = await supabase.from("owner_courts")
+            .update({ maps_url: url || null }).eq("id", c.id);
+          if (e) throw e;
+        }
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
@@ -298,9 +315,48 @@ export default function ConfiguracionPage() {
             </div>
           )}
 
-          {(activeSection === "ubicacion" || activeSection === "seguridad") && (
+          {activeSection === "ubicacion" && (
+            <div>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 20, lineHeight: 1.6 }}>
+                Pegá el enlace de <strong style={{ color: "rgba(255,255,255,0.7)" }}>Waze</strong> o{" "}
+                <strong style={{ color: "rgba(255,255,255,0.7)" }}>Google Maps</strong> de cada cancha. Los jugadores lo verán
+                en el botón "Cómo llegar".
+              </p>
+              {courts.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "36px 0", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
+                  Todavía no tenés canchas. Agregá una en la sección Canchas.
+                </div>
+              ) : courts.map(c => (
+                <div key={c.id} style={{ marginBottom: 18 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 700, letterSpacing: "0.10em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 8 }}>
+                    <MapPin size={11} /> {c.name}{c.location ? ` · ${c.location}` : ""}
+                  </label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      value={c.maps_url}
+                      onChange={e => setCourts(prev => prev.map(x => x.id === c.id ? { ...x, maps_url: e.target.value } : x))}
+                      placeholder="https://maps.app.goo.gl/…  o  https://waze.com/ul/…"
+                      style={{
+                        flex: 1, padding: "11px 14px", borderRadius: 11,
+                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)",
+                        color: "rgba(255,255,255,0.88)", fontSize: 13.5,
+                      }}
+                    />
+                    {c.maps_url.trim() && (
+                      <a href={c.maps_url.trim()} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", padding: "0 12px", borderRadius: 11, background: "rgba(215,255,0,0.08)", border: "1px solid rgba(215,255,0,0.2)", color: "var(--accent)", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+                        Probar
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeSection === "seguridad" && (
             <div style={{ textAlign: "center", padding: "48px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 10 }}>{activeSection === "ubicacion" ? "📍" : "🔒"}</div>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>🔒</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>Próximamente</div>
               <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>
                 Esta sección estará disponible en la próxima versión
@@ -316,7 +372,7 @@ export default function ConfiguracionPage() {
           )}
 
           {/* Save button */}
-          {["perfil", "notifs", "pagos"].includes(activeSection) && (
+          {["perfil", "notifs", "pagos", "ubicacion"].includes(activeSection) && (
             <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
               <button
                 onClick={handleSave}
