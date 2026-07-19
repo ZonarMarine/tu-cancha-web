@@ -6,7 +6,6 @@ import MasReservadas from "@/components/MasReservadas";
 import HomeRetosSection from "@/components/HomeRetosSection";
 import DescubriDeporte from "@/components/DescubriDeporte";
 import SportSelector from "@/components/SportSelector";
-import StatsCounter from "@/components/StatsCounter";
 import HeroSearch from "@/components/HeroSearch";
 import HeroStats from "@/components/HeroStats";
 import HeroLiveStrip from "@/components/HeroLiveStrip";
@@ -571,17 +570,6 @@ export default async function HomePage() {
           RETOS — live, sport-filtered client component
       ══════════════════════════════════ */}
       <HomeRetosSection />
-
-      <DarkBreath />
-
-      {/* ══════════════════════════════════
-          STATS
-      ══════════════════════════════════ */}
-      <section style={{ ...S.sectionAlt }}>
-        <div className="container">
-          <StatsCounter />
-        </div>
-      </section>
 
       {TOP_PLAYERS.length > 0 && <DarkBreath />}
 
