@@ -151,9 +151,36 @@ function CourtModal({
   saving: boolean;
 }) {
   const [f, setF] = useState<FormState>(initial);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState("");
 
   function set<K extends keyof FormState>(k: K, v: FormState[K]) {
     setF(p => ({ ...p, [k]: v }));
+  }
+
+  async function uploadImage(file: File) {
+    setUploadErr("");
+    if (!file.type.startsWith("image/")) { setUploadErr("Elegí un archivo de imagen."); return; }
+    if (file.size > 5 * 1024 * 1024) { setUploadErr("La imagen no puede superar 5 MB."); return; }
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sesión expirada. Iniciá sesión de nuevo.");
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      // Namespaced by owner id so RLS on the bucket can scope writes per owner.
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("court-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("court-images").getPublicUrl(path);
+      if (!pub?.publicUrl) throw new Error("No se pudo obtener la URL de la imagen.");
+      set("image_url", pub.publicUrl);
+    } catch (e: any) {
+      setUploadErr(e?.message || "No se pudo subir la imagen. Intentá de nuevo.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function toggleSlot(s: string) {
@@ -287,25 +314,70 @@ function CourtModal({
             />
           </div>
 
-          {/* Image URL */}
+          {/* Court image — upload a file, or paste a URL */}
           <div>
-            <Label><ImageIcon size={8} style={{ display: "inline", marginRight: 3 }} />URL de imagen</Label>
-            <input
-              style={inputSt}
-              placeholder="https://..."
-              value={f.image_url}
-              onChange={e => set("image_url", e.target.value)}
-            />
-            {f.image_url && (
-              <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", height: 100, background: "rgba(255,255,255,0.04)" }}>
+            <Label><ImageIcon size={8} style={{ display: "inline", marginRight: 3 }} />Foto de la cancha</Label>
+
+            {f.image_url ? (
+              <div style={{ position: "relative", marginBottom: 8, borderRadius: 10, overflow: "hidden", height: 120, background: "rgba(255,255,255,0.04)" }}>
                 <img
                   src={f.image_url}
                   alt="preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
+                <button
+                  type="button"
+                  onClick={() => set("image_url", "")}
+                  style={{
+                    position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 8,
+                    background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.15)",
+                    color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                  aria-label="Quitar imagen"
+                ><X size={15} /></button>
               </div>
+            ) : (
+              <label
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                  height: 120, borderRadius: 10, cursor: uploading ? "default" : "pointer",
+                  border: "1.5px dashed rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.03)",
+                  color: "rgba(255,255,255,0.5)", fontSize: 13, textAlign: "center", padding: "0 12px",
+                }}
+              >
+                {uploading ? (
+                  <>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.15)", borderTopColor: "var(--accent)", animation: "spin 0.7s linear infinite" }} />
+                    <span>Subiendo…</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon size={22} />
+                    <span>Tocá para subir una foto<br />JPG o PNG · máx. 5 MB</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  style={{ display: "none" }}
+                  onChange={e => { const file = e.target.files?.[0]; if (file) uploadImage(file); e.target.value = ""; }}
+                />
+              </label>
             )}
+
+            {uploadErr && (
+              <p style={{ fontSize: 12, color: "#FF6B6B", marginTop: 6 }}>{uploadErr}</p>
+            )}
+
+            {/* Fallback: paste a URL instead */}
+            <input
+              style={{ ...inputSt, marginTop: 8, fontSize: 12 }}
+              placeholder="…o pegá una URL de imagen (opcional)"
+              value={f.image_url}
+              onChange={e => set("image_url", e.target.value)}
+            />
           </div>
 
           {/* Time slots */}
