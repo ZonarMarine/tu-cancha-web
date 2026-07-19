@@ -60,7 +60,7 @@ async function fetchNearbyCourts() {
     // Use real schema columns: name, base_price, active, deleted_at
     const { data, error } = await sb
       .from('owner_courts')
-      .select('id, name, sport, location, base_price, slots')
+      .select('id, name, sport, location, base_price, slots, image_url, image_position')
       .eq('active', true)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -74,6 +74,8 @@ async function fetchNearbyCourts() {
         location:       c.location ?? null,
         price_per_hour: c.base_price ?? null,
         slots:          Array.isArray(c.slots) ? c.slots : [],
+        image_url:      c.image_url ?? null,
+        image_position: c.image_position ?? 'center',
       }));
     }
   } catch (_) {}
@@ -498,9 +500,17 @@ export default async function HomePage() {
                       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 26px rgba(0,0,0,0.35)',
                       transition: 'border-color 0.18s, box-shadow 0.18s, transform 0.18s',
                     }}>
-                      {/* Field preview — no tag badge inside, sport shown in info row */}
+                      {/* Real court photo when the owner uploaded one; otherwise the drawn pitch */}
                       <div style={{ position: 'relative', height: 110, overflow: 'hidden' }}>
-                        <FieldPreview sport={fieldSport} tag={null} />
+                        {court.image_url ? (
+                          <img
+                            src={court.image_url}
+                            alt={court.court_name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: court.image_position || 'center', filter: 'brightness(0.82)' }}
+                          />
+                        ) : (
+                          <FieldPreview sport={fieldSport} tag={null} />
+                        )}
                         {/* Bottom gradient scrim so the preview reads as depth, not flat */}
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 45%, rgba(8,9,11,0.55) 100%)', pointerEvents: 'none' }} />
                       </div>
