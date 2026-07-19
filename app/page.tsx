@@ -233,7 +233,16 @@ export default async function HomePage() {
     fetchNearbyCourts(),
   ]);
   return (
-    <div style={{ backgroundColor: 'var(--bg)' }}>
+    <div style={{
+      // FC-style depth: cool navy pools in the corners + a faint lime top glow,
+      // layered over near-black. Gives the lower sections dimension instead of flat black.
+      background: `
+        radial-gradient(1100px 620px at 88% 2%, rgba(56,86,110,0.10) 0%, transparent 55%),
+        radial-gradient(1000px 700px at 6% 22%, rgba(34,46,64,0.10) 0%, transparent 55%),
+        radial-gradient(900px 500px at 50% 100%, rgba(40,54,40,0.08) 0%, transparent 60%),
+        var(--bg)
+      `,
+    }}>
 
       {/* ══════════════════════════════════
           HERO
@@ -364,9 +373,15 @@ export default async function HomePage() {
           }
           .scroll-row { scrollbar-width: none; -ms-overflow-style: none; }
           .scroll-row::-webkit-scrollbar { display: none; }
+          .court-card-link .court-card { transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
           .court-card-link:hover .court-card {
-            border-color: rgba(215,255,0,0.14) !important;
-            box-shadow: 0 0 0 1px rgba(215,255,0,0.06) inset;
+            border-color: rgba(215,255,0,0.28) !important;
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.07),
+              0 0 0 1px rgba(215,255,0,0.10),
+              0 0 34px rgba(215,255,0,0.07),
+              0 24px 48px rgba(0,0,0,0.5) !important;
+            transform: translateY(-3px);
           }
         `}</style>
 
@@ -448,7 +463,7 @@ export default async function HomePage() {
           <div className="container">
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36 }}>
               <div>
-                <p className="eyebrow" style={{ marginBottom: 12 }}>CANCHAS DESTACADAS</p>
+                <p className="eyebrow eyebrow-bar" style={{ marginBottom: 12 }}>CANCHAS DESTACADAS</p>
                 <h2 style={{ fontSize: 'clamp(22px, 2.6vw, 34px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 8 }}>
                   Canchas destacadas.
                 </h2>
@@ -476,14 +491,18 @@ export default async function HomePage() {
                 return (
                   <Link key={court.id} href="/explorar" className="court-card-link" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div className="court-card" style={{
+                      position: 'relative',
                       borderRadius: 18, overflow: 'hidden',
-                      background: '#0d0d0d',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      transition: 'border-color 0.18s, box-shadow 0.18s',
+                      background: 'linear-gradient(160deg, #16171b 0%, #0d0e10 62%, #0a0b0d 100%)',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 26px rgba(0,0,0,0.35)',
+                      transition: 'border-color 0.18s, box-shadow 0.18s, transform 0.18s',
                     }}>
                       {/* Field preview — no tag badge inside, sport shown in info row */}
                       <div style={{ position: 'relative', height: 110, overflow: 'hidden' }}>
                         <FieldPreview sport={fieldSport} tag={null} />
+                        {/* Bottom gradient scrim so the preview reads as depth, not flat */}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 45%, rgba(8,9,11,0.55) 100%)', pointerEvents: 'none' }} />
                       </div>
 
                       {/* Info */}
@@ -564,7 +583,7 @@ export default async function HomePage() {
         <div className="container">
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 40 }}>
             <div>
-              <p className="eyebrow" style={{ marginBottom: 14 }}>RANKINGS</p>
+              <p className="eyebrow eyebrow-bar" style={{ marginBottom: 14 }}>RANKINGS</p>
               <h2 style={{ fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 10 }}>
                 Top jugadores esta semana.
               </h2>
