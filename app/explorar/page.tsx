@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useSport } from "@/context/SportContext";
-import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users } from "lucide-react";
+import { Search, MapPin, Star, SlidersHorizontal, X, Clock, Users, Navigation } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtColones } from "@/lib/data";
 
@@ -21,8 +21,18 @@ export type Court = {
   imageUrl?:       string | null;
   imagePosition?:  string | null;
   mapsUrl?:        string | null;
+  lat?:            number | null;
+  lng?:            number | null;
   slots:           string[];
 };
+
+// Great-circle distance in km between two points.
+export function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const R = 6371, toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat), dLng = toRad(bLng - aLng);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
 
 export type CourtWithLive = Court & {
   bookingsToday:     number;
@@ -42,6 +52,8 @@ function normalise(row: Record<string, any>): Court {
     tag:             row.tag     ?? null,
     slotsAvailable:  row.slots_available ?? row.slotsAvailable ?? 0,
     slots:           Array.isArray(row.slots) ? row.slots : [],
+    lat:             typeof row.lat === 'number' ? row.lat : null,
+    lng:             typeof row.lng === 'number' ? row.lng : null,
     imageUrl:        row.image_url ?? row.imageUrl ?? row.photo_url ?? row.photo
                  ?? row.cover_image ?? row.cover_url ?? row.thumbnail_url ?? row.thumbnail
                  ?? row.picture_url ?? row.picture ?? row.img_url ?? row.img
@@ -378,6 +390,17 @@ function CourtCard({ c, hero = false }: { c: CourtWithLive; hero?: boolean }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 15, fontSize: 11, color: 'rgba(255,255,255,0.30)', letterSpacing: '-0.01em', fontWeight: 500 }}>
           <MapPin size={8.5} style={{ flexShrink: 0, opacity: 0.55 }} />
           {c.location}
+          {typeof (c as any).distanceKm === 'number' && (
+            <span style={{
+              marginLeft: 'auto', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3,
+              fontWeight: 800, color: 'rgba(215,255,0,0.72)',
+            }}>
+              <Navigation size={8.5} />
+              {(c as any).distanceKm < 1
+                ? `${Math.round((c as any).distanceKm * 1000)} m`
+                : `${(c as any).distanceKm.toFixed(1)} km`}
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 13, borderTop: '1px solid rgba(255,255,255,0.045)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
@@ -437,6 +460,11 @@ export default function ExplorarPage() {
   const [horaFilter,  setHoraFilter] = useState('');      // from ?hora= param
   const [dateFilter,  setDateFilter] = useState('');      // from ?date= param
   const [showFilters, setShow]    = useState(false);
+  // "Cerca de mí" — real distance from the visitor's position
+  const [userPos,     setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearby,      setNearby]  = useState(false);
+  const [locating,    setLocating] = useState(false);
+  const [geoError,    setGeoError] = useState('');
   const [totalBookingsToday, setTotalBookingsToday] = useState(0);
   const [sigIdx,      setSigIdx]  = useState(0);
   const [phIdx,       setPhIdx]   = useState(0);
@@ -609,7 +637,32 @@ export default function ExplorarPage() {
       if (c.bookedTimesForDate.some(t => norm(t) === norm(horaFilter))) return false;
     }
     return true;
+  })
+  // Attach real distance when we know where the visitor is
+  .map(c => ({
+    ...c,
+    distanceKm: (userPos && c.lat != null && c.lng != null)
+      ? distanceKm(userPos.lat, userPos.lng, c.lat, c.lng)
+      : null,
+  }))
+  .sort((a, b) => {
+    if (!nearby) return 0;
+    // Courts without coordinates sink to the bottom of a proximity sort
+    if (a.distanceKm == null && b.distanceKm == null) return 0;
+    if (a.distanceKm == null) return 1;
+    if (b.distanceKm == null) return -1;
+    return a.distanceKm - b.distanceKm;
   });
+
+  const locateMe = () => {
+    if (!navigator.geolocation) { setGeoError('Tu navegador no permite ubicación.'); return; }
+    setLocating(true); setGeoError('');
+    navigator.geolocation.getCurrentPosition(
+      pos => { setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setNearby(true); setLocating(false); },
+      () => { setGeoError('No pudimos obtener tu ubicación. Revisá los permisos.'); setLocating(false); },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   const activeFilters = [zone !== 'Todas' && zone, price !== 'Cualquiera' && price].filter(Boolean);
 
@@ -837,6 +890,25 @@ export default function ExplorarPage() {
               )}
             </div>
 
+            {/* Cerca de mí — sorts by real distance from the visitor */}
+            <button
+              onClick={() => { if (nearby) { setNearby(false); } else if (userPos) { setNearby(true); } else { locateMe(); } }}
+              className="filter-btn"
+              title="Ordenar por cercanía"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0,
+                padding: '0 20px', height: 60, borderRadius: 18, cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em',
+                backdropFilter: 'blur(20px)',
+                background: nearby ? pageSolid.bg : 'rgba(255,255,255,0.044)',
+                color: nearby ? pageSolid.text : 'rgba(255,255,255,0.48)',
+                border: `1px solid ${nearby ? pageSolid.bg : 'rgba(255,255,255,0.088)'}`,
+              }}
+            >
+              <Navigation size={14} />
+              <span className="filter-label">{locating ? 'Ubicando…' : 'Cerca de mí'}</span>
+            </button>
+
             <button onClick={() => setShow(!showFilters)} className="filter-btn" style={{
               display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0,
               padding: '0 22px', height: 60, borderRadius: 18, cursor: 'pointer',
@@ -856,6 +928,17 @@ export default function ExplorarPage() {
               )}
             </button>
           </div>
+
+          {/* Nearby feedback */}
+          {(geoError || (nearby && userPos)) && (
+            <p style={{ fontSize: 12, marginBottom: 12, color: geoError ? '#FF6B6B' : 'rgba(255,255,255,0.35)' }}>
+              {geoError
+                ? geoError
+                : filtered.some(c => (c as any).distanceKm != null)
+                  ? 'Ordenado por cercanía a tu ubicación.'
+                  : 'Ninguna cancha tiene ubicación exacta configurada todavía.'}
+            </p>
+          )}
 
           {/* Sport pills */}
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Save, Bell, CreditCard, User, MapPin, Shield } from "lucide-react";
+import { Save, Bell, CreditCard, User, MapPin, Shield, Crosshair } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const SECTIONS = [
@@ -22,6 +22,28 @@ const NOTIF_DEFAULTS: Record<NotifKey, boolean> = {
   resenas_nuevas:     false,
 };
 
+// Accepts "9.9281, -84.0907" or a full Waze/Google Maps URL that carries the
+// point (@lat,lng / ?q=lat,lng / ?ll=lat,lng / !3dlat!4dlng). Shortened links
+// (maps.app.goo.gl) don't contain coordinates — those need manual/GPS entry.
+export function extractCoords(raw: string): { lat: number; lng: number } | null {
+  const s = (raw || "").trim();
+  if (!s) return null;
+  const pats = [
+    /^(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)$/,   // plain "lat, lng"
+    /[?&](?:ll|q|query|destination)=(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)/i,
+    /@(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)/,          // google /@lat,lng,zoom
+    /!3d(-?\d{1,3}(?:\.\d+)?)!4d(-?\d{1,3}(?:\.\d+)?)/,      // google place data
+  ];
+  for (const p of pats) {
+    const m = s.match(p);
+    if (m) {
+      const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+    }
+  }
+  return null;
+}
+
 export default function ConfiguracionPage() {
   const [activeSection, setActiveSection] = useState("perfil");
   const [saved,    setSaved]    = useState(false);
@@ -41,7 +63,8 @@ export default function ConfiguracionPage() {
   const [notifPrefs, setNotifPrefs] = useState<Record<NotifKey, boolean>>(NOTIF_DEFAULTS);
 
   // Ubicación — a Waze/Google Maps link per court
-  const [courts, setCourts] = useState<{ id: string; name: string; location: string | null; maps_url: string }[]>([]);
+  const [courts, setCourts] = useState<{ id: string; name: string; location: string | null; maps_url: string; coords: string }[]>([]);
+  const [locating, setLocating] = useState<string | null>(null); // court id capturing GPS
 
   // Load existing data on mount
   const loadProfile = useCallback(async () => {
@@ -59,9 +82,13 @@ export default function ConfiguracionPage() {
         setNotifPrefs({ ...NOTIF_DEFAULTS, ...meta.notif_prefs });
       }
       const { data: cs } = await supabase.from("owner_courts")
-        .select("id, name, location, maps_url")
+        .select("id, name, location, maps_url, lat, lng")
         .eq("owner_id", user.id).is("deleted_at", null).order("name");
-      setCourts((cs ?? []).map((c: any) => ({ id: c.id, name: c.name, location: c.location, maps_url: c.maps_url ?? "" })));
+      setCourts((cs ?? []).map((c: any) => ({
+        id: c.id, name: c.name, location: c.location,
+        maps_url: c.maps_url ?? "",
+        coords: (c.lat != null && c.lng != null) ? `${c.lat}, ${c.lng}` : "",
+      })));
     } finally {
       setLoading(false);
     }
@@ -109,8 +136,17 @@ export default function ConfiguracionPage() {
           if (url && !/^https?:\/\/.+/i.test(url)) {
             throw new Error(`El enlace de "${c.name}" debe empezar con https://`);
           }
-          const { error: e } = await supabase.from("owner_courts")
-            .update({ maps_url: url || null }).eq("id", c.id);
+          // Coordinates: typed directly, or lifted out of the maps link.
+          const typed = c.coords.trim();
+          const pt = typed ? extractCoords(typed) : extractCoords(url);
+          if (typed && !pt) {
+            throw new Error(`Las coordenadas de "${c.name}" no son válidas. Usá el formato 9.9281, -84.0907`);
+          }
+          const { error: e } = await supabase.from("owner_courts").update({
+            maps_url: url || null,
+            lat: pt ? pt.lat : null,
+            lng: pt ? pt.lng : null,
+          }).eq("id", c.id);
           if (e) throw e;
         }
       }
@@ -349,6 +385,47 @@ export default function ConfiguracionPage() {
                       </a>
                     )}
                   </div>
+
+                  {/* Coordinates — powers "canchas cerca de mí" for players */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <input
+                      value={c.coords}
+                      onChange={e => setCourts(prev => prev.map(x => x.id === c.id ? { ...x, coords: e.target.value } : x))}
+                      placeholder="Coordenadas — 9.9281, -84.0907"
+                      style={{
+                        flex: 1, padding: "11px 14px", borderRadius: 11,
+                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)",
+                        color: "rgba(255,255,255,0.88)", fontSize: 13.5,
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={locating === c.id}
+                      onClick={() => {
+                        if (!navigator.geolocation) { setError("Tu navegador no permite ubicación."); return; }
+                        setLocating(c.id);
+                        navigator.geolocation.getCurrentPosition(
+                          pos => {
+                            const v = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+                            setCourts(prev => prev.map(x => x.id === c.id ? { ...x, coords: v } : x));
+                            setLocating(null);
+                          },
+                          () => { setError("No pudimos obtener tu ubicación."); setLocating(null); },
+                          { enableHighAccuracy: true, timeout: 10000 },
+                        );
+                      }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6, padding: "0 13px", borderRadius: 11,
+                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+                        color: "rgba(255,255,255,0.75)", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                      }}
+                    >
+                      <Crosshair size={13} /> {locating === c.id ? "Ubicando…" : "Usar mi ubicación"}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 6 }}>
+                    Necesarias para que aparezca en “canchas cerca de mí”. Estando en la cancha, tocá “Usar mi ubicación”.
+                  </p>
                 </div>
               ))}
             </div>
